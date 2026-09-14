@@ -99,8 +99,17 @@ and commit. The Pages workflow deploys on the next push to `main`.
 | --- | --- | --- | --- | --- |
 | `trained-front-nine` (featured) | MaleCNS + trained readout (`hindsight-gated-v2`, readout `20260913T220118Z`, engine `fly-golf-lif-v1`) | `20260914T115447Z-e62f18` | commit `fd29296`, clean tree | seed 7: 58 strokes (+22), 7 of 9 holes holed |
 | `untrained-front-nine` | MaleCNS, fixed a-priori readout (engine `fly-golf-lif-v1`) | `20260914T115447Z-81909c` | commit `fd29296`, clean tree | seed 7: 81 strokes (+45), no hole finished |
+| `mock-front-nine` | MOCK controller: hand-written heuristic, no neurons | `20260914T142253Z-8674c0` | commit `8567436`, clean tree | seed 7: 35 strokes (−1) |
 
-Both rounds were played with the project's default seed (7), chosen before either round was
-played, and they are the only rounds recorded for the showcase. Neither was selected from several
+All three rounds were played with the project's default seed (7), chosen before any round was
+played, and they are the only rounds recorded for the showcase. None was selected from several
 attempts. On an 18-hole pace the trained fly shoots 116 and the untrained fly 162: neither breaks
-100 yet.
+100 yet. The mock, which reads the golf state directly and has no neurons, is the reference.
+
+## What visitors see
+
+A splash screen explains that the page shows pre-generated plays and that running the simulation
+in real time means cloning the repository (the connectome needs more than 1 GB of disk). Visitors
+pick a brain; each brain with a recorded solo round is selectable. Switching brains restarts that
+brain's round at the first tee. Shots play one at a time: a shot plays when asked and then waits.
+The splash reopens from **About this demo**.

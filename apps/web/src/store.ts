@@ -30,8 +30,7 @@ export interface ShowcaseView {
   cursor: number; // index into run.shots
   stage: "before" | "playing" | "after"; // relative to the shot at `cursor`
   playId?: number; // the playback started for the shot at `cursor`
-  autoplay: boolean; // carry on to the next shot when one finishes
-  started: boolean; // the landing card has been dismissed
+  started: boolean; // the splash screen has been dismissed
 }
 
 export interface AppState {

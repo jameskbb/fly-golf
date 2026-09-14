@@ -65,6 +65,37 @@
       "source_run_id": "20260914T115447Z-81909c",
       "recorded_utc": "2026-09-14T11:54:48.932455+00:00",
       "git_commit": "fd29296454c29cb49572aad9a6f6a4a4d9e93c6f"
+    },
+    {
+      "id": "mock-front-nine",
+      "title": "Mock - Front Nine",
+      "description": "The wind-up plays the same round seed with no brain at all: a few lines of hand-written golf rules and a caddie's distance table. It is the no-neuron reference the connectome is measured against.",
+      "file": "runs/mock-front-nine.json",
+      "controller": {
+        "id": "mock",
+        "kind": "mock",
+        "label": "MOCK CONTROLLER",
+        "is_mock": true,
+        "neuron_count": null,
+        "edge_count": null,
+        "connectome": null,
+        "model": "mock-heuristic-v2"
+      },
+      "controllers_used": [
+        "mock"
+      ],
+      "is_mock": true,
+      "mode": "course",
+      "shots": 35,
+      "holed": 9,
+      "holes_played": 9,
+      "strokes": 35,
+      "to_par": -1,
+      "round_complete": true,
+      "round_seed": 7,
+      "source_run_id": "20260914T142253Z-8674c0",
+      "recorded_utc": "2026-09-14T14:22:53.269103+00:00",
+      "git_commit": "8567436f8833108c3bcdbc1a3eceb2773f85fc61"
     }
   ]
 }

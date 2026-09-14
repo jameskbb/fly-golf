@@ -8,13 +8,15 @@ import { TechPanel } from "../ui/TechPanel";
 import { Scorecard } from "../ui/Scorecard";
 import { ModesPanel } from "../ui/ModesPanel";
 import { ShowcaseControls } from "./ShowcaseControls";
-import { ShowcaseLanding } from "./ShowcaseLanding";
-import { initShowcase, nextShot, prevShot, replayShot, togglePlay } from "./controller";
+import { ShowcaseSplash } from "./ShowcaseSplash";
+import { closeSplash, initShowcase, nextShot, prevShot, primaryAction, replayShot } from "./controller";
 import "./showcase.css";
 
 /** The GitHub Pages build: the same scene and panels, driven by recorded runs instead of a backend. */
 export function ShowcaseApp() {
-  useEffect(() => initShowcase(), []);
+  useEffect(() => {
+    initShowcase();
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -28,10 +30,13 @@ export function ShowcaseApp() {
       )
         return;
       const st = useStore.getState();
-      if (!st.showcase?.started) return;
+      if (!st.showcase?.started) {
+        if (e.key === "Escape" && st.showcase?.run) closeSplash();
+        return;
+      }
       if (e.code === "Space") {
         e.preventDefault();
-        togglePlay();
+        primaryAction();
       } else if (e.key === "ArrowRight") nextShot();
       else if (e.key === "ArrowLeft") prevShot();
       else if (e.key === "r") replayShot();
@@ -52,7 +57,7 @@ export function ShowcaseApp() {
         <ShowcaseControls />
         <TechPanel />
         <ModesPanel />
-        <ShowcaseLanding />
+        <ShowcaseSplash />
       </main>
       <BrainPanel />
       <ShotBar />

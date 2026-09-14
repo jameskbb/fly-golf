@@ -120,9 +120,12 @@ experiments/readouts/     the installed trained readout and archived ones (small
    rates, populations, motor channels, club chain) and technical drawer are the live app's own
    components. In the showcase the brain panel reveals each shot's recorded 10 ms activity bins,
    slowed down, while the fly addresses the ball. The values are the recorded ones.
-5. Visitors can play or pause the round, step to the previous or next shot, replay, scrub within a
-   shot, jump to any hole or stroke, pick another recorded round, orbit and zoom. The URL keeps
-   `?run=…&shot=…`, so a refresh or a shared link returns to the same shot.
+5. Shots play one at a time and never advance on their own. Visitors can play, pause, replay, step
+   to the previous or next shot, scrub within a shot, jump to any hole or stroke, orbit and zoom,
+   and pick a brain. Switching brains loads that brain's recorded round from the first tee. A
+   splash screen (reopened from **About this demo**) explains that the page shows pre-generated
+   plays and how to run the real simulation locally. The URL keeps `?run=…&shot=…`, so a refresh
+   or a shared link returns to the same shot.
 6. Not available in the showcase: hitting new shots, switching brains, the practice green and the
    Runs drawer, because they need the backend.
 

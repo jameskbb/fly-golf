@@ -40,22 +40,25 @@ tell the story. [Open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp
 [**jameskbb.github.io/fly-golf**](https://jameskbb.github.io/fly-golf/) is the same 3D app
 replaying **recorded MaleCNS rounds**. The neural simulation was computed beforehand; the replay
 runs entirely in your browser. There is no backend, and nothing is simulated or invented on the
-page. Play the round, pause, scrub through a swing, jump to any hole or stroke, orbit the camera,
-and read each shot's recorded spikes, active neurons, population rates, motor channels and club
-choice.
+page. Pick a brain, play its round one shot at a time, pause, scrub through a swing, jump to any
+hole or stroke, orbit the camera, and read each shot's recorded spikes, active neurons,
+population rates, motor channels and club choice. To watch the brain play new shots as they are
+computed, [run it locally](#run-it-locally): the connectome download needs more than 1 GB of disk.
 
-Both featured rounds were played from round seed 7, the project's default, chosen before either
-round was played. Neither was picked from several attempts:
+All three rounds were played from round seed 7, the project's default, chosen before any round
+was played. None was picked from several attempts:
 
 | Round | Brain | Score | What happened |
 | --- | --- | --- | --- |
 | **Trained MaleCNS: Front Nine** (featured) | the connectome + a trained readout | **58** (+22), 7 of 9 holes holed | Drivers off the tee, wedges around the greens, one ball in the water; two holes picked up |
 | **Untrained MaleCNS: Front Nine** | the connectome, fixed readout rules | **81** (+45), no hole finished | Only a 6-, 7- or 8-iron from everywhere, and 29 penalty strokes |
+| **Mock: Front Nine** | no brain: hand-written golf rules | **35** (−1) | The no-neuron reference. It reads the distance and lie directly, so it plays well |
 
 [![The web demo at the end of the trained round: the golfer fly beside the ninth hole's flag after holing out, with the scorecard reading Round complete: 58 (+22), on pace for 116 over eighteen, not breaking 100 yet, and the recorded neural telemetry in the brain panel](docs/screenshots/web-demo-round-complete.png)](https://jameskbb.github.io/fly-golf/)
 
-On an 18-hole pace that is 116 and 162. **The fly does not break 100 yet.** Both rounds were
-recorded at this repository's first public commit and re-simulate bit for bit (`fly-golf replay`).
+On an 18-hole pace the two connectome rounds are 116 and 162. **The fly does not break 100
+yet.** The connectome rounds were recorded at this repository's first public commit, and every
+round re-simulates bit for bit (`fly-golf replay`).
 How the demo works and how to publish another run: [GITHUB_PAGES.md](docs/GITHUB_PAGES.md).
 
 ![Meet the three brains section header](docs/screenshots/readme-header-brains.png)

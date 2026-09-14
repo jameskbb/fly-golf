@@ -2,27 +2,20 @@
  * Showcase playback: steps through a recorded round with the app's normal playback. For each shot
  * the store gets the session state from just before the shot (lib/showcase.ts) and the recorded
  * ShotRecord is played exactly as a live shot result would be; when the animation ends, the state
- * from just after the shot takes over. Nothing is simulated: the records are the whole story.
+ * from just after the shot takes over. One shot at a time: nothing advances on its own. Nothing is
+ * simulated: the records are the whole story.
  */
-import { holeOf, holeStarts, showcaseState } from "../lib/showcase";
+import type { ShowcaseIndex } from "@fly-golf/protocol";
+import { holeStarts, showcaseState } from "../lib/showcase";
 import { showcaseSource } from "../lib/showcaseSource";
 import { useStore, type AppState, type ShowcaseView } from "../store";
 
-const BETWEEN_SHOTS_MS = 1200;
-const BETWEEN_HOLES_MS = 2600;
-
-let timer: number | undefined;
 let subscribed = false;
 let initialised: Promise<void> | undefined;
 
 const st = () => useStore.getState();
 const view = () => st().showcase;
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
-
-function clearTimer() {
-  if (timer !== undefined) window.clearTimeout(timer);
-  timer = undefined;
-}
 
 function setView(patch: Partial<ShowcaseView>, extra: Partial<AppState> = {}) {
   const v = view();
@@ -43,20 +36,16 @@ function onPlaybackEnded(id: number) {
   const v = view();
   const course = st().course;
   if (!v?.run || !course || v.stage !== "playing" || v.playId !== id) return;
-  const k = v.cursor;
-  const shots = v.run.shots;
-  st().set({ session: showcaseState(v.run, course, k, "after"), showcase: { ...v, stage: "after" } });
-  if (!v.autoplay) return;
-  if (k + 1 >= shots.length) return setView({ autoplay: false });
-  const wait = holeOf(shots[k + 1]) !== holeOf(shots[k]) ? BETWEEN_HOLES_MS : BETWEEN_SHOTS_MS;
-  timer = window.setTimeout(() => {
-    timer = undefined;
-    if (view()?.autoplay) playShot(k + 1);
-  }, wait);
+  st().set({ session: showcaseState(v.run, course, v.cursor, "after"), showcase: { ...v, stage: "after" } });
+}
+
+/** The recorded round a brain played on its own, if this showcase has one. */
+export function runForBrain(index: ShowcaseIndex, brainId: string): string | undefined {
+  return index.runs.find((r) => r.controllers_used.length === 1 && r.controllers_used[0] === brainId)?.id;
 }
 
 /** Load the showcase index, the course and the featured (or linked) run. Safe to call twice. */
-export function initShowcase(): () => void {
+export function initShowcase() {
   if (!subscribed) {
     subscribed = true;
     useStore.subscribe((s, prev) => {
@@ -64,7 +53,7 @@ export function initShowcase(): () => void {
     });
   }
   initialised ??= (async () => {
-    st().set({ showcase: { cursor: 0, stage: "before", autoplay: false, started: false } });
+    st().set({ showcase: { cursor: 0, stage: "before", started: false } });
     try {
       const [index, course] = await Promise.all([showcaseSource.getIndex(), showcaseSource.getCourse()]);
       st().set({ course });
@@ -80,18 +69,23 @@ export function initShowcase(): () => void {
       st().set({ error: `Could not load the recorded showcase: ${errorText(e)}` });
     }
   })();
-  return clearTimer;
 }
 
 export async function loadRun(id: string, k = 0) {
-  clearTimer();
   try {
     const run = await showcaseSource.getShowcaseRun(id);
-    setView({ run, autoplay: false }, { error: undefined });
+    setView({ run }, { error: undefined });
     goTo(Math.min(Math.max(0, k), run.shots.length - 1));
   } catch (e) {
     st().set({ error: `Could not load recorded run "${id}": ${errorText(e)}` });
   }
+}
+
+/** Watch another brain: its recorded round starts over from the first tee. */
+export async function selectBrain(brainId: string) {
+  const v = view();
+  const id = v?.index ? runForBrain(v.index, brainId) : undefined;
+  if (id && id !== v?.run?.id) await loadRun(id, 0);
 }
 
 /** Stand at shot `k`, before it is played. */
@@ -99,7 +93,6 @@ export function goTo(k: number) {
   const v = view();
   const course = st().course;
   if (!v?.run || !course || k < 0 || k >= v.run.shots.length) return;
-  clearTimer();
   st().set({
     playback: undefined,
     session: showcaseState(v.run, course, k, "before"),
@@ -109,12 +102,11 @@ export function goTo(k: number) {
   syncUrl();
 }
 
-/** Play recorded shot `k` from the top. */
+/** Play recorded shot `k` from the top. It stops when the ball does. */
 export function playShot(k: number) {
   const v = view();
   const course = st().course;
   if (!v?.run || !course || k < 0 || k >= v.run.shots.length) return;
-  clearTimer();
   const shots = v.run.shots;
   st().set({
     playback: undefined,
@@ -127,22 +119,15 @@ export function playShot(k: number) {
   syncUrl();
 }
 
-/** Play / pause. Playing carries on shot after shot until the end of the round. */
-export function togglePlay() {
+/** The main button: play the shot on screen, pause or resume it, then move on when asked. */
+export function primaryAction() {
   const v = view();
   if (!v?.run) return;
   const pb = st().playback;
-  if ((pb && pb.pausedAt === undefined) || v.autoplay) {
-    clearTimer();
-    st().pausePlayback();
-    setView({ autoplay: false });
-    return;
-  }
-  setView({ autoplay: true, started: true });
-  if (pb && pb.pausedAt !== undefined) return st().resumePlayback();
-  const last = v.run.shots.length - 1;
-  if (v.stage === "after") playShot(v.cursor >= last ? 0 : v.cursor + 1);
-  else playShot(v.cursor);
+  if (pb) return pb.pausedAt === undefined ? st().pausePlayback() : st().resumePlayback();
+  if (v.stage !== "after") return playShot(v.cursor);
+  if (v.cursor >= v.run.shots.length - 1) return goTo(0);
+  playShot(v.cursor + 1);
 }
 
 export const nextShot = () => {
@@ -171,20 +156,11 @@ export function seek(seconds: number) {
   if (!v?.run) return;
   const pb = st().playback;
   if (!pb || pb.record !== v.run.shots[v.cursor]) {
-    setView({ autoplay: false });
     playShot(v.cursor);
     st().pausePlayback();
   }
   st().seekPlayback(seconds);
 }
 
-/** Landing card: watch the whole round from the first tee. */
-export function startRound() {
-  setView({ autoplay: true, started: true });
-  playShot(0);
-}
-
-/** Landing card: look around first, then play shots one at a time. */
-export function dismissLanding() {
-  setView({ started: true });
-}
+export const openSplash = () => setView({ started: false });
+export const closeSplash = () => setView({ started: true });

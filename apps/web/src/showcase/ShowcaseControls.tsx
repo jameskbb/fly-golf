@@ -4,10 +4,21 @@ import { timelineFor } from "../lib/playback";
 import { holeOf, holeStarts } from "../lib/showcase";
 import { useFrameClock } from "../lib/useFrameClock";
 import { playbackTime, useStore } from "../store";
-import { brainById, controllerLabel } from "../ui/brains";
+import { BRAINS } from "../ui/brains";
 import { Headshot } from "../ui/Headshot";
 import { fmt } from "../ui/widgets";
-import { loadRun, nextShot, playShot, prevShot, replayShot, seek, togglePlay, watchHole } from "./controller";
+import {
+  nextShot,
+  openSplash,
+  playShot,
+  prevShot,
+  primaryAction,
+  replayShot,
+  runForBrain,
+  seek,
+  selectBrain,
+  watchHole,
+} from "./controller";
 
 const PHASE_LABEL: Record<string, string> = {
   select: "choosing a club",
@@ -79,24 +90,23 @@ export function ShowcaseControls() {
     .map((s, i) => ({ s, i }))
     .filter(({ s }) => holeOf(s) === hole && s.hole_index === shot.hole_index);
   const last = shots.length - 1;
-  const paused = !!playback && playback.pausedAt !== undefined;
-  const running = (!!playback && !paused) || view.autoplay;
-  const primary = running
-    ? "❚❚ Pause"
-    : paused
+  const primary = playback
+    ? playback.pausedAt !== undefined
       ? "▶ Resume"
-      : view.stage === "after" && k === last
-        ? "↺ Watch again"
-        : "▶ Play";
-  const brain = brainById(shot.controller.id);
-  const runs = view.index?.runs ?? [];
+      : "❚❚ Pause"
+    : view.stage !== "after"
+      ? "▶ Play shot"
+      : k === last
+        ? "↺ Restart round"
+        : "▶ Next shot";
   const holes = course?.holes.map((h) => h.number) ?? [...starts.keys()].sort((a, b) => a - b);
+  const current = shot.controller.id;
 
   return (
     <>
       <div className="controls showcase-controls">
         <div className="controls-row">
-          <button className="btn primary" onClick={togglePlay} title="Play / pause (Space)">
+          <button className="btn primary" onClick={primaryAction} title="Space">
             {primary}
           </button>
           <button className="btn" disabled={k === 0} onClick={prevShot} title="Previous shot (←)">
@@ -108,20 +118,6 @@ export function ShowcaseControls() {
           <button className="btn" disabled={k >= last} onClick={nextShot} title="Next shot (→)">
             Next ⏭
           </button>
-          {runs.length > 1 && (
-            <select
-              className="run-select"
-              value={run.id}
-              onChange={(e) => void loadRun(e.target.value)}
-              aria-label="Recorded round"
-            >
-              {runs.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.title}
-                </option>
-              ))}
-            </select>
-          )}
           <button
             className={`btn ghost ${cardOpen ? "on" : ""}`}
             onClick={() => set({ cardOpen: !cardOpen })}
@@ -142,6 +138,9 @@ export function ShowcaseControls() {
             title="M"
           >
             What&apos;s the difference?
+          </button>
+          <button className="btn ghost" onClick={openSplash}>
+            About this demo
           </button>
         </div>
         <div className="now-playing">
@@ -181,19 +180,38 @@ export function ShowcaseControls() {
             ))}
           </div>
         </div>
-        <div className={`recorded-brain ${brain?.tone ?? "mock"}`}>
-          {brain && <Headshot persona={brain.persona.id} tone={brain.tone} />}
-          <span className="brain-text">
-            <span className="brain-name">{controllerLabel(shot.controller)}</span>
-            <span className="brain-sub">
-              <span className="brain-kicker">
-                {brain?.kicker ?? shot.controller.kind.toUpperCase()} · RECORDED
-              </span>{" "}
-              · round seed {run.round.seed} · commit{" "}
-              <span className="mono">{run.source.git.commit.slice(0, 7)}</span>
-            </span>
-          </span>
+        <div className="showcase-brains" role="radiogroup" aria-label="Brain">
+          {BRAINS.map((b) => {
+            const available = !!view.index && !!runForBrain(view.index, b.id);
+            const on = current === b.id;
+            return (
+              <button
+                key={b.id}
+                role="radio"
+                aria-checked={on}
+                className={`brain-card ${b.tone} ${on ? "on" : ""}`}
+                disabled={!available}
+                title={
+                  available
+                    ? `Watch ${b.persona.name}'s recorded round from the first tee`
+                    : "No recorded round for this brain yet"
+                }
+                onClick={() => void selectBrain(b.id)}
+              >
+                <Headshot persona={b.persona.id} tone={b.tone} />
+                <span className="brain-text">
+                  <span className="brain-name">{b.name}</span>
+                  <span className="brain-kicker">{b.kicker}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
+        <p className="recorded-note">
+          Recorded round, seed {run.round.seed}, simulated at commit{" "}
+          <span className="mono">{run.source.git.commit.slice(0, 7)}</span>. Switching brains starts that
+          brain&apos;s round from the first tee.
+        </p>
       </div>
       {error && (
         <div className="toast" onClick={() => set({ error: undefined })}>
