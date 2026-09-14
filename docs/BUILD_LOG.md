@@ -318,3 +318,45 @@ wedge on 72–82 % of shots from 20–60 m. The untrained MaleCNS readout is sti
 beats the real wiring (putts 15.7 % against 6.5 % holed, full shots 37.5 m against 79.2 m). The
 engine change needed retraining and changed none of the conclusions
 ([TRAINING.md](TRAINING.md#engine-migration-2026-09-13)).
+
+## 2026-09-14: readout capacity and side-resolved features
+
+A four-hour training session. Details and tables:
+[TRAINING.md](TRAINING.md#readout-capacity-and-side-resolved-features-2026-09-14).
+
+### What changed
+
+- `28b7a06`: training also records every DN type's rate **per soma side** (`features_side` in
+  `features.npz`). `fly-golf train/refit --features dn-type-side` fits a readout on them. Readouts
+  record `feature_space` (absent means `dn-type`, so every existing readout loads unchanged).
+- `109c4a1`: each readout head may use up to 256 PCA components (was 64), still chosen by 5-fold CV
+  on the training situations.
+
+### Runs
+
+- `fly-golf refit` of `v3-lif1-seed2-x6` at `109c4a1` gave `20260914T191715Z-refit`: the same practice
+  and held-out split as the installed readout, and better on every held-out kind. On bench seeds
+  100–111 it scored 66.9 per nine, against 70.0 for the installed readout (reproduced exactly), with
+  59 % of holes holed out against 45 %. On fresh seeds 200–211 it scored 66.6, against 71.9, with 70 %
+  against 52 %.
+- `fly-golf train --seed 3 --scale 12 --jobs 12 --features dn-type-side` at `28b7a06` gave
+  `20260914T192725Z`: 6,720 situations, 2,016 held out, 75 min.
+- Benched on seeds 100–111 at PCA ≤ 64, the side-resolved readout scored 73.6 per nine, worse
+  than the installed readout. Its three refits (side and per-type at PCA ≤ 256, per-type at
+  PCA ≤ 64) were still calibrating at the four-hour mark. They were stopped, and no result is
+  claimed for them.
+- `fly-golf refit` of the shuffled control `20260913T223205Z-shuffled` at `109c4a1` gave
+  `20260914T212017Z-shuffled-refit` (109 min). The shuffle still beats the real wiring on every
+  held-out kind except the median leave of green putts.
+- `8626d54`: `refit` loads the saved practice once. At scale 12 that takes 0.7 s, where the lazy
+  NpzFile reads took about 14 minutes.
+- **Installed** `20260914T191715Z-refit`, with its seeds 200–211 confirmation attached.
+  `20260913T220118Z` is archived, so the published showcase round still replays.
+
+### Provenance notes
+
+- A first scale-12 run on the unchanged `main` was stopped after 10 minutes. The side-resolved run
+  saves the per-type features too, so it answered the same question on identical situations.
+- One confirmation bench (`v3-type256-s200`) recorded `dirty: true`. Doc edits in its worktree were
+  uncommitted while it ran; the code was `109c4a1` unchanged. The confirmation attached to the
+  installed readout was re-run from a clean tree.

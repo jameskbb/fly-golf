@@ -192,7 +192,7 @@ A cross bunker divides the fairway before a big, fast finishing green.
 | **Front nine**: 9 hand-designed holes, fairways, bunkers, water on holes 3/4/5/8, tree-lined out of bounds ([COURSE.md](docs/COURSE.md)) | ✅ |
 | **Full bag**: driver, 3W, 5W, 4H, 5–9 irons, PW/GW/SW/LW, putter. The fly chooses via the `club_reach` motor channel | ✅ |
 | Full-shot physics: drag + Magnus flight, spin, surface bounce and roll, penalties, lies | ✅ tested, replayable |
-| **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls; retrained on the Brian2-exact engine: 70.0 strokes per nine, half the holes holed ([TRAINING.md](docs/TRAINING.md#engine-migration-2026-09-13)) | ✅ experimental |
+| **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls; retrained on the Brian2-exact engine, then refitted with more PCA components: 66.6 strokes per nine on fresh rounds (was 71.9), 70 % of holes holed ([TRAINING.md](docs/TRAINING.md#readout-capacity-and-side-resolved-features-2026-09-14)) | ✅ experimental |
 | **Switch brains mid-round** (Mock / MaleCNS / Trained); scorecard marks who played each hole, mixed rounds flagged | ✅ |
 | **Web demo**: Showcase Mode replays recorded MaleCNS rounds on GitHub Pages, no backend ([GITHUB_PAGES.md](docs/GITHUB_PAGES.md)) | ✅ |
 | `fly-golf bench`: complete front-nine rounds per brain (holes finished, strokes, trees, club by distance) | ✅ |

@@ -18,6 +18,7 @@ the end.
 - [Controls and baselines](#controls-and-baselines)
 - [Results](#results)
 - [Engine migration (2026-09-13)](#engine-migration-2026-09-13)
+- [Readout capacity and side-resolved features (2026-09-14)](#readout-capacity-and-side-resolved-features-2026-09-14)
 - [Honest limits](#honest-limits)
 - [Reproduce](#reproduce)
 
@@ -116,7 +117,7 @@ flowchart TB
 - **Aim / power heads**: two ridge regressions, one on putts and one on swings, because a putter's
   power and a full swing's power mean different things.
 
-Each part is a PCA projection followed by the regression; the number of PCA components (4–64) and
+Each part is a PCA projection followed by the regression; the number of PCA components (4–256) and
 the regularisation are chosen by 5-fold cross-validation on the training situations only, and the
 result is collapsed to a single linear layer on `z`. The readout is saved as JSON with full
 provenance (git commit, versions, graph, seeds, CV choices, held-out metrics, bench results) and
@@ -318,9 +319,9 @@ Complete front-nine rounds (`fly-golf bench`, 12 rounds each):
 | MaleCNS, untrained | legacy | 100–111 | 81.0 | 0 % | 25.3 | 6-iron 94 % |
 | MaleCNS, untrained | fly-golf-lif-v1 | 100–111 | 81.0 | 0 % | 23.8 | 6-iron 94 % |
 | Trained (installed before) | legacy | 100–111 | 70.3 | 50.0 % | 7.0 | lob wedge 65 %, 17 % trees |
-| **Trained (installed now)** | **fly-golf-lif-v1** | 100–111 | **70.0** (best 64) | 45.4 % | **3.3** | lob wedge 82 %, 9.6 % trees |
+| **Trained (`20260913T220118Z`)** | **fly-golf-lif-v1** | 100–111 | **70.0** (best 64) | 45.4 % | **3.3** | lob wedge 82 %, 9.6 % trees |
 | Trained (installed before) | legacy | 200–211 | 71.5 | 49.1 % | 5.9 | lob wedge 66 %, 21 % trees |
-| **Trained (installed now)** | **fly-golf-lif-v1** | 200–211 | **71.9** (best 58) | **51.9 %** | 4.0 | lob wedge 72 %, 14 % trees |
+| **Trained (`20260913T220118Z`)** | **fly-golf-lif-v1** | 200–211 | **71.9** (best 58) | **51.9 %** | 4.0 | lob wedge 72 %, 14 % trees |
 
 What the migration says:
 
@@ -336,6 +337,75 @@ What the migration says:
   still trains better than the real MaleCNS wiring on every kind of shot (putts 15.7 % against
   6.5 % holed, full shots 37.5 m against 79.2 m). The no-brain readout of the raw senses still
   beats both.
+
+## Readout capacity and side-resolved features (2026-09-14)
+
+Two changes to the readout, tried on the same engine, method and practice:
+
+1. **More PCA components.** Each head's PCA size used to be chosen by CV from 4–64. With 2,352
+   training situations the club head's cross-validated error keeps falling past 64 (2.21 clubs off
+   at 64, 1.98 at 256 on the saved practice of `v3-lif1-seed2-x6`), so CV may now also choose 128 or
+   256 (`109c4a1`). CV picked 256 for the club, putter and swing heads and 32 for the gate.
+2. **Side-resolved features** (`--features dn-type-side`, `28b7a06`). A DN type's mean rate merges
+   its left and right neurons, which cancels exactly the asymmetry steering is read from. Training
+   now also saves every DN type's rate per soma side ("DNa01|L": 953 features, 473 left, 472 right, 8 midline), and a readout can be
+   fitted on those. The readout records `feature_space`, and the controller computes whichever
+   space its readout was fitted on (a readout without the field is `dn-type`, as before).
+
+**Refit of the installed run with more components** (`20260914T191715Z-refit`, clean `109c4a1`,
+from the saved practice of `20260913T220118Z`: the same 3,360 situations and held-out split, no
+brain simulation):
+
+| Held-out shots | Practice putts | Course-green putts | Chips and pitches | Full shots |
+| --- | --- | --- | --- | --- |
+| `20260913T220118Z` (PCA ≤ 64) | 6.5 %, 0.82 m | 3.2 %, 1.28 m | 0 %, 14.0 m, 4.6 % trees, club ±1 91 % | 0 %, 79.2 m, 6.1 % trees, club ±1 55 % |
+| **`20260914T191715Z-refit` (PCA ≤ 256)** | **10.6 %, 0.71 m** | **6.5 %, 1.12 m** | 0 %, **13.4 m, 3.7 % trees**, club ±1 91 % | 0 %, **73.3 m, 5.0 % trees**, club ±1 57 % |
+| same, uncalibrated | 11.6 %, 0.74 m | 6.0 %, 1.25 m | 0 %, 16.0 m, 8.8 % trees | 0 %, 68.8 m, 5.8 % trees |
+
+It is better on every kind of shot. The club head's in-sample error falls from 2.05 to 1.68 clubs;
+calibration chose stretch 1.5, shift 1.0 (was 1.5, 1.5), putter power 0.95, swing power 1.0, none on
+a grid edge.
+
+**A twice-as-large practice run with both feature spaces** (`20260914T192725Z`, clean `28b7a06`,
+`--seed 3 --scale 12 --features dn-type-side`): 6,720 situations (1,440 practice putts, 1,440 green
+putts, 1,440 chips and pitches, 2,400 full shots), 2,016 held out, 75 min on 12 workers. It saves
+the per-type and the per-side rates for the same situations, so the two feature spaces can be
+compared on identical practice with `fly-golf refit --features`.
+
+Complete front-nine rounds, 12 each, all at clean commits:
+
+| Readout | Features | PCA | Practice | Seeds 100–111 | Holes holed out | Trees / round | Seeds 200–211 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `20260913T220118Z` (installed before) | DN type | ≤ 64 | 3,360 | 70.0 (best 64) | 45.4 % | 3.3 | 71.9 (51.9 % holed) |
+| `20260914T191715Z-refit` | DN type | ≤ 256 | 3,360 (same) | **66.9** (best 52) | **59.3 %** | 3.2 | **66.6** (70.4 % holed) |
+| `20260914T192725Z` | DN type × side | ≤ 64 | 6,720 | 73.6 (best 68) | 38.9 % | 4.4 | not run |
+
+The obvious next comparison is the three refits of `20260914T192725Z`: DN type × side and DN type
+at PCA ≤ 256, and DN type at PCA ≤ 64. They were still calibrating when the session's four hours
+ran out (calibration at 6,720 situations runs well over an hour each), so they were stopped and no
+result is claimed for them. Each is one `fly-golf refit runs/training/v4-side-seed3-x12 --features
+…` away. Loading a run's saved practice now takes under a second, where it used to take 14 minutes
+(`8626d54`). So far, side-resolved features have not beaten per-type features.
+
+**Installed: `20260914T191715Z-refit`.** It was chosen on seeds 100–111 and confirmed on seeds
+200–211, recorded in its `meta.bench`. Like every readout before it, it reads nothing but DN-type
+rates.
+
+**The shuffled-wiring control, refitted the same way** (`20260914T212017Z-shuffled-refit`, clean
+`109c4a1`, from the saved practice of `20260913T223205Z-shuffled`):
+
+| Held-out shots | Practice putts | Course-green putts | Chips and pitches | Full shots |
+| --- | --- | --- | --- | --- |
+| Real wiring, PCA ≤ 256 | 10.6 %, 0.71 m | 6.5 %, 1.12 m | 13.4 m, 3.7 % trees | 73.3 m, 5.0 % trees |
+| Shuffled wiring, PCA ≤ 64 | 15.7 %, 0.49 m | 11.1 %, 2.46 m | 10.2 m | 37.5 m |
+| **Shuffled wiring, PCA ≤ 256** | 15.3 %, 0.51 m | 7.9 %, 1.65 m | 9.6 m, 0 % trees | 37.2 m, 1.1 % trees |
+
+More components helped the real wiring much more than the shuffle: full shots went from 79.2 to
+73.3 m for the real wiring and from 37.5 to 37.2 m for the shuffle. The shuffle still trains better
+on every kind of shot except the median leave of course-green putts. **The central finding
+stands:** under this proxy sensing and DN readout, the reconstructed wiring is not an advantage.
+(The shuffle's calibration chose a grid edge for the swing power scale; its CV kept 64 components
+for the club head.)
 
 ## Honest limits
 
@@ -376,6 +446,12 @@ machine). Each training run writes
 with every shot of every round. The installed readout is
 `experiments/readouts/malecns-readout-v1.json` (the file name is historical; the `format` field
 inside says v1 or v2) and records the commit it was trained at and its neural engine
-(`meta.neural_engine`). Since the engine migration the installed readout is `20260913T220118Z`,
-trained on `fly-golf-lif-v1` with the commands above (`--out runs/training/v3-lif1-seed2-x6`, then
-the two benches, `--attach` on seeds 200–211).
+(`meta.neural_engine`). The engine migration installed `20260913T220118Z`, trained on
+`fly-golf-lif-v1` with the commands above (`--out runs/training/v3-lif1-seed2-x6`). It is now
+archived. The installed readout is its refit with up to 256 PCA components,
+`20260914T191715Z-refit`:
+`$SIM refit runs/training/v3-lif1-seed2-x6 --out runs/training/v3-lif1-seed2-x6-pca256` at
+`109c4a1`, then the two benches, with `--attach` on seeds 200–211. A side-resolved run is
+`$SIM train --seed 3 --scale 12 --jobs 12 --features dn-type-side --out runs/training/v4-side-seed3-x12`
+(75 min). It saves both feature spaces, so `$SIM refit … --features dn-type` compares them on the
+same practice.
