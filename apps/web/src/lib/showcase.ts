@@ -9,13 +9,64 @@ import type {
   ScorecardEntry,
   SessionState,
   ShotRecord,
+  ShowcaseIndex,
   ShowcaseRun,
+  ShowcaseRunSummary,
 } from "@fly-golf/protocol";
 
 export type Stage = "before" | "after";
 
 export const holeOf = (shot: ShotRecord): number =>
   shot.course?.hole_number ?? shot.hole?.number ?? shot.scenario.hole_number ?? 0;
+
+/** Where one hole of a mixed round was recorded. */
+export interface HoleSource {
+  hole: number;
+  run: string; // showcase run id
+  seed: number; // that round's seed
+  commit: string; // the commit it was simulated at
+}
+
+/** A round assembled from real recorded holes (`mixRound`). */
+export type MixedRun = ShowcaseRun & { holeSources: HoleSource[] };
+
+export const isMixed = (run: ShowcaseRun | undefined): run is MixedRun =>
+  !!run && Array.isArray((run as Partial<MixedRun>).holeSources);
+
+/** The complete rounds a brain played on its own in this showcase. */
+export function runsForBrain(index: ShowcaseIndex, brainId: string): ShowcaseRunSummary[] {
+  return index.runs.filter((r) => r.controllers_used.length === 1 && r.controllers_used[0] === brainId);
+}
+
+/** For every hole, one of the run ids, at random. */
+export function drawHoles(
+  holes: number[],
+  ids: string[],
+  random: () => number = Math.random,
+): Map<number, string> {
+  return new Map(holes.map((n) => [n, ids[Math.floor(random() * ids.length) % ids.length]]));
+}
+
+/**
+ * A round made of real recorded holes: hole n is every recorded stroke of hole n, unchanged, from
+ * the run `picks.get(n)`. The runs are complete rounds by the same brain on the same course and
+ * every hole starts from its tee, so each hole stands on its own; the scorecard and totals are
+ * rebuilt from the shots exactly as for a single recorded run. Nothing in a shot is altered.
+ */
+export function mixRound(runs: Map<string, ShowcaseRun>, picks: Map<number, string>): MixedRun {
+  const holeSources: HoleSource[] = [];
+  const shots: ShotRecord[] = [];
+  for (const [hole, id] of picks) {
+    const run = runs.get(id);
+    if (!run) throw new Error(`recorded run "${id}" is not loaded`);
+    const strokes = run.shots.filter((s) => holeOf(s) === hole);
+    if (!strokes.length) throw new Error(`recorded run "${id}" has no strokes on hole ${hole}`);
+    shots.push(...strokes);
+    holeSources.push({ hole, run: id, seed: run.round.seed, commit: run.source.git.commit });
+  }
+  if (!holeSources.length) throw new Error("a mixed round needs at least one hole");
+  return { ...runs.get(holeSources[0].run)!, shots, holeSources };
+}
 
 /** Index of the first recorded shot on each hole, in the order the holes were played. */
 export function holeStarts(shots: ShotRecord[]): Map<number, number> {
@@ -124,7 +175,9 @@ export function showcaseState(
     controller: shot.controller,
     stats: {},
     run_id: shot.run_id,
-    round_seed: run.round.seed,
+    round_seed: isMixed(run)
+      ? (run.holeSources.find((h) => h.hole === number)?.seed ?? run.round.seed)
+      : run.round.seed,
     scorecard: card,
     totals: totalsOf(card),
     round_complete: card.every((c) => c.strokes !== null),

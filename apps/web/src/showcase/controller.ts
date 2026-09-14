@@ -4,9 +4,13 @@
  * ShotRecord is played exactly as a live shot result would be; when the animation ends, the state
  * from just after the shot takes over. One shot at a time: nothing advances on its own. Nothing is
  * simulated: the records are the whole story.
+ *
+ * A brain's round is a mix of its recorded rounds: each hole is drawn at random from every round
+ * that brain recorded (lib/showcase.ts `mixRound`), so every visit shows different holes. A link
+ * to one recorded run (?run=<id>&shot=<n>) still plays that run exactly as it was recorded.
  */
-import type { ShowcaseIndex } from "@fly-golf/protocol";
-import { holeStarts, showcaseState } from "../lib/showcase";
+import type { ShowcaseRun } from "@fly-golf/protocol";
+import { drawHoles, holeStarts, isMixed, mixRound, runsForBrain, showcaseState } from "../lib/showcase";
 import { showcaseSource } from "../lib/showcaseSource";
 import { useStore, type AppState, type ShowcaseView } from "../store";
 
@@ -16,19 +20,29 @@ let initialised: Promise<void> | undefined;
 const st = () => useStore.getState();
 const view = () => st().showcase;
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+const brainOf = (run: ShowcaseRun) => run.shots[0].controller.id;
 
 function setView(patch: Partial<ShowcaseView>, extra: Partial<AppState> = {}) {
   const v = view();
   if (v) st().set({ ...extra, showcase: { ...v, ...patch } });
 }
 
-/** Keep the address bar pointing at the shot on screen, so a refresh or a shared link returns to it. */
+/** Keep the address bar pointing at what is on screen. A single recorded run keeps its shot, so a
+ *  refresh or a shared link returns to it; a mixed round keeps only the brain, since every visit
+ *  draws a new mix. */
 function syncUrl() {
   const v = view();
   if (!v?.run) return;
   const url = new URL(window.location.href);
-  url.searchParams.set("run", v.run.id);
-  url.searchParams.set("shot", String(v.cursor + 1));
+  if (isMixed(v.run)) {
+    url.searchParams.delete("run");
+    url.searchParams.delete("shot");
+    url.searchParams.set("brain", brainOf(v.run));
+  } else {
+    url.searchParams.delete("brain");
+    url.searchParams.set("run", v.run.id);
+    url.searchParams.set("shot", String(v.cursor + 1));
+  }
   window.history.replaceState(null, "", url);
 }
 
@@ -39,12 +53,8 @@ function onPlaybackEnded(id: number) {
   st().set({ session: showcaseState(v.run, course, v.cursor, "after"), showcase: { ...v, stage: "after" } });
 }
 
-/** The recorded round a brain played on its own, if this showcase has one. */
-export function runForBrain(index: ShowcaseIndex, brainId: string): string | undefined {
-  return index.runs.find((r) => r.controllers_used.length === 1 && r.controllers_used[0] === brainId)?.id;
-}
-
-/** Load the showcase index, the course and the featured (or linked) run. Safe to call twice. */
+/** Load the showcase index and the course, then a linked run or a mix for the featured brain.
+ *  Safe to call twice. */
 export function initShowcase() {
   if (!subscribed) {
     subscribed = true;
@@ -60,17 +70,23 @@ export function initShowcase() {
       setView({ index });
       const params = new URLSearchParams(window.location.search);
       const linked = index.runs.find((r) => r.id === params.get("run"))?.id;
-      const id = linked ?? index.featured ?? index.runs[0]?.id;
-      if (!id) throw new Error("this showcase has no recorded runs yet");
-      const shot = Number(params.get("shot"));
-      await loadRun(id, Number.isInteger(shot) && shot > 0 ? shot - 1 : 0);
-      if (linked) setView({ started: true }); // a shared link goes straight to its shot
+      if (linked) {
+        const shot = Number(params.get("shot"));
+        await loadRun(linked, Number.isInteger(shot) && shot > 0 ? shot - 1 : 0);
+        setView({ started: true }); // a shared link goes straight to its shot
+        return;
+      }
+      const featured = index.runs.find((r) => r.id === index.featured) ?? index.runs[0];
+      if (!featured) throw new Error("this showcase has no recorded runs yet");
+      const asked = params.get("brain");
+      await selectBrain(asked && runsForBrain(index, asked).length ? asked : featured.controllers_used[0]);
     } catch (e) {
       st().set({ error: `Could not load the recorded showcase: ${errorText(e)}` });
     }
   })();
 }
 
+/** Play one recorded run exactly as it was recorded, from shot `k`. */
 export async function loadRun(id: string, k = 0) {
   try {
     const run = await showcaseSource.getShowcaseRun(id);
@@ -81,11 +97,27 @@ export async function loadRun(id: string, k = 0) {
   }
 }
 
-/** Watch another brain: its recorded round starts over from the first tee. */
+/** Watch a brain: a new mix of its recorded holes, from the first tee. Only the rounds the draw
+ *  picked are fetched. */
 export async function selectBrain(brainId: string) {
   const v = view();
-  const id = v?.index ? runForBrain(v.index, brainId) : undefined;
-  if (id && id !== v?.run?.id) await loadRun(id, 0);
+  const course = st().course;
+  if (!v?.index || !course) return;
+  const ids = runsForBrain(v.index, brainId).map((r) => r.id);
+  if (!ids.length) return;
+  const picks = drawHoles(
+    course.holes.map((h) => h.number),
+    ids,
+  );
+  try {
+    const loaded = await Promise.all(
+      [...new Set(picks.values())].map((id) => showcaseSource.getShowcaseRun(id)),
+    );
+    setView({ run: mixRound(new Map(loaded.map((r) => [r.id, r])), picks) }, { error: undefined });
+    goTo(0);
+  } catch (e) {
+    st().set({ error: `Could not load the recorded rounds: ${errorText(e)}` });
+  }
 }
 
 /** Stand at shot `k`, before it is played. */
@@ -119,14 +151,15 @@ export function playShot(k: number) {
   syncUrl();
 }
 
-/** The main button: play the shot on screen, pause or resume it, then move on when asked. */
+/** The main button: play the shot on screen, pause or resume it, then move on when asked. At the
+ *  end of a mixed round it draws a new mix; a single recorded run starts over. */
 export function primaryAction() {
   const v = view();
   if (!v?.run) return;
   const pb = st().playback;
   if (pb) return pb.pausedAt === undefined ? st().pausePlayback() : st().resumePlayback();
   if (v.stage !== "after") return playShot(v.cursor);
-  if (v.cursor >= v.run.shots.length - 1) return goTo(0);
+  if (v.cursor >= v.run.shots.length - 1) return isMixed(v.run) ? void selectBrain(brainOf(v.run)) : goTo(0);
   playShot(v.cursor + 1);
 }
 

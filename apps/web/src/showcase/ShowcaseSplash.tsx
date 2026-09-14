@@ -1,7 +1,8 @@
 import { useStore } from "../store";
 import { BRAINS, brainById } from "../ui/brains";
 import { Headshot } from "../ui/Headshot";
-import { closeSplash, runForBrain, selectBrain } from "./controller";
+import { runsForBrain } from "../lib/showcase";
+import { closeSplash, selectBrain } from "./controller";
 
 export const REPO_URL = "https://github.com/jameskbb/fly-golf";
 
@@ -37,7 +38,7 @@ export function ShowcaseSplash() {
         <h3 id="splash-pick">Pick a brain to watch</h3>
         <div className="splash-brains" role="radiogroup" aria-labelledby="splash-pick">
           {BRAINS.map((b) => {
-            const available = !!index && !!runForBrain(index, b.id);
+            const available = !!index && runsForBrain(index, b.id).length > 0;
             const on = current === b.id;
             return (
               <button
@@ -64,9 +65,11 @@ export function ShowcaseSplash() {
           <section>
             <h3>On this page</h3>
             <p>
-              Recorded rounds, one shot at a time. Play a shot, pause it, scrub through the swing, jump to any
-              hole and orbit the camera. The spikes, active neurons and motor outputs are the values recorded
-              for each shot. Nothing is simulated here, so it loads in seconds.
+              Recorded rounds, one shot at a time. Each brain recorded several complete rounds, and every hole
+              you watch is drawn at random from all of them, so each visit shows different holes; the page
+              says which round each hole came from. Play a shot, pause it, scrub through the swing, jump to
+              any hole and orbit the camera. The spikes, active neurons and motor outputs are the values
+              recorded for each shot. Nothing is simulated here, so it loads in seconds.
             </p>
           </section>
           <section>

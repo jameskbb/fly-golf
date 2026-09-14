@@ -1,5 +1,5 @@
 import { playHole } from "../actions";
-import { holeOf } from "../lib/showcase";
+import { holeOf, isMixed } from "../lib/showcase";
 import { IS_SHOWCASE } from "../lib/source";
 import { watchHole } from "../showcase/controller";
 import { useStore } from "../store";
@@ -34,6 +34,11 @@ export function Scorecard() {
   const water = new Set(course?.holes.filter((h) => h.water.length).map((h) => h.number) ?? []);
   const used = session.controllers_used ?? [];
   const mixed = used.length > 1;
+  // a showcase mix: which recorded round each hole was drawn from
+  const sources = isMixed(recorded) ? recorded.holeSources : undefined;
+  const seedOf = (hole: number) => sources?.find((s) => s.hole === hole)?.seed;
+  const roundsUsed = new Set(sources?.map((s) => s.seed)).size;
+  const roundsWord = `${roundsUsed} recorded round${roundsUsed === 1 ? "" : "s"}`;
   return (
     <div className="scorecard" aria-label="Scorecard">
       <div className="sc-title">
@@ -43,7 +48,7 @@ export function Scorecard() {
           {used.length > 0 &&
             !used.includes(session.controller.id) &&
             ` · next: ${names([session.controller.id])}`}{" "}
-          · round {session.round_seed}
+          {sources ? `· holes from ${roundsWord}` : `· round ${session.round_seed}`}
         </span>
         {mixed && (
           <span className="tag mixed" title="More than one brain has played this round">
@@ -108,6 +113,15 @@ export function Scorecard() {
             ))}
             <td />
           </tr>
+          {sources && (
+            <tr className="muted">
+              <td title="The recorded round (seed) each hole was drawn from">ROUND</td>
+              {card.map((c) => (
+                <td key={c.hole}>{seedOf(c.hole) ?? ""}</td>
+              ))}
+              <td />
+            </tr>
+          )}
         </tbody>
       </table>
       {session.round_complete && totals && (
@@ -119,6 +133,7 @@ export function Scorecard() {
             : totals.strokes * 2 < 100
               ? "The fly would break 100."
               : "Not breaking 100 yet."}
+          {sources && ` Nine real recorded holes, drawn from ${roundsWord} of this brain.`}
         </div>
       )}
     </div>

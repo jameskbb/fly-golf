@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { ShotRecord } from "@fly-golf/protocol";
 import { timelineFor } from "../lib/playback";
-import { holeOf, holeStarts } from "../lib/showcase";
+import { holeOf, holeStarts, isMixed, runsForBrain } from "../lib/showcase";
 import { useFrameClock } from "../lib/useFrameClock";
 import { playbackTime, useStore } from "../store";
 import { BRAINS } from "../ui/brains";
@@ -14,7 +14,6 @@ import {
   prevShot,
   primaryAction,
   replayShot,
-  runForBrain,
   seek,
   selectBrain,
   watchHole,
@@ -97,10 +96,14 @@ export function ShowcaseControls() {
     : view.stage !== "after"
       ? "▶ Play shot"
       : k === last
-        ? "↺ Restart round"
+        ? isMixed(run)
+          ? "↺ New mix of holes"
+          : "↺ Restart round"
         : "▶ Next shot";
   const holes = course?.holes.map((h) => h.number) ?? [...starts.keys()].sort((a, b) => a - b);
   const current = shot.controller.id;
+  const source = isMixed(run) ? run.holeSources.find((h) => h.hole === hole) : undefined;
+  const rounds = view.index ? runsForBrain(view.index, current).length : 1;
 
   return (
     <>
@@ -182,7 +185,7 @@ export function ShowcaseControls() {
         </div>
         <div className="showcase-brains" role="radiogroup" aria-label="Brain">
           {BRAINS.map((b) => {
-            const available = !!view.index && !!runForBrain(view.index, b.id);
+            const available = !!view.index && runsForBrain(view.index, b.id).length > 0;
             const on = current === b.id;
             return (
               <button
@@ -193,7 +196,7 @@ export function ShowcaseControls() {
                 disabled={!available}
                 title={
                   available
-                    ? `Watch ${b.persona.name}'s recorded round from the first tee`
+                    ? `Watch ${b.persona.name} from the first tee, each hole drawn from its recorded rounds`
                     : "No recorded round for this brain yet"
                 }
                 onClick={() => void selectBrain(b.id)}
@@ -207,11 +210,20 @@ export function ShowcaseControls() {
             );
           })}
         </div>
-        <p className="recorded-note">
-          Recorded round, seed {run.round.seed}, simulated at commit{" "}
-          <span className="mono">{run.source.git.commit.slice(0, 7)}</span>. Switching brains starts that
-          brain&apos;s round from the first tee.
-        </p>
+        {source ? (
+          <p className="recorded-note">
+            Hole {hole} is from recorded round seed {source.seed}, simulated at commit{" "}
+            <span className="mono">{source.commit.slice(0, 7)}</span>. Each hole is drawn at random from this
+            brain&apos;s {rounds} recorded round{rounds === 1 ? "" : "s"}, and every round recorded is
+            included. Finishing the round or switching brains draws a new mix.
+          </p>
+        ) : (
+          <p className="recorded-note">
+            Recorded round, seed {run.round.seed}, simulated at commit{" "}
+            <span className="mono">{run.source.git.commit.slice(0, 7)}</span>. Switching brains starts a mix
+            of that brain&apos;s recorded holes from the first tee.
+          </p>
+        )}
       </div>
       {error && (
         <div className="toast" onClick={() => set({ error: undefined })}>
