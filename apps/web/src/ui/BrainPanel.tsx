@@ -1,8 +1,9 @@
-import { MOTOR_CHANNELS, type ClubChain } from "@fly-golf/protocol";
+import { MOTOR_CHANNELS, type Club, type ClubChain } from "@fly-golf/protocol";
 import { IS_SHOWCASE } from "../lib/source";
 import { useFrameClock } from "../lib/useFrameClock";
 import { playbackTime, selectLastRecord, useStore } from "../store";
 import { controllerLabel } from "./brains";
+import { ClubIcon } from "./ClubIcon";
 import { Meter, Sparkline, Stat, fmt, fmtInt } from "./widgets";
 
 /** Seconds of playback over which the showcase reveals a shot's recorded 400 ms of activity. */
@@ -53,7 +54,7 @@ const CHAIN_LABEL: Record<string, string> = {
 };
 
 /** Senses -> (descending-neuron activity ->) readout -> club_reach -> club, for the shot on screen. */
-function ClubChainView({ chain, clubName }: { chain: ClubChain; clubName?: string }) {
+function ClubChainView({ chain, club }: { chain: ClubChain; club?: Club }) {
   const neural = chain.readout !== "mock heuristic";
   let decision = chain.rule ?? "";
   if (chain.readout === "trained" && chain.gate) {
@@ -89,8 +90,8 @@ function ClubChainView({ chain, clubName }: { chain: ClubChain; clubName?: strin
           {decision}
         </li>
         <li>
-          <span className="chain-step">club_reach</span> {fmt(chain.club_reach, 3)} →{" "}
-          <b>{clubName ?? chain.club}</b>
+          <span className="chain-step">club_reach</span> {fmt(chain.club_reach, 3)} → <ClubIcon club={club} />
+          <b>{club?.name ?? chain.club}</b>
           {chain.forced_club ? " (practice green: putter only)" : ""}
         </li>
       </ol>
@@ -249,7 +250,9 @@ export function BrainPanel() {
             ))}
             {record.stroke.club && !record.club_chain && (
               <p className="small club-note">
-                club_reach {record.motor.channels.club_reach?.toFixed(2)} → <b>{record.stroke.club.name}</b>
+                club_reach {record.motor.channels.club_reach?.toFixed(2)} →{" "}
+                <ClubIcon club={record.stroke.club} />
+                <b>{record.stroke.club.name}</b>
                 {record.stroke.forced_club ? " (practice green: putter only)" : ""}
               </p>
             )}
@@ -259,7 +262,7 @@ export function BrainPanel() {
         )}
       </section>
 
-      {record?.club_chain && <ClubChainView chain={record.club_chain} clubName={record.stroke.club?.name} />}
+      {record?.club_chain && <ClubChainView chain={record.club_chain} club={record.stroke.club} />}
 
       <footer className="honesty">
         Real anatomical wiring (MaleCNS v1.0, CC BY 4.0). Neuron dynamics, sensory and motor mappings are

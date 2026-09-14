@@ -568,6 +568,13 @@ code,
 .cell.club .v {
   color: #ffe39a;
 }
+/* Line icon of the chosen club (ClubIcon), sized to the name's cap height and drawn in its colour. */
+.club-icon {
+  width: 0.85em;
+  height: 0.85em;
+  margin-right: 0.3em;
+  vertical-align: -0.08em;
+}
 
 /* ---------- trained readout */
 .badge.trained {

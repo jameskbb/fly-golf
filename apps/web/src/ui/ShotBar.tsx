@@ -3,6 +3,7 @@ import { selectLastRecord, useStore } from "../store";
 import { metresToFeet } from "../lib/coords";
 import { distanceLabel } from "../lib/terrain";
 import { controllerLabel } from "./brains";
+import { ClubIcon } from "./ClubIcon";
 import { fmt } from "./widgets";
 
 type Out = ShotRecord["outcome"];
@@ -77,7 +78,16 @@ export function ShotBar() {
         <div className="cell club">
           <span className="k">CLUB</span>
           <span className="v">
-            {chosen?.stroke.club ? chosen.stroke.club.name : playback ? "choosing…" : "—"}
+            {chosen?.stroke.club ? (
+              <>
+                <ClubIcon club={chosen.stroke.club} />
+                {chosen.stroke.club.name}
+              </>
+            ) : playback ? (
+              "choosing…"
+            ) : (
+              "—"
+            )}
           </span>
           <span className="s">
             {chosen?.stroke.club_reach != null
