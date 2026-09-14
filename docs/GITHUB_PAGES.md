@@ -135,3 +135,19 @@ link to one recorded run (`?run=<id>&shot=<n>`) still plays that run exactly as 
 
 Shots play one at a time: a shot plays when asked and then waits. The splash reopens from
 **About this demo**.
+
+**Watch the brain fire** (the button at the top right of the course, or key **B**) replays each
+MaleCNS shot's recorded activity on a map of the fly's brain. The dots are real anatomy: MaleCNS
+v1.0 cell-body positions, the brain seen from behind and binned into a halftone
+(`apps/web/public/anatomy/malecns-brain-somata.json`, 21 kB, built by
+`services/sim/scripts/build_soma_map.py`; CC BY 4.0). The light comes only from the shot's recorded
+`neural_summary`: the whole network's spikes per 10 ms brighten every dot together; each sensory and
+descending-neuron population glows at its recorded mean rate per neuron, over 0–150 ms and then over
+the 150–400 ms readout window; and the 18 named descending neurons each glow at their own recorded
+rate. Which individual neurons fired is not recorded, so no single neuron is shown firing on its own.
+The antenna, eye-rim and leg neurons have their cell bodies outside the imaged brain, so they are
+listed as readings, not placed on the map. The 400 ms of neural time replay about 6× slower while
+the fly picks its club, addresses the ball and lines up (in the simulation all of it happened
+before the fly moved). The result holds through the swing, and the map goes dark while the ball
+moves. Mock shots have no neural activity, and the view says so. With reduced motion, the whole
+window shows at once. The same view works in the live app.

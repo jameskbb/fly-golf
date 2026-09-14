@@ -12,6 +12,7 @@ import { RunsPanel } from "./ui/RunsPanel";
 import { Scorecard } from "./ui/Scorecard";
 import { ModesPanel } from "./ui/ModesPanel";
 import { ShowcaseApp } from "./showcase/ShowcaseApp";
+import { BrainFiring, toggleFiring } from "./ui/BrainFiring";
 
 /** One app, two data sources: the live backend, or recorded runs on GitHub Pages (lib/source.ts). */
 export function App() {
@@ -39,6 +40,7 @@ function LiveApp() {
       else if (e.key === "t") st.set({ techOpen: !st.techOpen });
       else if (e.key === "c") st.set({ cardOpen: !st.cardOpen });
       else if (e.key === "m") st.set({ modesOpen: !st.modesOpen, techOpen: false, runsOpen: false });
+      else if (e.key === "b") toggleFiring();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -66,6 +68,7 @@ function LiveApp() {
       </main>
       <BrainPanel />
       <ShotBar />
+      <BrainFiring />
     </div>
   );
 }

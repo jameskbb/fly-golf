@@ -1,0 +1,381 @@
+/* "Brain firing" (BrainFiring.tsx): a picture-in-picture over the course on desktop, a block in
+   the page on narrow screens. Uses the app's tokens; --tone is the brain's colour. */
+
+.firing {
+  position: fixed;
+  top: 72px; /* header 58px + 14px */
+  right: 354px; /* brain panel 340px + 14px */
+  z-index: 6;
+  width: 336px;
+  display: flex;
+  justify-content: flex-end;
+}
+.firing:not(.open) {
+  width: auto;
+}
+.firing :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.firing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 11px;
+  font: 600 13px var(--body);
+  color: var(--text);
+  background: rgba(8, 12, 10, 0.8);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.firing-toggle:hover {
+  border-color: var(--accent);
+}
+.firing-toggle kbd,
+.firing-close {
+  font: 600 11px var(--mono);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 5px;
+  background: transparent;
+}
+.dot-glyph {
+  width: 13px;
+  height: 13px;
+  fill: var(--live);
+}
+
+.firing-card {
+  width: 100%;
+  max-height: calc(100vh - 58px - 96px - 28px);
+  overflow-y: auto;
+  padding: 10px 14px 12px;
+  background: rgba(5, 10, 8, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--tone);
+  border-radius: 10px;
+}
+
+.firing-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.firing-title {
+  margin: 0;
+  font: 700 20px/1 var(--display);
+  letter-spacing: 0.05em;
+}
+.firing-who {
+  font: 600 12px var(--mono);
+  color: var(--tone);
+}
+.firing-close {
+  margin-left: auto;
+  font-size: 14px;
+  line-height: 18px;
+  cursor: pointer;
+}
+.firing-close:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+/* the neural clock */
+.firing-time {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  margin: 6px 0 2px;
+  min-height: 44px;
+}
+.firing-big {
+  font: 700 40px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  min-width: 2.1em;
+  white-space: nowrap;
+}
+.firing-unit {
+  margin-left: 3px;
+  font: 600 15px var(--display);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.firing-sub {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: #c7d3cc;
+}
+
+/* the halftone brain */
+.firing-map {
+  position: relative;
+  width: 100%;
+  margin: 8px 0 2px;
+}
+.firing-map canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.map-label {
+  position: absolute;
+  transform: translate(-50%, -150%);
+  padding: 0 3px;
+  font: 500 9.5px/1.2 var(--mono);
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow:
+    0 0 3px #000,
+    0 0 6px #000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.map-label.sensory {
+  color: #d9f0ff;
+}
+.map-label b {
+  font-weight: 700;
+}
+.map-side {
+  position: absolute;
+  top: -2px;
+  font: 600 10px var(--mono);
+  color: var(--muted);
+}
+.map-side.left {
+  left: 0;
+}
+.map-side.right {
+  right: 0;
+}
+.firing-map-empty {
+  margin: 12px 0;
+  font: 12px var(--mono);
+  color: var(--muted);
+}
+
+/* the recorded bins */
+.firing-strip svg {
+  display: block;
+  width: 100%;
+  height: 34px;
+}
+.firing-strip .bar.past {
+  fill: var(--tone);
+  opacity: 0.85;
+}
+.firing-strip .bar.now {
+  fill: var(--accent);
+}
+.firing-strip .bar.future {
+  fill: #fff;
+  opacity: 0.13;
+}
+.firing-strip .divider {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  vector-effect: non-scaling-stroke;
+}
+.firing-windows {
+  display: grid;
+  gap: 6px;
+  margin-top: 3px;
+  font: 10px/1.25 var(--mono);
+  color: var(--muted);
+}
+.firing-windows span + span {
+  padding-left: 6px;
+}
+.firing-windows .on {
+  color: var(--text);
+}
+
+/* recorded rates in the current window, one reading per population */
+.firing-readings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px 10px;
+  margin: 7px 0 0;
+  padding: 6px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.firing-readings-title {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.reading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11.5px;
+}
+.reading-name {
+  color: #c7d3cc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reading-hz {
+  font: 10.5px var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+.rd-sw {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.rd-sw.outside {
+  border-radius: 1px;
+}
+.rd-sw.sensory {
+  background: var(--sense);
+  box-shadow: 0 0 6px var(--sense);
+}
+.rd-sw.motor {
+  background: var(--tone);
+  box-shadow: 0 0 6px var(--tone);
+}
+.firing-legend .sw.square {
+  border-radius: 1px;
+  background: var(--sense);
+}
+
+.firing-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 7px 0 0;
+  padding: 6px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+.firing-legend li {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.firing-legend .sw {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.sw.sense {
+  background: var(--sense);
+  box-shadow: 0 0 5px var(--sense);
+}
+.sw.tone {
+  background: var(--tone);
+  box-shadow: 0 0 5px var(--tone);
+}
+.sw.ring {
+  border: 1.5px solid #fff;
+}
+.sw.rest {
+  background: #6f8a7c;
+}
+.firing-legend .scale {
+  font: 10px var(--mono);
+}
+.firing-legend .scale b {
+  width: 46px;
+  height: 6px;
+  border-radius: 3px;
+  /* zero is dark; anything that fired is drawn at least this bright (BrainFiring.tsx `glow`) */
+  background: linear-gradient(
+    90deg,
+    #1a2520 0 8%,
+    color-mix(in srgb, var(--tone) 25%, #1a2520) 8%,
+    var(--tone)
+  );
+}
+
+.firing-caption {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.firing-caption summary {
+  cursor: pointer;
+  color: #c7d3cc;
+}
+.firing-caption p {
+  margin: 6px 0 0;
+}
+.firing-caption b {
+  color: #c7d3cc;
+  font-weight: 600;
+}
+.firing-caption .attribution {
+  font-size: 10px;
+}
+
+/* Mock: nothing to show, and say so */
+.firing-none {
+  margin: 8px 0 2px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #c7d3cc;
+}
+.firing-none p {
+  margin: 4px 0 0;
+}
+.firing-none .firing-none-lede {
+  font: 700 19px/1.1 var(--display);
+  letter-spacing: 0.03em;
+  color: var(--mock);
+}
+
+@media (min-width: 1001px) {
+  /* the drawers open in the same corner; they win while they are open */
+  .firing.under-drawer {
+    display: none;
+  }
+}
+
+@media (max-width: 1000px) {
+  .app:has(> .firing) {
+    grid-template-rows: 58px 60vh auto auto auto;
+    grid-template-areas: "hdr" "stage" "bar" "firing" "brain";
+  }
+  .firing,
+  .firing:not(.open) {
+    position: static;
+    grid-area: firing;
+    width: auto;
+    max-width: 100vw;
+    display: block;
+    padding: 10px 12px 0;
+    background: var(--panel);
+  }
+  .firing-toggle {
+    width: 100%;
+    justify-content: center;
+    border-radius: 8px;
+    padding: 9px 12px;
+  }
+  .firing-card {
+    max-height: none;
+    backdrop-filter: none;
+  }
+}

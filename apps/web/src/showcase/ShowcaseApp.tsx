@@ -7,6 +7,7 @@ import { ShotBar } from "../ui/ShotBar";
 import { TechPanel } from "../ui/TechPanel";
 import { Scorecard } from "../ui/Scorecard";
 import { ModesPanel } from "../ui/ModesPanel";
+import { BrainFiring, toggleFiring } from "../ui/BrainFiring";
 import { ShowcaseControls } from "./ShowcaseControls";
 import { ShowcaseSplash } from "./ShowcaseSplash";
 import { closeSplash, initShowcase, nextShot, prevShot, primaryAction, replayShot } from "./controller";
@@ -43,6 +44,7 @@ export function ShowcaseApp() {
       else if (e.key === "t") st.set({ techOpen: !st.techOpen, modesOpen: false });
       else if (e.key === "c") st.set({ cardOpen: !st.cardOpen });
       else if (e.key === "m") st.set({ modesOpen: !st.modesOpen, techOpen: false });
+      else if (e.key === "b") toggleFiring();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -61,6 +63,7 @@ export function ShowcaseApp() {
       </main>
       <BrainPanel />
       <ShotBar />
+      <BrainFiring />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { MOTOR_CHANNELS, type Club, type ClubChain } from "@fly-golf/protocol";
+import { replayWindowS } from "../lib/brainFiring";
 import { IS_SHOWCASE } from "../lib/source";
 import { useFrameClock } from "../lib/useFrameClock";
 import { playbackTime, selectLastRecord, useStore } from "../store";
@@ -6,17 +7,16 @@ import { controllerLabel } from "./brains";
 import { ClubIcon } from "./ClubIcon";
 import { Meter, Sparkline, Stat, fmt, fmtInt } from "./widgets";
 
-/** Seconds of playback over which the showcase reveals a shot's recorded 400 ms of activity. */
-const REVEAL_S = 1.6;
-
 /** Network spikes per 10 ms bin. In the showcase the recorded bins are revealed, slowed down,
- *  while the fly chooses its club and addresses the ball; the values are the recorded ones. */
+ *  while the fly chooses its club and addresses the ball (in step with the Brain firing view);
+ *  the values are the recorded ones. */
 function SpikeTrace({ values }: { values: number[] }) {
   const playback = useStore((s) => s.playback);
   const animated = IS_SHOWCASE && !!playback && !playback.replay;
-  const t = animated && playback ? playbackTime(playback) : REVEAL_S;
-  useFrameClock(animated && playback?.pausedAt === undefined && t < REVEAL_S);
-  const progress = animated ? Math.min(1, t / REVEAL_S) : undefined;
+  const revealS = playback ? replayWindowS(playback.record) : 1;
+  const t = animated && playback ? playbackTime(playback) : revealS;
+  useFrameClock(animated && playback?.pausedAt === undefined && t < revealS);
+  const progress = animated ? Math.min(1, t / revealS) : undefined;
   return (
     <div className="spark-wrap">
       <span className="spark-caption">

@@ -51,6 +51,7 @@ export interface AppState {
   runsOpen: boolean;
   cardOpen: boolean;
   modesOpen: boolean;
+  firingOpen: boolean; // the "Brain firing" view (ui/BrainFiring.tsx)
   set: (patch: Partial<AppState>) => void;
   startPlayback: (record: ShotRecord, replay: boolean) => void;
   endPlayback: () => void;
@@ -71,6 +72,7 @@ export const useStore = create<AppState>((set) => ({
   runsOpen: false,
   cardOpen: true,
   modesOpen: false,
+  firingOpen: false,
   set: (patch) => set(patch),
   startPlayback: (record, replay) =>
     set({ playback: { record, replay, id: ++nextPlaybackId, startedAt: performance.now() } }),

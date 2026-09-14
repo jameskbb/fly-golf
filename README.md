@@ -45,8 +45,14 @@ page. Pick a brain and watch nine holes one shot at a time: each hole is drawn a
 that brain's recorded rounds, so every visit shows different play, and the scorecard says which
 round each hole came from. Pause, scrub through a swing, jump to any hole or stroke, orbit the
 camera, and read each shot's recorded spikes, active neurons, population rates, motor channels
-and club choice. To watch the brain play new shots as they are
-computed, [run it locally](#run-it-locally): the connectome download needs more than 1 GB of disk.
+and club choice. Press **Watch the brain fire** (or **B**) to see each shot's recorded 400 ms of
+activity light up a map of the fly's brain, slowed down while the fly lines up. The dots are the
+real MaleCNS v1.0 cell-body positions, binned; the light is only what each shot recorded:
+network spikes per 10 ms, each sensory and descending-neuron population's mean rate before and
+during the 150–400 ms readout window, and 18 named descending neurons' own rates. Which single
+neurons fired is not recorded, so none is shown firing alone, and Mock shots, which have no
+brain, show nothing. To watch the brain play new shots as they are computed,
+[run it locally](#run-it-locally): the connectome download needs more than 1 GB of disk.
 
 Each brain recorded ten complete rounds, seeds 7–16, fixed before any round was played. Every
 one of them is in the demo; none was picked from several attempts:
@@ -487,6 +493,9 @@ controls, and the web demo. Next:
 - **Connectome:** MaleCNS v1.0 © the MaleCNS collaboration (FlyEM/HHMI Janelia, Cambridge, MRC
   LMB, Google Research), CC BY 4.0. Cite https://doi.org/10.1016/j.cell.2026.08.015. No
   connectome data is stored in this repository; `make data` fetches it from the official release.
+  The only derived file is the web app's small binned map of brain cell-body positions
+  (`apps/web/public/anatomy/`, built by `services/sim/scripts/build_soma_map.py`), which keeps
+  this attribution.
 - **Neural model:** the whole-brain LIF model of Shiu *et al.* 2024 (reference implementation MIT).
   Fly Golf's engine, data compiler and source lock are implemented in this repository.
 - **History:** early versions of Fly Golf used portions of the open-source
