@@ -821,7 +821,10 @@ def refit(src_dir: Path, out_dir: Path, log: Callable[[str], None] = print, feat
     run's) can switch to the DN-type x side rates when the run saved them."""
     src = Path(src_dir)
     rep = json.loads((src / "report.json").read_text())
-    z = np.load(src / "features.npz")
+    # Decompress every array once: indexing an NpzFile re-reads the whole array on every access,
+    # which made building the rows quadratic in the number of situations.
+    with np.load(src / "features.npz") as npz:
+        z = {k: npz[k] for k in npz.files}
     if "fixed" not in z:
         raise ValueError(f"{src} predates saved fixed channels; re-run `fly-golf train` instead")
     from ..brain.trained import load_readout
