@@ -1,0 +1,82 @@
+/* ---------- brain personas: headshots on the brain picker and in "What's the difference?" */
+.headshot {
+  --face: 56px;
+  position: relative;
+  flex: none;
+  width: var(--face);
+  height: var(--face);
+  overflow: hidden;
+  border-radius: 6px;
+  /* a neutral ground: the character carries the contrast, the tone is the rule underneath */
+  background: #1b2320;
+  box-shadow: inset 0 -3px 0 var(--tone, var(--line));
+}
+.headshot.lg {
+  --face: 76px;
+}
+.headshot.mock {
+  --tone: var(--mock);
+}
+.headshot.live {
+  --tone: var(--live);
+}
+.headshot.trained {
+  --tone: var(--trained);
+}
+.headshot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* until the model has been rendered: the tile, quietly */
+.headshot:empty::after {
+  content: "";
+  position: absolute;
+  inset: 30% 30% 22%;
+  border-radius: 50% 50% 40% 40%;
+  background: var(--tone);
+  opacity: 0.18;
+}
+
+.brains .brain-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.brain-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.brain-card.on .headshot {
+  box-shadow:
+    inset 0 -3px 0 var(--tone),
+    0 0 0 1px var(--tone);
+}
+
+.mode-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.mode-body > div {
+  min-width: 0;
+}
+.mode-look {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text);
+}
+.mode-look b {
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .headshot {
+    --face: 44px;
+  }
+  .brains .brain-card {
+    gap: 8px;
+  }
+}

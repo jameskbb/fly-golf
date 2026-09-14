@@ -1,0 +1,206 @@
+{
+  "type": "shot_result",
+  "protocol_version": 2,
+  "seq": 1,
+  "data": {
+    "record_type": "shot",
+    "schema_version": 1,
+    "experiment_id": "putting-v1",
+    "run_id": "20260913T000000Z-fixture",
+    "shot_id": "h000-s01",
+    "hole_index": 0,
+    "stroke_number": 1,
+    "timestamp_utc": "2026-09-13T00:00:00+00:00",
+    "git": {
+      "commit": "0000000000000000000000000000000000000000",
+      "dirty": false
+    },
+    "versions": {
+      "fly_golf": "0.1.0",
+      "protocol": 1,
+      "physics": "putting-physics-v1",
+      "scenario": "putting-scenario-v1",
+      "reward": "putting-reward-v1",
+      "sensory_mapping": "proxy-sensory-v0.1",
+      "motor_mapping": "motor-mapping-v1"
+    },
+    "seed": 7,
+    "controller_seed": 7000,
+    "controller": {
+      "id": "mock",
+      "kind": "mock",
+      "label": "MOCK CONTROLLER",
+      "is_mock": true,
+      "description": "Deterministic hand-written putting heuristic with seeded noise. Development infrastructure only - no neurons, no connectome.",
+      "neuron_count": null,
+      "edge_count": null,
+      "connectome": null,
+      "model": "mock-heuristic-v1",
+      "config": {
+        "aim_noise_deg": 1.5,
+        "power_noise": 0.05
+      }
+    },
+    "decision_window_ms": 400.0,
+    "scenario": {
+      "seed": 7,
+      "green": {
+        "stimp_ft": 9.295,
+        "slope_x": -0.002199,
+        "slope_y": -0.003064,
+        "radius_m": 12.0,
+        "center": [
+          0.0,
+          0.0
+        ],
+        "rolling_decel": 0.5910276882414981
+      },
+      "cup": [
+        0.0,
+        0.0
+      ],
+      "ball": [
+        -1.327709,
+        -0.304513
+      ],
+      "address_heading_rad": 0.17856965,
+      "version": "putting-scenario-v1",
+      "distance_m": 1.3621818365585412
+    },
+    "initial_state": {
+      "ball": [
+        -1.327709,
+        -0.304513
+      ],
+      "strokes_before": 0,
+      "observation": {
+        "ball": [
+          -1.327709,
+          -0.304513
+        ],
+        "cup": [
+          0.0,
+          0.0
+        ],
+        "distance_m": 1.3621818365585412,
+        "bearing_world_rad": 0.22545306211759514,
+        "body_heading_rad": 0.17856965,
+        "bearing_rel_rad": 0.04688341211759495,
+        "slope_along": -0.0028283007595619396,
+        "slope_cross": 0.0024948771138998717,
+        "stimp_ft": 9.295,
+        "ball_at_rest": true,
+        "strokes": 0
+      }
+    },
+    "sensory": {
+      "channels": {
+        "target_left": 0.0596938143002376,
+        "target_right": 0.0,
+        "target_distance": 0.1362181836558541,
+        "slope_uphill": 0.0,
+        "slope_downhill": 0.094276691985398,
+        "slope_fall_left": 0.08316257046332906,
+        "slope_fall_right": 0.0,
+        "green_speed": 0.411875,
+        "ball_at_rest": 1.0
+      },
+      "encoder": "proxy-v0",
+      "version": "proxy-sensory-v0.1"
+    },
+    "neural_summary": null,
+    "motor": {
+      "channels": {
+        "aim_left": 0.07594300950743972,
+        "aim_right": 0.0,
+        "stroke_power": 0.3466187197785099,
+        "stroke_tempo": 0.5483685680311712,
+        "face_open": 0.0,
+        "face_closed": 0.030265850272263452,
+        "strike": 1.0
+      },
+      "source": "mock"
+    },
+    "stroke": {
+      "speed_mps": 1.438899048332,
+      "heading_rad": 0.213502050704221,
+      "contact": true,
+      "aim_deg": 1.898575237685993,
+      "face_deg": 0.12106340108905381,
+      "start_offset_deg": 2.0014791286116886,
+      "power": 0.3466187197785099,
+      "tempo": 0.5483685680311712,
+      "smash": 0.9883915436725189,
+      "backswing_s": 0.5758157159844144,
+      "downswing_s": 0.23419577183625945,
+      "body_heading_rad": 0.17856965,
+      "motor_mapping_version": "motor-mapping-v1"
+    },
+    "trajectory": {
+      "sample_hz": 60,
+      "points": [
+        [
+          0.0,
+          -1.327709,
+          -0.304513,
+          0.025187659923
+        ],
+        [
+          0.016666666666666666,
+          -1.3043694581970866,
+          -0.29944970374635216,
+          0.025120822330854217
+        ],
+        [
+          0.03333333333333333,
+          -1.2811860754609417,
+          -0.2944152728371853,
+          0.025054416575911745
+        ],
+        [
+          1.2,
+          -0.045932612403940705,
+          -0.016045373533875446,
+          0.02148516883918406
+        ],
+        [
+          1.2041666666666666,
+          0.0,
+          0.0,
+          -0.021335
+        ]
+      ],
+      "events": [
+        {
+          "t": 1.1958333333333333,
+          "type": "lip",
+          "speed": 0.746239584263173,
+          "offset": 0.05173383636003325
+        },
+        {
+          "t": 1.2041666666666666,
+          "type": "holed",
+          "speed": 0.7414784584069711,
+          "offset": 0.04558765605108161
+        }
+      ]
+    },
+    "outcome": {
+      "outcome": "holed",
+      "holed": true,
+      "start_distance_m": 1.3621818365585412,
+      "final_distance_m": 0.0,
+      "long_by_m": 0.0,
+      "miss_side": "center",
+      "lip_outs": 1,
+      "closest_approach_m": 0.04558765605108161,
+      "reward": 1.0,
+      "strokes": 1,
+      "episode_state": "holed"
+    },
+    "reward": 1.0,
+    "sim_duration_s": 1.2041666666666666,
+    "wall_duration_s": 0.001,
+    "trace_file": null
+  }
+}

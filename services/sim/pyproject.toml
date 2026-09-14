@@ -1,0 +1,56 @@
+[project]
+name = "fly-golf-sim"
+version = "0.1.0"
+description = "Fly Golf simulation backend: deterministic putting physics, controller interface, MaleCNS neural adapter, FastAPI/WebSocket server."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "numpy>=2.0",
+    "numba>=0.60",
+    "pyarrow>=16",
+    "pandas>=2.2",
+]
+
+[project.scripts]
+fly-golf = "fly_golf.cli:main"
+fly-golf-data = "fly_golf.data.prepare:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+    "ruff>=0.6",
+]
+reference = [
+    "brian2>=2.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fly_golf"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: requires the compiled MaleCNS v1.0 graph (run `make data`); skipped when absent",
+]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "NPY"]
+ignore = ["E741"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/fly_golf/brain/malecns/engine.py" = ["E701", "E702"]

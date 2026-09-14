@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python (lint, tests, smoke)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/sim
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-groups --frozen
+      - name: Ruff lint
+        run: uv run ruff check .
+      - name: Ruff format
+        run: uv run ruff format --check .
+      - name: Tests (no connectome; integration tests auto-skip)
+        run: uv run pytest -q
+      - name: Backend startup smoke test
+        run: uv run python -m fly_golf.smoke
+
+  web:
+    name: Web (lint, typecheck, tests, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm --filter @fly-golf/web lint
+      - name: Typecheck
+        run: pnpm -r typecheck
+      - name: Tests (protocol contract + frontend)
+        run: pnpm -r test
+      - name: Build
+        run: pnpm --filter @fly-golf/web build

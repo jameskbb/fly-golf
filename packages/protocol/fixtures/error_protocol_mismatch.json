@@ -1,0 +1,10 @@
+{
+  "type": "error",
+  "protocol_version": 2,
+  "seq": 0,
+  "data": {
+    "code": "protocol_mismatch",
+    "message": "client protocol 2 != server protocol 1; rebuild the frontend and backend from the same commit",
+    "server_protocol_version": 1
+  }
+}

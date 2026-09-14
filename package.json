@@ -1,0 +1,30 @@
+{
+  "name": "fly-golf",
+  "private": true,
+  "description": "Can a fruit fly break 100? A simulated MaleCNS connectome plays golf.",
+  "license": "MIT",
+  "packageManager": "pnpm@12.4.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "pnpm install && uv --directory services/sim sync",
+    "dev": "concurrently -k -n sim,web -c yellow,cyan \"pnpm run dev:sim\" \"pnpm run dev:web\"",
+    "dev:sim": "uv --directory services/sim run fly-golf serve --reload",
+    "dev:web": "pnpm --filter @fly-golf/web dev",
+    "test": "pnpm run test:sim && pnpm run test:web",
+    "test:sim": "uv --directory services/sim run pytest",
+    "test:web": "pnpm -r --if-present run test",
+    "lint": "pnpm run lint:sim && pnpm run lint:web",
+    "lint:sim": "uv --directory services/sim run ruff check . && uv --directory services/sim run ruff format --check .",
+    "lint:web": "pnpm -r --if-present run lint && pnpm -r --if-present run typecheck",
+    "format": "uv --directory services/sim run ruff format . && pnpm -r --if-present run format",
+    "build": "pnpm --filter @fly-golf/web build",
+    "data": "uv --directory services/sim run fly-golf-data prepare",
+    "data:status": "uv --directory services/sim run fly-golf-data status",
+    "putt": "uv --directory services/sim run fly-golf putt --controller mock --seed 7"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

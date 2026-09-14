@@ -1,0 +1,44 @@
+# --- Connectome data: NEVER commit (large, separately licensed, fetched by tooling) ---
+data/raw/
+data/normalized/
+data/compiled/
+*.feather
+*.arrow
+*.npz
+
+# --- Runtime output (experiment runs, traces, checkpoints) ---
+runs/
+outputs/
+*.jsonl.gz
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# --- Node / frontend ---
+node_modules/
+apps/web/dist/
+*.tsbuildinfo
+.vite/
+
+# --- Secrets / local config ---
+.env
+.env.*
+!.env.example
+*.token
+
+# --- Editors / OS ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local smoke-test runs
+.smoke-runs/

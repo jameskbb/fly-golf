@@ -1,0 +1,22 @@
+{
+  "name": "@fly-golf/protocol",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed WebSocket/REST protocol shared by the Fly Golf frontend and backend",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.1",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.0"
+  }
+}
