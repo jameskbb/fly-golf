@@ -249,8 +249,9 @@ def test_stratified_folds_and_pca_choices():
     folds = _stratified_folds(labels, 0)
     for k in range(CV_FOLDS):  # every training fold sees both classes
         assert labels[folds != k].any() and (~labels[folds != k]).any() and labels[folds == k].any()
-    assert _k_choices(481) == [4, 8, 16, 32, 64]  # review finding: 64 used to be tried twice
-    assert _k_choices(64) == [4, 8, 16, 32, 64] and _k_choices(14) == [4, 8, 14]
+    assert _k_choices(481) == [4, 8, 16, 32, 64, 128, 256]
+    assert _k_choices(64) == [4, 8, 16, 32, 64]  # review finding: 64 used to be tried twice
+    assert _k_choices(200) == [4, 8, 16, 32, 64, 128, 200] and _k_choices(14) == [4, 8, 14]
 
 
 def test_bench_needs_at_least_one_round():
