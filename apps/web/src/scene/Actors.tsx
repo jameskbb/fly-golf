@@ -153,7 +153,7 @@ export function Actors({ scenario, hole }: { scenario: Scenario; hole: CourseHol
     let ballWorld: [number, number, number];
     let anchor: number[]; // ball position the fly addresses
     let lineHeading: number;
-    let club = Math.sin(t * 1.3) * 0.03; // idle waggle
+    let club = (1 + Math.sin(t * 1.3)) * 0.015; // idle waggle, back from address only (never into the ball)
     let turn = 0;
     let phase: Phase | "idle" = "idle";
     let reaction = 0;

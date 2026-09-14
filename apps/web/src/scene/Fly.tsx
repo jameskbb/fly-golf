@@ -18,6 +18,7 @@ import {
   type ReactElement,
 } from "react";
 import * as THREE from "three";
+import { BALL_RADIUS } from "./Course";
 import { LOOKS, LookContext, type Part, type PersonaId } from "./looks";
 
 export type ClubStyle = "putter" | "iron" | "wood";
@@ -57,13 +58,24 @@ const WING = "#e4eef6";
 
 export const BALL_OFFSET = BALL_OFFSETS.putter;
 export const GRIP: V3 = [0.1, 0.13, 0];
-const HOSEL: V3 = [0.04, -0.108, -0.028];
-const HEAD_CENTER: V3 = [0.04, -0.121, -0.028];
+// Club heads: putter and iron are boxes of these sizes (the iron lofted about x), the wood an
+// ellipsoid with these radii.
+export const PUTTER_SIZE: V3 = [0.05, 0.016, 0.012];
+export const IRON_SIZE: V3 = [0.03, 0.02, 0.005];
+export const IRON_LOFT = 0.35;
+export const WOOD_RADII: V3 = [0.022, 0.012, 0.018];
+// At address (club angle 0) each head rests ADDRESS_GAP behind the ball (-z, away from the
+// target), so it clears the ball at any ball height, teed up or not.
+const ADDRESS_GAP = 0.003;
+const behindBall = (halfDepth: number) => -(BALL_RADIUS + ADDRESS_GAP + halfDepth);
+const IRON_HALF_DEPTH = (IRON_SIZE[1] * Math.sin(IRON_LOFT) + IRON_SIZE[2] * Math.cos(IRON_LOFT)) / 2;
+export const HEAD_CENTER: V3 = [0.04, -0.121, behindBall(PUTTER_SIZE[2] / 2)];
+const HOSEL: V3 = [0.04, -0.108, HEAD_CENTER[2]];
 // Full clubs: the head reaches the ball further out (the fly stands further away).
-const IRON_HOSEL: V3 = [0.07, -0.112, -0.004];
-const IRON_HEAD: V3 = [0.074, -0.121, -0.004];
-const WOOD_HOSEL: V3 = [0.078, -0.108, -0.004];
-const WOOD_HEAD: V3 = [0.084, -0.117, -0.004];
+export const IRON_HEAD: V3 = [0.074, -0.121, behindBall(IRON_HALF_DEPTH)];
+const IRON_HOSEL: V3 = [0.07, -0.112, IRON_HEAD[2]];
+export const WOOD_HEAD: V3 = [0.084, -0.117, behindBall(WOOD_RADII[2])];
+const WOOD_HOSEL: V3 = [0.078, -0.108, WOOD_HEAD[2]];
 
 /** The persona's material for `part`, or the baseline material given as the child. */
 function Mat({ part, children }: { part?: Part; children: ReactElement }) {
@@ -400,20 +412,20 @@ export function Fly({
             <group ref={putterHead}>
               <Segment a={[0, 0.02, 0]} b={HOSEL} r={0.0026} color="#d7dde2" />
               <mesh position={HEAD_CENTER} castShadow>
-                <boxGeometry args={[0.05, 0.016, 0.012]} />
+                <boxGeometry args={PUTTER_SIZE} />
                 <meshStandardMaterial color="#b8c0c7" metalness={0.85} roughness={0.25} />
               </mesh>
             </group>
             <group ref={ironHead} visible={false}>
               <Segment a={[0, 0.02, 0]} b={IRON_HOSEL} r={0.0022} color="#dfe4e8" />
-              <mesh position={IRON_HEAD} rotation={[0.35, 0, 0]} castShadow>
-                <boxGeometry args={[0.03, 0.02, 0.005]} />
+              <mesh position={IRON_HEAD} rotation={[IRON_LOFT, 0, 0]} castShadow>
+                <boxGeometry args={IRON_SIZE} />
                 <meshStandardMaterial color="#c9d0d6" metalness={0.9} roughness={0.2} />
               </mesh>
             </group>
             <group ref={woodHead} visible={false}>
               <Segment a={[0, 0.02, 0]} b={WOOD_HOSEL} r={0.0024} color="#2a2f35" />
-              <mesh position={WOOD_HEAD} scale={[0.022, 0.012, 0.018]} castShadow>
+              <mesh position={WOOD_HEAD} scale={WOOD_RADII} castShadow>
                 <sphereGeometry args={[1, 20, 14]} />
                 <meshPhysicalMaterial color="#15181c" metalness={0.4} roughness={0.25} clearcoat={0.8} />
               </mesh>

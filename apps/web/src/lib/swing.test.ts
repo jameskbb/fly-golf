@@ -1,6 +1,20 @@
+import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { buildTimeline, lerpAngle, poseAt } from "./swing";
+import { ADDRESS_S, buildTimeline, lerpAngle, poseAt } from "./swing";
 import { sampleTrajectory, toThree } from "./coords";
+import { BALL_RADIUS } from "../scene/Course";
+import {
+  BALL_OFFSETS,
+  GRIP,
+  HEAD_CENTER,
+  IRON_HEAD,
+  IRON_LOFT,
+  IRON_SIZE,
+  PUTTER_SIZE,
+  WOOD_HEAD,
+  WOOD_RADII,
+  type ClubStyle,
+} from "../scene/Fly";
 
 const stroke = { power: 0.6, backswing_s: 0.6, downswing_s: 0.24, contact: true };
 
@@ -63,6 +77,56 @@ describe("full swing on the course", () => {
     expect(putt.full).toBe(false);
     expect(poseAt(putt, 0).phase).toBe("address");
     expect(poseAt(putt, putt.down0).turn).toBe(0);
+  });
+});
+
+/** Surface points of a club head in the fly's frame, built like the rig in Fly.tsx, at club angle `angle`. */
+function headPoints(style: ClubStyle, angle: number): THREE.Vector3[] {
+  const club = new THREE.Group();
+  club.position.set(...GRIP);
+  club.rotation.x = angle;
+  const head = new THREE.Mesh(
+    style === "wood"
+      ? new THREE.SphereGeometry(1, 64, 48)
+      : new THREE.BoxGeometry(...(style === "iron" ? IRON_SIZE : PUTTER_SIZE), 32, 32, 32),
+  );
+  head.position.set(...(style === "putter" ? HEAD_CENTER : style === "iron" ? IRON_HEAD : WOOD_HEAD));
+  if (style === "iron") head.rotation.x = IRON_LOFT;
+  if (style === "wood") head.scale.set(...WOOD_RADII);
+  club.add(head);
+  club.updateMatrixWorld(true);
+  const pos = head.geometry.attributes.position;
+  return Array.from({ length: pos.count }, (_, i) =>
+    new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(head.matrixWorld),
+  );
+}
+
+describe("club head at address", () => {
+  const clubs: [ClubStyle, string][] = [
+    ["putter", "putter"],
+    ["iron", "iron"],
+    ["wood", "driver"],
+  ];
+  // the ball sitting on the ground, teed up, and on ground a little above or below the fly's feet
+  const lifts = [0, 0.006, 0.012, 0.025, -0.006];
+
+  it.each(clubs)("the %s head rests just behind the ball, never inside it", (style, kind) => {
+    const tl = buildTimeline({ ...stroke, club: { kind }, swing_fraction: 0.9 }, 3.0, false, {
+      select: style !== "putter",
+    });
+    // from address until the downswing starts (the backswing only takes the head further back)
+    for (let t = tl.aim0 - ADDRESS_S; t < tl.down0; t += 0.02) {
+      const pts = headPoints(style, poseAt(tl, t).club);
+      for (const lift of lifts) {
+        const ball = new THREE.Vector3(BALL_OFFSETS[style], BALL_RADIUS + lift, 0);
+        const nearest = Math.min(...pts.map((p) => p.distanceTo(ball)));
+        expect(nearest).toBeGreaterThan(BALL_RADIUS + 0.001);
+      }
+    }
+    // ... and at address it is behind the ball (-z, away from the target), not beside or past it
+    const front = Math.max(...headPoints(style, 0).map((p) => p.z));
+    expect(front).toBeLessThan(-BALL_RADIUS);
+    expect(front).toBeGreaterThan(-BALL_RADIUS - 0.006);
   });
 });
 
