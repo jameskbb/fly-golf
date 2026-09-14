@@ -360,3 +360,28 @@ A four-hour training session. Details and tables:
 - One confirmation bench (`v3-type256-s200`) recorded `dirty: true`. Doc edits in its worktree were
   uncommitted while it ran; the code was `109c4a1` unchanged. The confirmation attached to the
   installed readout was re-run from a clean tree.
+
+## 2026-09-14: web demo with ten rounds per brain, and holes mixed at random
+
+### What changed
+
+- The demo draws each hole at random from the brain's recorded rounds (`mixRound`), so reloading
+  shows different play. The scorecard's ROUND row names the round each hole came from.
+- Round seeds 7–16 were recorded for each brain at `dd1e393` with the new readout and exported: 30
+  runs, 31 MB of JSON. They replace the three seed-7 rounds.
+- Club heads rest 3 mm behind the ball at address instead of inside it. The iron and wood heads
+  had sat 4 mm behind the ball's centre, and the ball's radius is 21 mm.
+- The HUD's CLUB cell and the club-choice line show an icon of the chosen club's family.
+
+### Results
+
+Trained 68.5 per nine (57–75), 56 of 90 holes holed; untrained 81 every round; Mock 36.5. The new
+readout's seed-7 round is 60; the old readout's was 58. Over ten rounds it averages 68.5.
+
+### Provenance notes
+
+- The first recording of 23 rounds was stamped `dirty`. Subagents' worktrees are created under
+  `.claude/worktrees/` inside the checkout, and the recorder counts untracked files as dirty; two
+  of the 23 had only their later shots stamped. All 23 were re-recorded from a separate clean
+  worktree (`FLY_GOLF_DATA_DIR`/`FLY_GOLF_RUNS_DIR` pointing at the main checkout's data), and
+  every re-recording is identical, stroke for stroke.

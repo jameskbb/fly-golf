@@ -82,6 +82,12 @@ with the same `--slug` replaces that run and keeps the others.
 
 A full front-nine run is about 1.2 MB of JSON, about 0.3 MB gzipped, as Pages serves it.
 
+**Several rounds per brain.** The demo mixes a brain's rounds hole by hole (see *What visitors
+see*), so export every round you record for a brain, one slug per round seed
+(`trained-front-nine-s07`, `-s08`, …), and never only the good ones. A new readout means
+re-recording the trained rounds with the same seeds and replacing the old exports. The demo
+should never keep replaying a retired readout.
+
 ## Replace the featured run
 
 The featured run is the one the demo opens with, as `featured` in
@@ -95,21 +101,37 @@ and commit. The Pages workflow deploys on the next push to `main`.
 
 ## Current showcase
 
-| id | Controller | Source run | Recorded at | Round |
-| --- | --- | --- | --- | --- |
-| `trained-front-nine` (featured) | MaleCNS + trained readout (`hindsight-gated-v2`, readout `20260913T220118Z`, engine `fly-golf-lif-v1`) | `20260914T115447Z-e62f18` | commit `fd29296`, clean tree | seed 7: 58 strokes (+22), 7 of 9 holes holed |
-| `untrained-front-nine` | MaleCNS, fixed a-priori readout (engine `fly-golf-lif-v1`) | `20260914T115447Z-81909c` | commit `fd29296`, clean tree | seed 7: 81 strokes (+45), no hole finished |
-| `mock-front-nine` | MOCK controller: hand-written heuristic, no neurons | `20260914T142253Z-8674c0` | commit `8567436`, clean tree | seed 7: 35 strokes (−1) |
+Ten rounds per brain, round seeds 7–16, all recorded from a clean tree at commit `dd1e393`
+(each run's `source.run_id` is in its showcase file):
 
-All three rounds were played with the project's default seed (7), chosen before any round was
-played, and they are the only rounds recorded for the showcase. None was selected from several
-attempts. On an 18-hole pace the trained fly shoots 116 and the untrained fly 162: neither breaks
-100 yet. The mock, which reads the golf state directly and has no neurons, is the reference.
+| ids | Controller | Strokes, seeds 7 to 16 | Summary |
+| --- | --- | --- | --- |
+| `trained-front-nine-s07` … `-s16` (`-s07` featured) | MaleCNS + trained readout (`hindsight-gated-v2`, readout `20260914T191715Z-refit`, engine `fly-golf-lif-v1`) | 60, 70, 71, 72, 64, 70, 57, 75, 71, 75 | mean 68.5, 56 of 90 holes holed |
+| `untrained-front-nine-s07` … `-s16` | MaleCNS, fixed a-priori readout (engine `fly-golf-lif-v1`) | 81 in every round | no hole finished |
+| `mock-front-nine-s07` … `-s16` | MOCK controller: hand-written heuristic, no neurons | 35, 36, 37, 36, 36, 37, 37, 37, 39, 35 | mean 36.5, every hole holed |
+
+The seeds were fixed before any round was played, and every round recorded for the showcase is in
+it. None was selected from several attempts. 23 of the 30 were recorded twice: the first
+recording of them was stamped `dirty` because an untracked directory of agent worktrees sat in the
+checkout. They were re-recorded from a clean worktree, and every re-recording is identical, stroke
+for stroke. On an 18-hole pace the trained fly averages 137 and the untrained fly 162: neither
+breaks 100 yet. The mock, which reads the golf state directly and has no neurons, is the
+reference.
 
 ## What visitors see
 
 A splash screen explains that the page shows pre-generated plays and that running the simulation
 in real time means cloning the repository (the connectome needs more than 1 GB of disk). Visitors
-pick a brain; each brain with a recorded solo round is selectable. Switching brains restarts that
-brain's round at the first tee. Shots play one at a time: a shot plays when asked and then waits.
-The splash reopens from **About this demo**.
+pick a brain; each brain with a recorded solo round is selectable.
+
+**Each hole is drawn at random from the brain's recorded rounds.** For every hole the page picks
+one of the brain's complete recorded rounds and plays that round's strokes on that hole,
+unchanged. Every hole starts from its tee and the brain resets before every stroke, so a hole
+stands on its own (`mixRound` in `apps/web/src/lib/showcase.ts`, tested in `showcase.test.ts`).
+The scorecard's ROUND row and the note under the controls say which round (seed) and commit each
+hole came from, and the total is the sum of the nine real holes shown. Choosing a brain, finishing
+the nine or reloading the page draws a new mix; only the rounds the draw needs are downloaded. A
+link to one recorded run (`?run=<id>&shot=<n>`) still plays that run exactly as recorded.
+
+Shots play one at a time: a shot plays when asked and then waits. The splash reopens from
+**About this demo**.

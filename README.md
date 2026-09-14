@@ -15,9 +15,10 @@ readout of descending-neuron activity to make its golf decisions.
 
 [![Animated gameplay from Pond Hop: the trained MaleCNS readout chooses a club, swings, and sends a shot across the water while live neural telemetry updates](docs/media/trained-pond-hop-gameplay.gif)](docs/media/trained-pond-hop-gameplay.mp4)
 
-*One real shot on Pond Hop, the 164-yard third. The trained readout runs 400 ms of MaleCNS
-activity, chooses the 4-hybrid, and sends it over the pond while the telemetry and follow camera
-tell the story. [Open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp4).*
+*One real shot on Pond Hop, the 164-yard third, recorded with the previous trained readout
+(`20260913T220118Z`). The readout runs 400 ms of MaleCNS activity, chooses the 4-hybrid, and sends
+it over the pond while the telemetry and follow camera tell the story.
+[Open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp4).*
 
 > **What is real, and what is not**
 >
@@ -40,24 +41,28 @@ tell the story. [Open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp
 [**jameskbb.github.io/fly-golf**](https://jameskbb.github.io/fly-golf/) is the same 3D app
 replaying **recorded MaleCNS rounds**. The neural simulation was computed beforehand; the replay
 runs entirely in your browser. There is no backend, and nothing is simulated or invented on the
-page. Pick a brain, play its round one shot at a time, pause, scrub through a swing, jump to any
-hole or stroke, orbit the camera, and read each shot's recorded spikes, active neurons,
-population rates, motor channels and club choice. To watch the brain play new shots as they are
+page. Pick a brain and watch nine holes one shot at a time: each hole is drawn at random from
+that brain's recorded rounds, so every visit shows different play, and the scorecard says which
+round each hole came from. Pause, scrub through a swing, jump to any hole or stroke, orbit the
+camera, and read each shot's recorded spikes, active neurons, population rates, motor channels
+and club choice. To watch the brain play new shots as they are
 computed, [run it locally](#run-it-locally): the connectome download needs more than 1 GB of disk.
 
-All three rounds were played from round seed 7, the project's default, chosen before any round
-was played. None was picked from several attempts:
+Each brain recorded ten complete rounds, seeds 7–16, fixed before any round was played. Every
+one of them is in the demo; none was picked from several attempts:
 
-| Round | Brain | Score | What happened |
+| Brain | Ten rounds (seeds 7–16) | Holes holed out | What happens |
 | --- | --- | --- | --- |
-| **Trained MaleCNS: Front Nine** (featured) | the connectome + a trained readout | **58** (+22), 7 of 9 holes holed | Drivers off the tee, wedges around the greens, one ball in the water; two holes picked up |
-| **Untrained MaleCNS: Front Nine** | the connectome, fixed readout rules | **81** (+45), no hole finished | Only a 6-, 7- or 8-iron from everywhere, and 29 penalty strokes |
-| **Mock: Front Nine** | no brain: hand-written golf rules | **35** (−1) | The no-neuron reference. It reads the distance and lie directly, so it plays well |
+| **Trained MaleCNS** (featured) | **68.5** strokes per nine on average (57–75) | 56 of 90 | Drivers off the tee and wedges around the greens, read out of descending-neuron activity by a readout fitted from practice |
+| **Untrained MaleCNS** | **81** in every round | 0 of 90 | The fixed readout rules hit a mid iron from everywhere and pick up every hole |
+| **Mock** | **36.5** (35–39) | 90 of 90 | The no-neuron reference. It reads the distance and lie directly, so it plays well |
 
-[![The web demo at the end of the trained round: the golfer fly beside the ninth hole's flag after holing out, with the scorecard reading Round complete: 58 (+22), on pace for 116 over eighteen, not breaking 100 yet, and the recorded neural telemetry in the brain panel](docs/screenshots/web-demo-round-complete.png)](https://jameskbb.github.io/fly-golf/)
+[![The web demo at the end of a mixed trained round: the scorecard reads Round complete: 74 (+38), on pace for 148 over eighteen, not breaking 100 yet, with a ROUND row giving the recorded round each hole was drawn from (six of the trained brain's ten rounds), and the recorded neural telemetry in the brain panel](docs/screenshots/web-demo-round-complete.png)](https://jameskbb.github.io/fly-golf/)
 
-On an 18-hole pace the two connectome rounds are 116 and 162. **The fly does not break 100
-yet.** The connectome rounds were recorded at this repository's first public commit, and every
+*One random mix, captured as it came: every visit draws a new one.*
+
+On an 18-hole pace the trained fly averages 137 and the untrained fly 162. **The fly does not
+break 100 yet.** All thirty rounds were recorded from a clean tree at commit `dd1e393`, and every
 round re-simulates bit for bit (`fly-golf replay`).
 How the demo works and how to publish another run: [GITHUB_PAGES.md](docs/GITHUB_PAGES.md).
 
