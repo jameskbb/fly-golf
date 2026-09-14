@@ -7,7 +7,8 @@ data/compiled/
 *.npz
 
 # --- Runtime output (experiment runs, traces, checkpoints) ---
-/runs/   # the recorder writes here; apps/web/public/showcase/runs/ is published
+# anchored: the recorder writes to the root runs/; apps/web/public/showcase/runs/ is published
+/runs/
 outputs/
 *.jsonl.gz
 
