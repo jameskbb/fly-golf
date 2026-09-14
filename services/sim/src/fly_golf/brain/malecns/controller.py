@@ -43,6 +43,11 @@ from .populations import (
     spec_by_name,
 )
 
+# Trained-readout feature spaces: DN-type mean rates, or DN-type x soma-side mean rates.
+FEATURE_SPACE = "dn-type"
+FEATURE_SPACE_SIDE = "dn-type-side"
+FEATURE_SPACES = (FEATURE_SPACE, FEATURE_SPACE_SIDE)
+
 
 class MaleCNSController:
     def __init__(self, graph: CompiledGraph, readout_start_ms: float = READOUT_START_MS, engine: str = ENGINE_VERSION):
@@ -70,6 +75,12 @@ class MaleCNSController:
         dn_types = types[dn]
         self.feature_names, self._dn_group = np.unique(dn_types, return_inverse=True)
         self._dn_group_size = np.bincount(self._dn_group).astype(np.float64)
+        # The same DN types split by soma side ("DNa01|L"): a type's mean merges its left and
+        # right neurons, which cancels exactly the asymmetry that steering is read from.
+        self.feature_names_side, self._dn_group_side = np.unique(
+            np.char.add(np.char.add(dn_types.astype(str), "|"), sides[dn].astype(str)), return_inverse=True
+        )
+        self._dn_group_side_size = np.bincount(self._dn_group_side).astype(np.float64)
         self.info = ControllerInfo(
             id="malecns",
             kind=ControllerKind.MALECNS,
@@ -163,6 +174,9 @@ class MaleCNSController:
         early = float(dn_bins[:half].sum() / dn_spikes) if dn_spikes else 0.5
         readout_dn = readout[:, dn_idx].sum(axis=0).astype(np.float64)
         self._features = np.bincount(self._dn_group, weights=readout_dn) / (self._dn_group_size * readout_s)
+        self._features_side = np.bincount(self._dn_group_side, weights=readout_dn) / (
+            self._dn_group_side_size * readout_s
+        )
         base = (
             decode_motor(rates, dn_spikes, early) if self._frame.is_legacy else decode_motor_v2(rates, dn_spikes, early)
         )
@@ -206,11 +220,17 @@ class MaleCNSController:
     def last_trace(self) -> dict | None:
         return self._trace
 
-    def last_features(self) -> np.ndarray:
-        """Per-DN-type mean rates (Hz) over the readout window of the last step."""
+    def last_features(self, space: str = "dn-type") -> np.ndarray:
+        """Per-DN-type mean rates (Hz) over the readout window of the last step; with
+        space="dn-type-side", per DN type and soma side."""
         if self._features is None:
             raise RuntimeError("step() must be called before last_features()")
-        return self._features
+        return self._features_side if space == FEATURE_SPACE_SIDE else self._features
+
+    def feature_names_for(self, space: str = "dn-type") -> list[str]:
+        if space not in FEATURE_SPACES:
+            raise ValueError(f"unknown feature space {space!r} (known: {FEATURE_SPACES})")
+        return [str(n) for n in (self.feature_names_side if space == FEATURE_SPACE_SIDE else self.feature_names)]
 
     def club_trace(self) -> dict | None:
         """How the last club choice was made (shot telemetry: senses -> DNs -> club_reach -> club)."""

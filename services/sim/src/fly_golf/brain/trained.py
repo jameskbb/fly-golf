@@ -31,7 +31,7 @@ import numpy as np
 
 from ..golf.clubs import BAG, reach_for
 from .interfaces import ControllerInfo, ControllerKind
-from .malecns.controller import MaleCNSController
+from .malecns.controller import FEATURE_SPACE, FEATURE_SPACE_SIDE, MaleCNSController
 from .malecns.engine import ENGINE_VERSION
 from .malecns.graph import CompiledGraph
 
@@ -150,6 +150,8 @@ class GatedReadout:
     power_scale: dict[str, float] = field(default_factory=lambda: {h: 1.0 for h in HEADS})
     meta: dict = field(default_factory=dict)
     transform: str = "log1p"
+    # What the feature vector is: DN-type rates, or DN-type x soma-side rates ("dn-type-side").
+    feature_space: str = FEATURE_SPACE
 
     def z(self, x: np.ndarray) -> np.ndarray:
         return _standardise(x, self.transform, self.mean, self.scale)
@@ -188,6 +190,7 @@ class GatedReadout:
             "clubs": [c.id for c in BAG],
             "heads": list(HEADS),
             "transform": self.transform,
+            "feature_space": self.feature_space,
             "feature_names": list(self.feature_names),
             "mean": _rounded(self.mean),
             "scale": _rounded(self.scale),
@@ -231,6 +234,7 @@ class GatedReadout:
             power_scale={h: float(cal.get("power_scale", {}).get(h, 1.0)) for h in HEADS},
             meta=dict(d.get("meta", {})),
             transform=d.get("transform", "log1p"),
+            feature_space=d.get("feature_space", FEATURE_SPACE),
         )
 
     def save(self, path: Path) -> None:
@@ -281,7 +285,8 @@ class TrainedReadoutController(MaleCNSController):
                 f"refusing to run it on {engine!r} (retrain it, or use the engine it was trained on)"
             )
         super().__init__(graph, engine=trained_on)
-        if list(readout.feature_names) != [str(n) for n in self.feature_names]:
+        self.feature_space = getattr(readout, "feature_space", FEATURE_SPACE)  # v1 readouts: DN types
+        if list(readout.feature_names) != self.feature_names_for(self.feature_space):
             raise ValueError("readout was trained on a different set of descending-neuron types")
         self.readout = readout
         self.last_prediction: dict | None = None
@@ -311,6 +316,7 @@ class TrainedReadoutController(MaleCNSController):
                     "neural_engine": trained_on,
                     "current_engine": trained_on == ENGINE_VERSION,
                     "method": readout.meta.get("method"),
+                    "feature_space": self.feature_space,
                     "trained_utc": readout.meta.get("created_utc"),
                     "git_commit": (readout.meta.get("git") or {}).get("commit"),
                     "test_metrics": readout.meta.get("test_summary"),
@@ -325,7 +331,7 @@ class TrainedReadoutController(MaleCNSController):
         fixed = super()._readout(rates, dn_spikes, early, readout_dn, readout_s)
         if self._frame.is_legacy:
             return fixed  # the trained readout is defined for v0.2 frames only
-        self.last_prediction = self.readout.predict(self._features)
+        self.last_prediction = self.readout.predict(self.last_features(self.feature_space))
         return trained_channels(fixed, self.last_prediction)
 
     def club_trace(self) -> dict | None:
@@ -338,7 +344,9 @@ class TrainedReadoutController(MaleCNSController):
             "format": READOUT_FORMAT_V2 if gated else READOUT_FORMAT,
             "readout_id": self.readout.meta.get("training_id"),
             "senses": "proxy sensory channels injected into MaleCNS sensory neurons; 400 ms simulated",
-            "inputs": f"{len(self.feature_names)} descending-neuron type rates (150-400 ms)",
+            "inputs": f"{len(self.readout.feature_names)} descending-neuron type"
+            + (" x side" if self.feature_space == FEATURE_SPACE_SIDE else "")
+            + " rates (150-400 ms)",
             "dn_all_rate_hz": round(self._rates["DN_all"], 4),
             "p_putt": p.get("p_putt"),
             "gate": p.get("head"),

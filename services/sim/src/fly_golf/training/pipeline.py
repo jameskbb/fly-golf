@@ -51,7 +51,7 @@ from pathlib import Path
 import numpy as np
 
 from ..brain.interfaces import MotorCommand, SensoryFrame
-from ..brain.malecns.controller import MaleCNSController
+from ..brain.malecns.controller import FEATURE_SPACE, FEATURE_SPACE_SIDE, FEATURE_SPACES, MaleCNSController
 from ..brain.malecns.engine import ENGINE_VERSION
 from ..brain.malecns.graph import CompiledGraph
 from ..brain.mock import MockBrainController
@@ -256,6 +256,7 @@ def _run_situation(sit_dict: dict) -> dict:
     return {
         "index": sit.index,
         "features": _CTRL.last_features().tolist(),
+        "features_side": _CTRL.last_features(FEATURE_SPACE_SIDE).tolist(),
         "fixed": fixed,
         "sensory": dict(frame.channels),
         "target": search["target"],
@@ -268,11 +269,12 @@ def _run_situation(sit_dict: dict) -> dict:
 
 def collect(
     graph: CompiledGraph, situations: list[Situation], jobs: int = 1, progress: Callable[[int, int], None] | None = None
-) -> tuple[list[str], list[dict]]:
-    """Neural features + fixed channels + practice targets for every situation."""
+) -> tuple[dict[str, list[str]], list[dict]]:
+    """Neural features (every feature space) + fixed channels + practice targets for every situation."""
     global _GRAPH
     _GRAPH = graph
-    names = [str(n) for n in MaleCNSController(graph).feature_names]
+    ctrl = MaleCNSController(graph)
+    names = {space: ctrl.feature_names_for(space) for space in FEATURE_SPACES}
     todo = [s.to_dict() for s in situations]
     out: list[dict] = []
     if jobs <= 1:
@@ -578,7 +580,9 @@ def _summary(results: list[dict], kinds: list[str], target_clubs: list[str]) -> 
     return out
 
 
-def evaluate(situations: list[Situation], rows: list[dict], readouts: dict[str, Readout | None]) -> dict:
+def evaluate(
+    situations: list[Situation], rows: list[dict], readouts: dict[str, Readout | None], feature_key: str = "features"
+) -> dict:
     """Held-out comparison of every variant (one stroke per situation, real physics). Club
     accuracy is measured against the (brain) practice target's club."""
     test = [(s, r) for s, r in zip(situations, rows, strict=True) if s.is_test]
@@ -592,7 +596,7 @@ def evaluate(situations: list[Situation], rows: list[dict], readouts: dict[str, 
     run("fixed_v0.2_readout", lambda s, r: r["fixed"])
 
     def brain_variant(name: str, ro: Readout) -> None:
-        run(name, lambda s, r: trained_channels(r["fixed"], ro.predict(np.asarray(r["features"]))))
+        run(name, lambda s, r: trained_channels(r["fixed"], ro.predict(np.asarray(r[feature_key]))))
 
     def senses_variant(name: str, ro: Readout) -> None:
         run(
@@ -640,6 +644,7 @@ def train(
     control: str | None = None,
     log: Callable[[str], None] = print,
     n_short: int = 120,
+    feature_space: str = FEATURE_SPACE,
 ) -> dict:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -664,13 +669,15 @@ def train(
         "neural_engine": ENGINE_VERSION,
     }
     counts = {"putt": n_putt, "green": n_green, "short": n_short, "full": n_full, "seed": seed}
-    return fit_and_report(situations, rows, names, out_dir, seed, graph_meta, counts, log=log, t0=t0)
+    return fit_and_report(
+        situations, rows, names, out_dir, seed, graph_meta, counts, log=log, t0=t0, feature_space=feature_space
+    )
 
 
 def fit_and_report(
     situations: list[Situation],
     rows: list[dict],
-    names: list[str],
+    names: dict[str, list[str]],
     out_dir: Path,
     seed: int,
     graph_meta: dict,
@@ -679,21 +686,29 @@ def fit_and_report(
     t0: float | None = None,
     extra_meta: dict | None = None,
     upper_bound: dict | None = None,
+    feature_space: str = FEATURE_SPACE,
 ) -> dict:
-    """Steps 4-6 from collected practice rows: fit, calibrate (out of fold), evaluate, save."""
+    """Steps 4-6 from collected practice rows: fit, calibrate (out of fold), evaluate, save.
+    `names` maps each feature space to its feature names; `feature_space` is the one fitted."""
     t0 = time.perf_counter() if t0 is None else t0
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     control = graph_meta.get("control")
     train_idx = [i for i, s in enumerate(situations) if not s.is_test]
+    if feature_space not in FEATURE_SPACES:
+        raise ValueError(f"unknown feature space {feature_space!r} (known: {FEATURE_SPACES})")
+    fkey = "features_side" if feature_space == FEATURE_SPACE_SIDE else "features"
+    if fkey not in rows[0] or feature_space not in names:
+        raise ValueError(f"these practice rows carry no {feature_space!r} features")
 
     def targets(key: str) -> tuple[np.ndarray, np.ndarray]:
         ap = np.asarray([[rows[i][key]["aim"], rows[i][key]["stroke_power"]] for i in train_idx])
         return ap, np.asarray([_club_index(rows[i][key]) for i in train_idx])
 
-    log("fitting the brain readout (putter gate + club head + putter / swing heads)...")
-    x = np.asarray([rows[i]["features"] for i in train_idx])
-    brain, brain_fit = fit_gated_readout(x, *targets("target"), names, seed=seed)
+    log(f"fitting the brain readout on {feature_space} rates (putter gate + club head + putter / swing heads)...")
+    x = np.asarray([rows[i][fkey] for i in train_idx])
+    brain, brain_fit = fit_gated_readout(x, *targets("target"), names[feature_space], seed=seed)
+    brain.feature_space = feature_space
     log("fitting the no-brain baseline...")
     sensory_names = list(rows[0]["sensory"])
     xs = np.asarray([[rows[i]["sensory"][c] for c in sensory_names] for i in train_idx])
@@ -718,7 +733,7 @@ def fit_and_report(
                 per[j] = ro
         return per
 
-    oof_brain = out_of_fold(x, "target", names, "log1p")
+    oof_brain = out_of_fold(x, "target", names[feature_space], "log1p")
     oof_senses = out_of_fold(xs, "target_no_brain", sensory_names, "none")
     brain, brain_fit["calibration"] = calibrate(
         brain, [(situations[i], envs[i], x[j], rows[i]["fixed"], oof_brain[j]) for j, i in enumerate(train_idx)]
@@ -730,7 +745,7 @@ def fit_and_report(
     # Evaluate exactly what gets saved and installed (weights rounded to 9 decimals in the JSON).
     brain = GatedReadout.from_json(brain.to_json())
     senses = GatedReadout.from_json(senses.to_json())
-    evaluation = evaluate(situations, rows, {"trained": brain, "no_brain": senses, **uncalibrated})
+    evaluation = evaluate(situations, rows, {"trained": brain, "no_brain": senses, **uncalibrated}, feature_key=fkey)
     if upper_bound is not None:
         evaluation["variants"].setdefault("practice_best_upper_bound", upper_bound)
     for name, fit in (("brain", brain_fit), ("no-brain", senses_fit)):
@@ -748,6 +763,7 @@ def fit_and_report(
         "graph": graph_meta,
         # the engine whose activity these weights read; a refit keeps its source run's engine
         "neural_engine": graph_meta.get("neural_engine") or LEGACY_ENGINE_VERSION,
+        "feature_space": feature_space,
         "situations": counts | {"train": len(train_idx), "test": evaluation["n_test"]},
         "decision_window_ms": DECISION_WINDOW_MS,
         "fit": _brief(brain_fit),
@@ -758,9 +774,19 @@ def fit_and_report(
     brain.save(out_dir / "readout.json")
     senses.meta = meta | {"feature_space": "sensory channels (no brain)", "fit": _brief(senses_fit)}
     senses.save(out_dir / "no_brain_readout.json")
+    by_side = "features_side" in rows[0] and FEATURE_SPACE_SIDE in names
     np.savez_compressed(
         out_dir / "features.npz",
         features=np.asarray([r["features"] for r in rows]),
+        feature_names=np.asarray(names[FEATURE_SPACE]),
+        **(
+            {
+                "features_side": np.asarray([r["features_side"] for r in rows]),
+                "feature_names_side": np.asarray(names[FEATURE_SPACE_SIDE]),
+            }
+            if by_side
+            else {}
+        ),
         targets=np.asarray([[r["target"][o] for o in OUTPUTS] for r in rows]),
         target_club=np.asarray([_club_index(r["target"]) for r in rows]),
         targets_no_brain=np.asarray([[r["target_no_brain"][o] for o in OUTPUTS] for r in rows]),
@@ -787,11 +813,12 @@ def _target_from(t: np.ndarray, club: int) -> dict:
     return {"aim": float(t[0]), "stroke_power": float(t[1]), "club_reach": float(t[2]), "club": BAG[int(club)].id}
 
 
-def refit(src_dir: Path, out_dir: Path, log: Callable[[str], None] = print) -> dict:
+def refit(src_dir: Path, out_dir: Path, log: Callable[[str], None] = print, feature_space: str | None = None) -> dict:
     """`fly-golf refit`: redo steps 4-6 from a finished run's SAVED practice (features.npz +
     report.json): the same situations, neural features, targets and fixed channels, no brain
     simulation. For improving the fitting / calibration code without re-simulating the connectome;
-    the new report records the run it was refitted from."""
+    the new report records the run it was refitted from. `feature_space` (default: the source
+    run's) can switch to the DN-type x side rates when the run saved them."""
     src = Path(src_dir)
     rep = json.loads((src / "report.json").read_text())
     z = np.load(src / "features.npz")
@@ -799,7 +826,15 @@ def refit(src_dir: Path, out_dir: Path, log: Callable[[str], None] = print) -> d
         raise ValueError(f"{src} predates saved fixed channels; re-run `fly-golf train` instead")
     from ..brain.trained import load_readout
 
-    names = list(load_readout(src / "readout.json").feature_names)
+    feature_space = feature_space or rep["meta"].get("feature_space", FEATURE_SPACE)
+    if "feature_names" in z:
+        names = {FEATURE_SPACE: [str(n) for n in z["feature_names"]]}
+    else:  # runs before feature spaces existed were all fitted on DN types
+        names = {FEATURE_SPACE: list(load_readout(src / "readout.json").feature_names)}
+    if "features_side" in z:
+        names[FEATURE_SPACE_SIDE] = [str(n) for n in z["feature_names_side"]]
+    elif feature_space == FEATURE_SPACE_SIDE:
+        raise ValueError(f"{src} saved no DN-type x side features; re-run `fly-golf train` instead")
     sensory_names = list(load_readout(src / "no_brain_readout.json").feature_names)
     fixed_names = [str(c) for c in z["fixed_channels"]]
     situations = [Situation.from_dict(d) for d in rep["situations"]]
@@ -807,6 +842,7 @@ def refit(src_dir: Path, out_dir: Path, log: Callable[[str], None] = print) -> d
         {
             "index": i,
             "features": z["features"][i].tolist(),
+            **({"features_side": z["features_side"][i].tolist()} if "features_side" in z else {}),
             "fixed": dict(zip(fixed_names, map(float, z["fixed"][i]), strict=True)),
             "sensory": dict(zip(sensory_names, map(float, z["sensory"][i]), strict=True)),
             "target": _target_from(z["targets"][i], z["target_club"][i]),
@@ -829,6 +865,7 @@ def refit(src_dir: Path, out_dir: Path, log: Callable[[str], None] = print) -> d
         log=log,
         extra_meta={"refit_from": {"training_id": m["training_id"], "git": m["git"], "path": str(src)}},
         upper_bound=rep["evaluation"]["variants"].get("practice_best_upper_bound"),
+        feature_space=feature_space,
     )
 
 

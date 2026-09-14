@@ -213,6 +213,35 @@ def test_readout_refuses_a_different_feature_space(trained, synthetic_graph):
         TrainedReadoutController(synthetic_graph, readout)
 
 
+def test_side_feature_space_refits_plays_and_replays(trained, synthetic_graph, tmp_path):
+    from fly_golf.brain.malecns.controller import FEATURE_SPACE, FEATURE_SPACE_SIDE, FEATURE_SPACES, MaleCNSController
+    from fly_golf.training.pipeline import refit
+
+    report, readout, out = trained
+    ctrl = MaleCNSController(synthetic_graph)
+    names_side = ctrl.feature_names_for(FEATURE_SPACE_SIDE)
+    assert all("|" in n for n in names_side) and len(names_side) >= len(ctrl.feature_names_for(FEATURE_SPACE))
+    assert readout.feature_space == FEATURE_SPACE and report["meta"]["feature_space"] == FEATURE_SPACE
+    # The same saved practice, refitted on DN type x side rates (no brain simulation).
+    r2 = refit(out, tmp_path / "side", log=lambda m: None, feature_space=FEATURE_SPACE_SIDE)
+    side = load_readout(tmp_path / "side" / "readout.json")
+    assert side.feature_space == FEATURE_SPACE_SIDE and r2["meta"]["feature_space"] == FEATURE_SPACE_SIDE
+    assert side.feature_names == names_side
+    c = TrainedReadoutController(synthetic_graph, side)
+    assert c.info.config["readout"]["feature_space"] == FEATURE_SPACE_SIDE
+    s = PuttingSession(c)
+    s.new_hole(4)
+    rec = s.play_shot()
+    assert replay_controller(rec, TrainedReadoutController(synthetic_graph, side))["identical"]
+    # A refit without a feature space keeps the source run's; an unknown one is refused.
+    again = refit(tmp_path / "side", tmp_path / "again", log=lambda m: None)
+    assert again["meta"]["feature_space"] == FEATURE_SPACE_SIDE
+    side.feature_space = "nope"
+    with pytest.raises(ValueError):
+        TrainedReadoutController(synthetic_graph, side)
+    assert FEATURE_SPACES == (FEATURE_SPACE, FEATURE_SPACE_SIDE)
+
+
 def test_stratified_folds_and_pca_choices():
     from fly_golf.training.pipeline import CV_FOLDS, _k_choices, _stratified_folds
 

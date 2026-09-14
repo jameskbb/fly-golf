@@ -92,6 +92,9 @@ def cmd_round(args) -> int:
     return 0
 
 
+FEATURE_SPACE_CHOICES = ["dn-type", "dn-type-side"]  # brain.malecns.controller.FEATURE_SPACES
+
+
 def cmd_train(args) -> int:
     from pathlib import Path
 
@@ -114,6 +117,7 @@ def cmd_train(args) -> int:
         seed=args.seed,
         jobs=args.jobs or default_jobs(),
         control=args.control,
+        feature_space=args.features,
     )
     return _report_and_install(report, out, args.install)
 
@@ -149,7 +153,7 @@ def cmd_refit(args) -> int:
 
     src = Path(args.source)
     out = Path(args.out) if args.out else src.parent / f"{src.name}-refit"
-    return _report_and_install(refit(src, out), out, args.install)
+    return _report_and_install(refit(src, out, feature_space=args.features), out, args.install)
 
 
 def cmd_bench(args) -> int:
@@ -332,12 +336,21 @@ def main(argv: list[str] | None = None) -> int:
         "--scale", type=float, default=0.0, help="multiply the 120/120/120/200 putt/green/short/full situations"
     )
     tr.add_argument("--install", action="store_true", help=f"copy the readout to {READOUT_HELP}")
+    tr.add_argument(
+        "--features",
+        choices=FEATURE_SPACE_CHOICES,
+        default="dn-type",
+        help="readout input: DN-type rates, or DN-type x soma-side rates (both are always saved)",
+    )
     rf = sub.add_parser(
         "refit", help="redo fit + calibration + evaluation from a training run's saved practice (no brain simulation)"
     )
     rf.add_argument("source", help="a runs/training/<name> directory written by `fly-golf train`")
     rf.add_argument("--out", help="output directory (default: <source>-refit)")
     rf.add_argument("--install", action="store_true", help=f"copy the readout to {READOUT_HELP}")
+    rf.add_argument(
+        "--features", choices=FEATURE_SPACE_CHOICES, help="readout input (default: the source run's feature space)"
+    )
     bn = sub.add_parser("bench", help="play complete front-nine rounds headless and summarise them")
     bn.add_argument("--controller", choices=controllers, default="malecns-trained")
     bn.add_argument("--rounds", type=int, default=8)
