@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { ShowcaseRun, type ShotRecord } from "@fly-golf/protocol";
+import { ShowcaseIndex, ShowcaseRun, type ShotRecord } from "@fly-golf/protocol";
 import { describe, expect, it } from "vitest";
 import {
   FULL_SCALE_HZ,
@@ -25,8 +25,12 @@ const somaMap = parseSomaMap(
   ),
 );
 
-const trained = loadRun("trained-front-nine");
-const mock = loadRun("mock-front-nine");
+const index = ShowcaseIndex.parse(
+  JSON.parse(readFileSync(new URL("../../public/showcase/index.json", import.meta.url), "utf8")),
+);
+
+const trained = loadRun("trained-front-nine-s07");
+const mock = loadRun("mock-front-nine-s07");
 const neural = (run: ShowcaseRun): ShotRecord[] => run.shots.filter((s) => s.neural_summary);
 
 describe("brain firing: shots without a brain", () => {
@@ -134,7 +138,9 @@ describe("brain firing: a recorded MaleCNS shot", () => {
   });
 
   it("every MaleCNS shot in every committed round has activity to show", () => {
-    for (const slug of ["trained-front-nine", "untrained-front-nine"]) {
+    const rounds = index.runs.filter((r) => !r.is_mock).map((r) => r.id);
+    expect(rounds.length).toBeGreaterThan(0);
+    for (const slug of rounds) {
       for (const s of loadRun(slug).shots) {
         if (s.controller.is_mock) continue;
         const act = shotActivity(s);
