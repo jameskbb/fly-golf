@@ -1,0 +1,70 @@
+{
+  "format": "fly-golf-showcase",
+  "version": 1,
+  "course": "course.json",
+  "featured": "trained-front-nine",
+  "runs": [
+    {
+      "id": "trained-front-nine",
+      "title": "Trained MaleCNS - Front Nine",
+      "description": "The trained golfer plays round seed 7, the project's default seed, fixed before the round was played. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons; a readout fitted offline from practice shots (readout 20260913T220118Z) turns descending-neuron firing into a club, an aim and a power. The connectome itself never learns.",
+      "file": "runs/trained-front-nine.json",
+      "controller": {
+        "id": "malecns-trained",
+        "kind": "malecns",
+        "label": "MaleCNS + TRAINED READOUT",
+        "is_mock": false,
+        "neuron_count": 166700,
+        "edge_count": 25582938,
+        "connectome": "MaleCNS v1.0",
+        "model": "fly-golf-lif-v1"
+      },
+      "controllers_used": [
+        "malecns-trained"
+      ],
+      "is_mock": false,
+      "mode": "course",
+      "shots": 57,
+      "holed": 7,
+      "holes_played": 9,
+      "strokes": 58,
+      "to_par": 22,
+      "round_complete": true,
+      "round_seed": 7,
+      "source_run_id": "20260914T115447Z-e62f18",
+      "recorded_utc": "2026-09-14T11:54:48.914146+00:00",
+      "git_commit": "fd29296454c29cb49572aad9a6f6a4a4d9e93c6f"
+    },
+    {
+      "id": "untrained-front-nine",
+      "title": "Untrained MaleCNS - Front Nine",
+      "description": "The wild fly plays the same round seed with the same connectome simulation, read out by fixed rules written before any shot was seen. It has never had a lesson: the comparison for the trained round.",
+      "file": "runs/untrained-front-nine.json",
+      "controller": {
+        "id": "malecns",
+        "kind": "malecns",
+        "label": "MaleCNS LIVE",
+        "is_mock": false,
+        "neuron_count": 166700,
+        "edge_count": 25582938,
+        "connectome": "MaleCNS v1.0",
+        "model": "fly-golf-lif-v1"
+      },
+      "controllers_used": [
+        "malecns"
+      ],
+      "is_mock": false,
+      "mode": "course",
+      "shots": 57,
+      "holed": 0,
+      "holes_played": 9,
+      "strokes": 81,
+      "to_par": 45,
+      "round_complete": true,
+      "round_seed": 7,
+      "source_run_id": "20260914T115447Z-81909c",
+      "recorded_utc": "2026-09-14T11:54:48.932455+00:00",
+      "git_commit": "fd29296454c29cb49572aad9a6f6a4a4d9e93c6f"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { advance, newHole, refreshStatus, replay, startLiveConnection } from "./actions";
+import { IS_SHOWCASE } from "./lib/source";
 import { useStore } from "./store";
 import { Scene } from "./scene/Scene";
 import { Header } from "./ui/Header";
@@ -10,8 +11,14 @@ import { TechPanel } from "./ui/TechPanel";
 import { RunsPanel } from "./ui/RunsPanel";
 import { Scorecard } from "./ui/Scorecard";
 import { ModesPanel } from "./ui/ModesPanel";
+import { ShowcaseApp } from "./showcase/ShowcaseApp";
 
+/** One app, two data sources: the live backend, or recorded runs on GitHub Pages (lib/source.ts). */
 export function App() {
+  return IS_SHOWCASE ? <ShowcaseApp /> : <LiveApp />;
+}
+
+function LiveApp() {
   const connection = useStore((s) => s.connection);
   const connectionMessage = useStore((s) => s.connectionMessage);
 

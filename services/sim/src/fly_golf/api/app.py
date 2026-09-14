@@ -39,8 +39,7 @@ from ..experiments.runner import (
     load_run,
     replay_physics,
 )
-from ..golf.clubs import BAG, nominal_distances
-from ..golf.course import COURSE_NAME, COURSE_PAR, COURSE_VERSION, FRONT_NINE
+from ..golf.payload import course_payload
 from ..provenance import git_info
 from .schemas import ClientHello, ControllerRequest, Envelope, ResetRequest, SessionRequest, envelope
 
@@ -145,16 +144,6 @@ class SimulationService:
         )
         await self.broadcast("state", state)
         return state
-
-
-def course_payload() -> dict:
-    return {
-        "name": COURSE_NAME,
-        "version": COURSE_VERSION,
-        "par": COURSE_PAR,
-        "holes": [h.to_dict() for h in FRONT_NINE],
-        "clubs": [c.to_dict() | {"nominal": nominal_distances().get(c.id)} for c in BAG],
-    }
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

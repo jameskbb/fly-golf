@@ -1,3 +1,4 @@
+import { IS_SHOWCASE } from "../lib/source";
 import { useStore } from "../store";
 import { fmtInt } from "./widgets";
 
@@ -14,7 +15,7 @@ function ControllerBadge() {
     );
   }
   const c = session?.controller;
-  if (!c) return <div className="badge off">NO SESSION</div>;
+  if (!c) return <div className="badge off">{IS_SHOWCASE ? "LOADING RUN…" : "NO SESSION"}</div>;
   if (c.is_mock) {
     return (
       <div className="badge mock" title="Deterministic test heuristic — not the connectome">
@@ -24,17 +25,20 @@ function ControllerBadge() {
     );
   }
   const trained = c.id === "malecns-trained";
+  const recorded = IS_SHOWCASE ? " (recorded run: the simulation was computed beforehand)" : "";
   return (
     <div
       className={`badge ${trained ? "trained" : "live"}`}
       title={
-        trained
+        (trained
           ? "MaleCNS connectome simulation with a readout trained from practice shots (connectome unchanged)"
-          : "Simulated neural dynamics over the reconstructed MaleCNS connectome"
+          : "Simulated neural dynamics over the reconstructed MaleCNS connectome") + recorded
       }
     >
       <span className="dot" />
-      <span className="badge-title">{trained ? "MaleCNS · TRAINED READOUT" : "MaleCNS LIVE"}</span>
+      <span className="badge-title">
+        {trained ? "MaleCNS · TRAINED READOUT" : IS_SHOWCASE ? "MaleCNS · RECORDED" : "MaleCNS LIVE"}
+      </span>
       <span className="badge-sub">
         {fmtInt(c.neuron_count)} neurons · {fmtInt(c.edge_count)} connections
       </span>
@@ -42,8 +46,35 @@ function ControllerBadge() {
   );
 }
 
-export function Header() {
+/** What kind of data is on screen. "LIVE" appears only while the simulation backend is connected. */
+function ModeBadge() {
   const connection = useStore((s) => s.connection);
+  const run = useStore((s) => s.showcase?.run);
+  if (IS_SHOWCASE) {
+    const mock = run?.shots.filter((s) => s.controller.is_mock).length ?? 0;
+    const text =
+      !run || mock === 0
+        ? "RECORDED MALECNS RUN"
+        : mock === run.shots.length
+          ? "RECORDED MOCK RUN"
+          : "RECORDED · MIXED BRAINS";
+    return (
+      <span
+        className="mode-badge recorded"
+        title="An interactive replay of shots recorded earlier. No simulation runs in this page."
+      >
+        {text}
+      </span>
+    );
+  }
+  return (
+    <span className={`conn conn-${connection}`} title="WebSocket connection to the simulation backend">
+      {connection === "open" ? "LIVE SIMULATION" : `backend ${connection}`}
+    </span>
+  );
+}
+
+export function Header() {
   return (
     <header className="hdr">
       <div className="brand">
@@ -51,9 +82,7 @@ export function Header() {
         <span className="tagline">Can a fruit fly break 100?</span>
       </div>
       <div className="hdr-right">
-        <span className={`conn conn-${connection}`} title="WebSocket connection to the simulation backend">
-          {connection === "open" ? "backend linked" : connection}
-        </span>
+        <ModeBadge />
         <ControllerBadge />
       </div>
     </header>

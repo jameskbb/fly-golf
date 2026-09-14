@@ -5,7 +5,7 @@ UV   ?= uv
 PNPM ?= pnpm
 SIM  := $(UV) --directory services/sim
 
-.PHONY: help setup dev test test-sim test-web test-integration lint format build data data-status verify-source lif-reference putt smoke clean
+.PHONY: help setup dev test test-sim test-web test-integration lint format build showcase build-showcase preview-showcase data data-status verify-source lif-reference putt smoke clean
 
 help:
 	@echo "make setup            install backend (uv) + frontend (pnpm) dependencies"
@@ -14,6 +14,9 @@ help:
 	@echo "make test-integration run tests that need the compiled MaleCNS graph"
 	@echo "make lint             ruff + eslint + tsc"
 	@echo "make build            production build of the web app"
+	@echo "make showcase         static Showcase Mode (recorded runs, no backend) at http://localhost:5173/fly-golf/"
+	@echo "make build-showcase   the GitHub Pages build (apps/web/dist, base /fly-golf/)"
+	@echo "make preview-showcase serve that build at http://localhost:4173/fly-golf/"
 	@echo "make data             download (~1.1 GB), verify and compile MaleCNS v1.0"
 	@echo "make data-status      show which data artifacts exist"
 	@echo "make verify-source    check the local MaleCNS files against the lock, and the lock against the official release"
@@ -51,6 +54,15 @@ format:
 
 build:
 	$(PNPM) --filter @fly-golf/web build
+
+showcase:
+	$(PNPM) --filter @fly-golf/web dev:showcase
+
+build-showcase:
+	$(PNPM) --filter @fly-golf/web build:showcase
+
+preview-showcase:
+	$(PNPM) --filter @fly-golf/web preview:showcase
 
 data:
 	$(SIM) run fly-golf-data prepare

@@ -1,5 +1,8 @@
 name: CI
 
+# Never downloads the MaleCNS connectome: the Python tests use synthetic graphs and mocks, and the
+# real-data integration tests skip themselves. GitHub Pages deploys from pages.yml.
+
 on:
   push:
     branches: [main]
@@ -16,8 +19,8 @@ jobs:
       run:
         working-directory: services/sim
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       - run: uv python install 3.12
@@ -32,12 +35,12 @@ jobs:
         run: uv run python -m fly_golf.smoke
 
   web:
-    name: Web (lint, typecheck, tests, build)
+    name: Web (lint, typecheck, tests, live and showcase builds)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -46,7 +49,9 @@ jobs:
         run: pnpm --filter @fly-golf/web lint
       - name: Typecheck
         run: pnpm -r typecheck
-      - name: Tests (protocol contract + frontend)
+      - name: Tests (protocol contract, showcase data, frontend)
         run: pnpm -r test
-      - name: Build
+      - name: Build (live)
         run: pnpm --filter @fly-golf/web build
+      - name: Build (showcase, as deployed to GitHub Pages)
+        run: pnpm --filter @fly-golf/web build:showcase

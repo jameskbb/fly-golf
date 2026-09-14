@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:showcase": "vite --mode showcase",
     "build": "tsc --noEmit && vite build",
+    "build:showcase": "tsc --noEmit && vite build --mode showcase",
     "preview": "vite preview",
+    "preview:showcase": "vite preview --mode showcase",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --check src",

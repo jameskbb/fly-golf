@@ -13,6 +13,10 @@ so they work on Windows without make:
 | Data status | `make data-status` | `pnpm run data:status` |
 | One headless mock putt | `make putt` | `pnpm run putt` |
 | Server smoke test | `make smoke` | — |
+| Web demo (showcase mode, no backend) | `make showcase` | `pnpm showcase` |
+| GitHub Pages build and preview | `make build-showcase` / `make preview-showcase` | `pnpm build:showcase` / `pnpm preview` |
+| Export a recorded run to the web demo | — | `pnpm export-showcase <run_id> --slug … --title …` |
 
-The Python CLIs are `fly-golf` (`serve`, `putt`, `runs`, `replay`) and `fly-golf-data`
-(`status`, `prepare`). Run them with `uv --directory services/sim run <cli> --help`.
+The Python CLIs are `fly-golf` (`serve`, `putt`, `round`, `train`, `refit`, `bench`, `runs`,
+`replay`, `export-showcase`) and `fly-golf-data` (`status`, `prepare`, `verify-source`, `lock`).
+Run them with `uv --directory services/sim run <cli> --help`.

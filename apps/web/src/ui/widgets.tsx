@@ -16,7 +16,16 @@ export function Meter({ label, value, tone = "accent" }: { label: string; value:
   );
 }
 
-export function Sparkline({ values, height = 46 }: { values: number[]; height?: number }) {
+/** `progress` (0..1) draws only the first part of the series, over a faint full trace. */
+export function Sparkline({
+  values,
+  height = 46,
+  progress,
+}: {
+  values: number[];
+  height?: number;
+  progress?: number;
+}) {
   if (!values.length) return <div className="spark empty">no activity</div>;
   const max = Math.max(1, ...values);
   const w = 280;
@@ -24,6 +33,9 @@ export function Sparkline({ values, height = 46 }: { values: number[]; height?: 
   const pts = values.map(
     (v, i) => `${(i * step).toFixed(1)},${(height - (v / max) * (height - 4) - 2).toFixed(1)}`,
   );
+  const partial = progress !== undefined && progress < 1;
+  const shown = partial ? pts.slice(0, Math.max(1, Math.ceil(progress * pts.length))) : pts;
+  const endX = ((shown.length - 1) * step).toFixed(1);
   return (
     <svg
       className="spark"
@@ -32,8 +44,9 @@ export function Sparkline({ values, height = 46 }: { values: number[]; height?: 
       role="img"
       aria-label="spike activity"
     >
-      <polyline points={`0,${height} ${pts.join(" ")} ${w},${height}`} className="spark-area" />
-      <polyline points={pts.join(" ")} className="spark-line" />
+      {partial && <polyline points={pts.join(" ")} className="spark-line ghost" />}
+      <polyline points={`0,${height} ${shown.join(" ")} ${endX},${height}`} className="spark-area" />
+      <polyline points={shown.join(" ")} className="spark-line" />
     </svg>
   );
 }

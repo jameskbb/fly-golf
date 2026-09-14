@@ -17,6 +17,11 @@ runs/<run_id>/traces/*.json   optional per-bin population traces (--traces)
 | 2026-09-13 | `20260913T145440Z-1133d9` | MaleCNS (superseded) | Same seed, recorded before the code was committed | Superseded: its provenance points at `35afc94`, which contains no code |
 | 2026-09-13 | `20260913T170708Z-553f51` | MOCK (course, commit `164a2d1`) | Front nine, round seed 7 | 35 (−1). Reference only: a heuristic with a distance table |
 | 2026-09-13 | training `20260913T172347Z` | MaleCNS + trained readout (`164a2d1`) | Readout fit, 1,320 practice situations, 396 held out | Putts: median leave 6.3 m → 1.0 m; still below a no-brain baseline. See docs/TRAINING.md |
+| 2026-09-14 | `20260914T115447Z-e62f18` | MaleCNS + trained readout `20260913T220118Z` (`fly-golf-lif-v1`, public commit `fd29296`, clean tree) | Front nine, round seed 7. Published as the web demo's `trained-front-nine` | 58 (+22), 7 of 9 holes holed, 1 water penalty. All 57 trajectories and motor outputs re-simulate identically (`fly-golf replay --controller`) |
+| 2026-09-14 | `20260914T115447Z-81909c` | MaleCNS, fixed readout (`fly-golf-lif-v1`, `fd29296`, clean tree) | Front nine, round seed 7. Published as `untrained-front-nine` | 81 (+45), every hole picked up, 29 penalty strokes, only 6/7/8-irons |
+
+Recorded runs stay out of git. Selected runs are exported, validated, into the web demo's static
+showcase (`apps/web/public/showcase/`) with `fly-golf export-showcase`; see docs/GITHUB_PAGES.md.
 
 ## Planned controlled comparisons
 

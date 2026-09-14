@@ -21,6 +21,8 @@ const post = (url: string, body?: unknown) =>
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
+import type { FlyGolfSource } from "./source";
+
 export type ControllerId = "mock" | "malecns" | "malecns-trained";
 export type Mode = "practice" | "course";
 
@@ -46,4 +48,12 @@ export const api = {
     );
     return { run: d.run, shots: d.shots.map((s) => ShotRecord.parse(s)) };
   },
+};
+
+/** The live backend as a data source (course and recorded runs). Session control stays on `api`. */
+export const liveSource: FlyGolfSource = {
+  mode: "live",
+  getCourse: api.course,
+  getRuns: api.runs,
+  getRun: api.run,
 };

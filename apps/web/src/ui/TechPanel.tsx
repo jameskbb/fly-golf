@@ -1,4 +1,5 @@
 import { SENSORY_CHANNELS } from "@fly-golf/protocol";
+import { IS_SHOWCASE } from "../lib/source";
 import { selectLastRecord, useStore } from "../store";
 import { Meter, fmt } from "./widgets";
 
@@ -38,11 +39,28 @@ export function TechPanel() {
         </button>
       </div>
       <h4>Experiment</h4>
-      <Row k="run" v={session?.run_id ?? "—"} />
-      <Row k="controller" v={session?.controller.id ?? "—"} />
-      <Row k="git" v={(status?.git as { commit?: string } | undefined)?.commit?.slice(0, 10) ?? "—"} />
-      <Row k="protocol" v={status?.protocol_version ?? "—"} />
-      <Row k="MaleCNS data" v={status?.malecns.status ?? "—"} />
+      {IS_SHOWCASE ? (
+        <>
+          {/* Provenance of the recorded shot itself: there is no backend in the showcase. */}
+          <Row k="source" v="recorded showcase (static files)" />
+          <Row k="run" v={record?.run_id ?? session?.run_id ?? "—"} />
+          <Row k="controller" v={record?.controller.id ?? session?.controller.id ?? "—"} />
+          <Row
+            k="git"
+            v={record ? `${record.git.commit.slice(0, 10)}${record.git.dirty ? " (dirty)" : ""}` : "—"}
+          />
+          <Row k="protocol" v={record?.versions.protocol ?? "—"} />
+          <Row k="MaleCNS data" v="not loaded: every value was recorded" />
+        </>
+      ) : (
+        <>
+          <Row k="run" v={session?.run_id ?? "—"} />
+          <Row k="controller" v={session?.controller.id ?? "—"} />
+          <Row k="git" v={(status?.git as { commit?: string } | undefined)?.commit?.slice(0, 10) ?? "—"} />
+          <Row k="protocol" v={status?.protocol_version ?? "—"} />
+          <Row k="MaleCNS data" v={status?.malecns.status ?? "—"} />
+        </>
+      )}
       {record ? (
         <>
           <h4>Shot {record.shot_id}</h4>

@@ -1,5 +1,6 @@
 import { SessionState, ShotPhase, ShotRecord } from "@fly-golf/protocol";
 import { api, type ControllerId, type Mode } from "./lib/api";
+import { dataSource } from "./lib/dataSource";
 import { connectSimulation } from "./lib/ws";
 import { useStore } from "./store";
 
@@ -17,7 +18,7 @@ export async function refreshStatus() {
 export async function loadCourse() {
   if (useStore.getState().course) return;
   try {
-    useStore.getState().set({ course: await api.course() });
+    useStore.getState().set({ course: await dataSource.getCourse() });
   } catch (e) {
     useStore.getState().set({ error: `Could not load the course: ${errorText(e)}` });
   }

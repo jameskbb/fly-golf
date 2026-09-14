@@ -1,12 +1,37 @@
 import { create } from "zustand";
-import type { CourseHole, CoursePayload, SessionState, ShotRecord, Status } from "@fly-golf/protocol";
+import type {
+  CourseHole,
+  CoursePayload,
+  SessionState,
+  ShotRecord,
+  ShowcaseIndex,
+  ShowcaseRun,
+  Status,
+} from "@fly-golf/protocol";
 
 export type Connection = "connecting" | "open" | "closed" | "mismatch";
 
 export interface Playback {
   record: ShotRecord;
-  startedAt: number; // performance.now() ms
+  id: number; // unique per started playback: replaying the same shot is a new playback
+  startedAt: number; // performance.now() ms, shifted on resume and seek
+  pausedAt?: number; // performance.now() ms at which the playback was paused
   replay: boolean;
+}
+
+/** Seconds into a playback's timeline (frozen while it is paused). */
+export const playbackTime = (pb: Playback, now = performance.now()) =>
+  ((pb.pausedAt ?? now) - pb.startedAt) / 1000;
+
+/** The static showcase (GitHub Pages): which recorded run is on screen and where we are in it. */
+export interface ShowcaseView {
+  index?: ShowcaseIndex;
+  run?: ShowcaseRun;
+  cursor: number; // index into run.shots
+  stage: "before" | "playing" | "after"; // relative to the shot at `cursor`
+  playId?: number; // the playback started for the shot at `cursor`
+  autoplay: boolean; // carry on to the next shot when one finishes
+  started: boolean; // the landing card has been dismissed
 }
 
 export interface AppState {
@@ -22,6 +47,7 @@ export interface AppState {
   error?: string;
   playback?: Playback;
   history: ShotRecord[]; // shots seen this browser session (live, not replays)
+  showcase?: ShowcaseView; // showcase builds only
   techOpen: boolean;
   runsOpen: boolean;
   cardOpen: boolean;
@@ -29,8 +55,13 @@ export interface AppState {
   set: (patch: Partial<AppState>) => void;
   startPlayback: (record: ShotRecord, replay: boolean) => void;
   endPlayback: () => void;
+  pausePlayback: () => void;
+  resumePlayback: () => void;
+  seekPlayback: (seconds: number) => void;
   addRecord: (record: ShotRecord) => void;
 }
+
+let nextPlaybackId = 0;
 
 export const useStore = create<AppState>((set) => ({
   connection: "connecting",
@@ -42,8 +73,36 @@ export const useStore = create<AppState>((set) => ({
   cardOpen: true,
   modesOpen: false,
   set: (patch) => set(patch),
-  startPlayback: (record, replay) => set({ playback: { record, startedAt: performance.now(), replay } }),
+  startPlayback: (record, replay) =>
+    set({ playback: { record, replay, id: ++nextPlaybackId, startedAt: performance.now() } }),
   endPlayback: () => set({ playback: undefined }),
+  pausePlayback: () =>
+    set((s) =>
+      s.playback && s.playback.pausedAt === undefined
+        ? { playback: { ...s.playback, pausedAt: performance.now() } }
+        : {},
+    ),
+  resumePlayback: () =>
+    set((s) => {
+      const pb = s.playback;
+      if (!pb || pb.pausedAt === undefined) return {};
+      return {
+        playback: { ...pb, startedAt: pb.startedAt + (performance.now() - pb.pausedAt), pausedAt: undefined },
+      };
+    }),
+  seekPlayback: (seconds) =>
+    set((s) => {
+      const pb = s.playback;
+      if (!pb) return {};
+      const now = performance.now();
+      return {
+        playback: {
+          ...pb,
+          startedAt: now - Math.max(0, seconds) * 1000,
+          pausedAt: pb.pausedAt === undefined ? undefined : now,
+        },
+      };
+    }),
   addRecord: (record) => set((s) => ({ history: [...s.history, record].slice(-200) })),
 }));
 

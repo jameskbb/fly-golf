@@ -1,6 +1,12 @@
 import type { ControllerInfo } from "@fly-golf/protocol";
 import type { ControllerId } from "../lib/api";
+import { IS_SHOWCASE } from "../lib/source";
 import type { PersonaId } from "../scene/looks";
+
+/** A controller's name on screen. The backend names the untrained connectome "MaleCNS LIVE";
+ *  a recorded run in the showcase is not live, so there it reads "MaleCNS (recorded)". */
+export const controllerLabel = (c: Pick<ControllerInfo, "label">): string =>
+  IS_SHOWCASE ? c.label.replace(/\s*\bLIVE\b/, " (recorded)") : c.label;
 
 /** Who the brain plays as: its 3D model on the course and its headshot on the picker. */
 export interface Persona {

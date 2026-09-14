@@ -10,11 +10,12 @@ import { useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import * as THREE from "three";
-import type { CourseHole, Scenario, ShotRecord } from "@fly-golf/protocol";
-import { useStore } from "../store";
-import { sampleTrajectory, trajectoryDuration } from "../lib/coords";
+import type { CourseHole, Scenario } from "@fly-golf/protocol";
+import { playbackTime, useStore } from "../store";
+import { sampleTrajectory } from "../lib/coords";
+import { timelineFor } from "../lib/playback";
 import { groundFor, heightAt } from "../lib/terrain";
-import { buildTimeline, easeInOut, lerpAngle, poseAt, type Phase, type Timeline } from "../lib/swing";
+import { easeInOut, lerpAngle, poseAt, type Phase, type Timeline } from "../lib/swing";
 import { BALL_OFFSETS, Fly, clubStyle, type ClubStyle, type FlyRig } from "./Fly";
 import { BALL_RADIUS } from "./Course";
 import { LOOKS, type Look } from "./looks";
@@ -27,12 +28,6 @@ const bagTop = new THREE.Vector3();
 const grip = new THREE.Vector3();
 const camGoal = new THREE.Vector3();
 const lookGoal = new THREE.Vector3();
-
-function timelineFor(record: ShotRecord): Timeline {
-  return buildTimeline(record.stroke, trajectoryDuration(record.trajectory.points), record.outcome.holed, {
-    select: record.mode === "course",
-  });
-}
 
 function ClubModel({ style }: { style: ClubStyle }) {
   // A loose club for the bag / the one being pulled out (shaft along +y, head at the bottom).
@@ -174,10 +169,10 @@ export function Actors({ scenario, hole }: { scenario: Scenario; hole: CourseHol
 
     if (pb) {
       const rec = pb.record;
-      const key = `${rec.run_id}/${rec.shot_id}/${pb.startedAt}`;
+      const key = `${rec.run_id}/${rec.shot_id}/${pb.id}`;
       if (cache.current?.key !== key) cache.current = { key, tl: timelineFor(rec) };
       tl = cache.current.tl;
-      const pose = poseAt(tl, (performance.now() - pb.startedAt) / 1000);
+      const pose = poseAt(tl, playbackTime(pb));
       phase = pose.phase;
       anchor = rec.initial_state.ball;
       lineHeading = lerpAngle(rec.stroke.body_heading_rad, rec.stroke.heading_rad, pose.aimProgress);

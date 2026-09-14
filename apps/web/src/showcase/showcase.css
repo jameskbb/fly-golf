@@ -1,0 +1,198 @@
+/* Showcase (GitHub Pages) additions on top of styles.css: mode badge, playback controls, landing. */
+
+.mode-badge.recorded {
+  font: 700 12px var(--mono);
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+.mode-badge.recorded.big {
+  display: inline-block;
+  font-size: 14px;
+  padding: 6px 12px;
+  margin: 6px 0 4px;
+}
+
+.showcase-controls {
+  gap: 8px;
+  /* narrow enough to stay clear of an open drawer on a desktop-width stage */
+  max-width: min(680px, calc(100% - 32px));
+}
+.showcase-controls .btn.primary {
+  min-width: 108px;
+}
+.run-select {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: 13px var(--body);
+  max-width: 260px;
+}
+.now-playing {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.now-title {
+  font: 700 16px var(--display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.scrub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 118px;
+  gap: 10px;
+  align-items: center;
+}
+.scrub input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.scrub-time {
+  font: 11px var(--mono);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.scrub-phase {
+  font-size: 12px;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shot-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.stroke-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.chip {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font: 12px var(--mono);
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--accent);
+}
+.chip.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.recorded-brain {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+.recorded-brain .headshot {
+  --face: 34px;
+}
+.recorded-brain .brain-name {
+  font-size: 15px;
+}
+.recorded-brain .brain-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+.recorded-brain.live {
+  border-color: var(--live);
+}
+.recorded-brain.trained {
+  border-color: var(--trained);
+}
+.recorded-brain.mock {
+  border-color: var(--mock);
+}
+.recorded-brain .brain-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.spark-line.ghost {
+  opacity: 0.22;
+}
+
+.overlay.landing {
+  background: rgba(4, 8, 6, 0.72);
+  z-index: 5;
+}
+.landing-card {
+  max-width: 560px;
+  border-color: var(--line);
+  text-align: center;
+  padding: 28px 28px 20px;
+}
+.landing-word {
+  font: 700 54px/1 var(--display);
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.landing-tag {
+  font: 600 20px var(--display);
+  letter-spacing: 0.06em;
+  margin: 4px 0 8px;
+}
+.landing-card p {
+  line-height: 1.5;
+}
+.landing-run {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.landing-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 14px 0 10px;
+}
+.btn.big {
+  font-size: 16px;
+  padding: 10px 22px;
+  letter-spacing: 0.06em;
+}
+.landing-honest {
+  text-align: left;
+  font-size: 12px;
+}
+.landing-honest a {
+  color: var(--accent);
+}
+.landing-error {
+  color: #ff8a8a;
+}
+
+@media (max-width: 720px) {
+  .landing-word {
+    font-size: 40px;
+  }
+  .scrub {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .scrub-phase {
+    display: none;
+  }
+}

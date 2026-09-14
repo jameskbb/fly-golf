@@ -142,3 +142,13 @@ Per-bin population traces are optional (`--traces` or `FLY_GOLF_DETAILED_TRACES=
 written to `runs/<run_id>/traces/`. `fly-golf replay <run_id>` re-simulates each shot and checks
 that the trajectory is identical; with `--controller` it also re-runs the brain on the recorded
 sensory frame, with the engine and readout the record names, and checks the motor channels.
+
+## The web demo's records
+
+The web demo (Showcase Mode, [GITHUB_PAGES.md](GITHUB_PAGES.md)) replays shot records exported
+from real runs by `fly-golf export-showcase`. The exporter keeps each record's fields, including
+the controller identity, versions, git commit, dirty flag, neural summary, motor channels and
+trajectory. It removes machine-local fields (`trace_file`, absolute paths) and rounds trajectory
+samples to 0.1 mm and 0.1 ms. Each exported run names its source run id, so the original
+re-simulates with `fly-golf replay`. The demo contains shot outcomes and summary neural
+statistics, not connectome data.

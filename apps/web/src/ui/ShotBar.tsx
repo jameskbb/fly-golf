@@ -2,6 +2,7 @@ import type { ShotRecord } from "@fly-golf/protocol";
 import { selectLastRecord, useStore } from "../store";
 import { metresToFeet } from "../lib/coords";
 import { distanceLabel } from "../lib/terrain";
+import { controllerLabel } from "./brains";
 import { fmt } from "./widgets";
 
 type Out = ShotRecord["outcome"];
@@ -101,7 +102,9 @@ export function ShotBar() {
         >
           <span className="k">RESULT {record && playback?.replay ? "· REPLAY" : ""}</span>
           <span className="v">{record ? (reveal ? resultText(record.outcome) : "…") : "—"}</span>
-          <span className="s">{record ? `${record.controller.label} · ${record.shot_id}` : ""}</span>
+          <span className="s">
+            {record ? `${controllerLabel(record.controller)} · ${record.shot_id}` : ""}
+          </span>
         </div>
         <div className="cell">
           <span className="k">STROKES</span>
@@ -158,7 +161,7 @@ export function ShotBar() {
       <div className={`cell result ${reveal && record?.outcome.holed ? "holed" : ""}`}>
         <span className="k">RESULT {record && playback?.replay ? "· REPLAY" : ""}</span>
         <span className="v">{record ? (reveal ? resultText(record.outcome) : "…") : "—"}</span>
-        <span className="s">{record ? `${record.controller.label} · ${record.shot_id}` : ""}</span>
+        <span className="s">{record ? `${controllerLabel(record.controller)} · ${record.shot_id}` : ""}</span>
       </div>
       <div className="cell">
         <span className="k">STROKES</span>

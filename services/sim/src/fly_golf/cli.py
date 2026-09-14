@@ -273,6 +273,40 @@ def cmd_replay(args) -> int:
     return 2 if not ok else (3 if unavailable else 0)
 
 
+def cmd_export_showcase(args) -> int:
+    from pathlib import Path
+
+    from .config import load_settings
+    from .experiments.showcase import ShowcaseExportError, export_showcase
+
+    s = load_settings()
+    out = Path(args.out) if args.out else s.repo_root / "apps" / "web" / "public" / "showcase"
+    try:
+        report = export_showcase(
+            s.runs_dir,
+            args.run_id,
+            out,
+            slug=args.slug,
+            title=args.title,
+            description=args.description,
+            round_seed=args.round,
+            featured=args.featured,
+        )
+    except ShowcaseExportError as exc:
+        print(f"export-showcase: {exc}", file=sys.stderr)
+        return 2
+    rnd = report["round"]
+    print(
+        f"{report['controller']}: {report['shots']} shots, {rnd['strokes']} strokes over {rnd['holes_played']} holes "
+        f"({rnd['to_par']:+d})" + ("" if rnd["complete"] else ", round incomplete")
+    )
+    print(f"  {report['run_file']}  {report['run_bytes'] / 1e6:.2f} MB")
+    print(f"  course.json  {report['course_bytes'] / 1e3:.0f} kB   index.json  {report['index_bytes'] / 1e3:.1f} kB")
+    for note in report["notes"]:
+        print(f"  note: {note}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="fly-golf")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -324,6 +358,16 @@ def main(argv: list[str] | None = None) -> int:
     rp.add_argument("run_id")
     rp.add_argument("--shot")
     rp.add_argument("--controller", action="store_true", help="also re-run the controller and compare motor output")
+    ex = sub.add_parser(
+        "export-showcase", help="export a recorded front-nine run for the static web showcase (GitHub Pages)"
+    )
+    ex.add_argument("run_id")
+    ex.add_argument("--slug", required=True, help="showcase id and file name, e.g. trained-front-nine")
+    ex.add_argument("--title", required=True, help='e.g. "Trained MaleCNS - Front Nine"')
+    ex.add_argument("--description", help="one or two sentences shown with the run (default: generated)")
+    ex.add_argument("--round", type=int, help="round seed to export when the run holds more than one round")
+    ex.add_argument("--out", help="showcase directory (default: apps/web/public/showcase)")
+    ex.add_argument("--featured", action="store_true", help="open the showcase on this run")
     args = p.parse_args(argv)
     handlers = {
         "serve": cmd_serve,
@@ -334,6 +378,7 @@ def main(argv: list[str] | None = None) -> int:
         "refit": cmd_refit,
         "runs": cmd_runs,
         "replay": cmd_replay,
+        "export-showcase": cmd_export_showcase,
     }
     return handlers[args.cmd](args)
 

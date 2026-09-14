@@ -20,6 +20,10 @@
     "lint:web": "pnpm -r --if-present run lint && pnpm -r --if-present run typecheck",
     "format": "uv --directory services/sim run ruff format . && pnpm -r --if-present run format",
     "build": "pnpm --filter @fly-golf/web build",
+    "showcase": "pnpm --filter @fly-golf/web dev:showcase",
+    "build:showcase": "pnpm --filter @fly-golf/web build:showcase",
+    "preview": "pnpm --filter @fly-golf/web preview:showcase",
+    "export-showcase": "uv --directory services/sim run fly-golf export-showcase",
     "data": "uv --directory services/sim run fly-golf-data prepare",
     "data:status": "uv --directory services/sim run fly-golf-data status",
     "putt": "uv --directory services/sim run fly-golf putt --controller mock --seed 7"

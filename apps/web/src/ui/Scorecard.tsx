@@ -1,7 +1,10 @@
 import { playHole } from "../actions";
+import { holeOf } from "../lib/showcase";
+import { IS_SHOWCASE } from "../lib/source";
+import { watchHole } from "../showcase/controller";
 import { useStore } from "../store";
 import { yards } from "../lib/terrain";
-import { brainById } from "./brains";
+import { brainById, controllerLabel } from "./brains";
 
 function scoreClass(strokes: number | null, par: number, holed: boolean | null): string {
   if (strokes == null) return "";
@@ -20,7 +23,9 @@ export function Scorecard() {
   const open = useStore((s) => s.cardOpen);
   const busy = useStore((s) => s.busy);
   const playback = useStore((s) => s.playback);
+  const recorded = useStore((s) => s.showcase?.run);
   if (!open || session?.mode !== "course" || !session.scorecard) return null;
+  const recordedHoles = new Set(recorded?.shots.map(holeOf) ?? []);
   const card = session.scorecard;
   const current = session.hole_number;
   const totals = session.totals;
@@ -34,7 +39,7 @@ export function Scorecard() {
       <div className="sc-title">
         FRONT NINE{" "}
         <span className="muted">
-          · {used.length ? names(used) : session.controller.label}
+          · {used.length ? names(used) : controllerLabel(session.controller)}
           {used.length > 0 &&
             !used.includes(session.controller.id) &&
             ` · next: ${names([session.controller.id])}`}{" "}
@@ -54,9 +59,9 @@ export function Scorecard() {
               <th key={c.hole}>
                 <button
                   className={`hole-btn ${c.hole === current ? "current" : ""}`}
-                  disabled={busy || !!playback}
-                  title={`Play hole ${c.hole}${water.has(c.hole) ? " (water)" : ""}`}
-                  onClick={() => void playHole(c.hole)}
+                  disabled={IS_SHOWCASE ? !recordedHoles.has(c.hole) : busy || !!playback}
+                  title={`${IS_SHOWCASE ? "Watch" : "Play"} hole ${c.hole}${water.has(c.hole) ? " (water)" : ""}`}
+                  onClick={() => void (IS_SHOWCASE ? watchHole(c.hole) : playHole(c.hole))}
                 >
                   {c.hole}
                   {water.has(c.hole) && <span className="drop">●</span>}

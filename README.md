@@ -4,32 +4,59 @@
 
 **Can a fruit fly break 100?**
 
-Fly Golf connects a simulated *Drosophila* nervous system to a 3D golf environment. The
-experiment asks whether activity propagating through the reconstructed MaleCNS connectome can
-produce useful golf behaviour. The fly now plays a **front nine** (par 36, water on four holes)
-with a **full bag**: it picks its own club from driver to putter, and the ball flies, bounces,
-rolls, finds the water or the trees.
+Fly Golf connects simulated neural activity running over the reconstructed **MaleCNS v1.0**
+fruit-fly connectome to a fully 3D golf environment. The fly plays a front nine, chooses its own
+club from a full bag, sets up every shot, records its neural telemetry, and can use a trained
+readout of descending-neuron activity to make its golf decisions.
+
+**[▶ Watch the Web Demo](https://jameskbb.github.io/fly-golf/)** ·
+[How It Works](#how-it-works) · [Run It Locally](#run-it-locally) ·
+[Scientific Caveats](#scientific-caveats)
 
 [![Animated gameplay from Pond Hop: the trained MaleCNS readout chooses a club, swings, and sends a shot across the water while live neural telemetry updates](docs/media/trained-pond-hop-gameplay.gif)](docs/media/trained-pond-hop-gameplay.mp4)
 
 *One real shot on Pond Hop, the 164-yard third. The trained readout runs 400 ms of MaleCNS
-activity, chooses the 4-hybrid, and sends it over the pond while the live telemetry and follow
-camera tell the story. [Open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp4).*
+activity, chooses the 4-hybrid, and sends it over the pond while the telemetry and follow camera
+tell the story. [Open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp4).*
 
-> **What this is, and what it is not**
+> **What is real, and what is not**
 >
-> - The **wiring is real**: 166,700 neurons and 25,582,938 connections from the MaleCNS v1.0 connectome
->   (brain + ventral nerve cord, CC BY 4.0).
-> - The **neuron dynamics are modelled**: Fly Golf's leaky integrate-and-fire engine implements the whole-brain model of
->   Shiu et al. 2024 and reproduces the Brian2 reference spike for spike, on the full connectome ([LIF_ENGINE.md](docs/LIF_ENGINE.md)).
-> - The **sensory and motor mappings are engineered**: we choose which neurons receive golf information
->   and which neurons steer the putter. Both are documented.
-> - **The connectome never learns.** An optional **trained readout** learns, offline, how to read putt-or-swing,
->   club, aim and power out of descending-neuron activity from practice shots. It is labelled TRAINED everywhere
->   and tested against a no-brain baseline and a shuffled-connectome control ([TRAINING.md](docs/TRAINING.md)).
->   Honest headline: a readout of the raw senses, and even of a randomly rewired connectome, still plays better.
-> - This is **not a digital copy of a fly's mind**. Think of it as simulated neural dynamics operating over the
->   reconstructed MaleCNS connectome.
+> - **Real:** the MaleCNS v1.0 anatomical wiring. 166,700 neurons and 25,582,938 connections
+>   from the brain and ventral nerve cord of one male fly (CC BY 4.0).
+> - **Modelled:** the neural dynamics. A leaky integrate-and-fire engine implements the
+>   whole-brain model of Shiu et al. 2024 and reproduces its Brian2 reference spike for spike
+>   ([LIF_ENGINE.md](docs/LIF_ENGINE.md)).
+> - **Engineered:** the golf sensory mapping (which neurons receive golf information) and the
+>   golf motor mapping (which neurons become the swing), plus the golf physics. All are
+>   documented.
+> - **Trained:** an optional readout that learns, offline, to turn descending-neuron activity
+>   into putt-or-swing, club, aim and power. **The connectome never learns.** This is not
+>   synaptic plasticity inside MaleCNS ([TRAINING.md](docs/TRAINING.md)).
+> - This is **not a digital copy of a fly's mind**, and no fly understands golf. It is simulated
+>   neural dynamics operating over a real wiring diagram, wired to golf by hand.
+
+## The web demo
+
+[**jameskbb.github.io/fly-golf**](https://jameskbb.github.io/fly-golf/) is the same 3D app
+replaying **recorded MaleCNS rounds**. The neural simulation was computed beforehand; the replay
+runs entirely in your browser. There is no backend, and nothing is simulated or invented on the
+page. Play the round, pause, scrub through a swing, jump to any hole or stroke, orbit the camera,
+and read each shot's recorded spikes, active neurons, population rates, motor channels and club
+choice.
+
+Both featured rounds were played from round seed 7, the project's default, chosen before either
+round was played. Neither was picked from several attempts:
+
+| Round | Brain | Score | What happened |
+| --- | --- | --- | --- |
+| **Trained MaleCNS: Front Nine** (featured) | the connectome + a trained readout | **58** (+22), 7 of 9 holes holed | Drivers off the tee, wedges around the greens, one ball in the water; two holes picked up |
+| **Untrained MaleCNS: Front Nine** | the connectome, fixed readout rules | **81** (+45), no hole finished | Only a 6-, 7- or 8-iron from everywhere, and 29 penalty strokes |
+
+[![The web demo at the end of the trained round: the golfer fly beside the ninth hole's flag after holing out, with the scorecard reading Round complete: 58 (+22), on pace for 116 over eighteen, not breaking 100 yet, and the recorded neural telemetry in the brain panel](docs/screenshots/web-demo-round-complete.png)](https://jameskbb.github.io/fly-golf/)
+
+On an 18-hole pace that is 116 and 162. **The fly does not break 100 yet.** Both rounds were
+recorded at this repository's first public commit and re-simulate bit for bit (`fly-golf replay`).
+How the demo works and how to publish another run: [GITHUB_PAGES.md](docs/GITHUB_PAGES.md).
 
 ![Meet the three brains section header](docs/screenshots/readme-header-brains.png)
 
@@ -162,22 +189,24 @@ A cross bunker divides the fairway before a big, fast finishing green.
 | **Front nine**: 9 hand-designed holes, fairways, bunkers, water on holes 3/4/5/8, tree-lined out of bounds ([COURSE.md](docs/COURSE.md)) | ✅ |
 | **Full bag**: driver, 3W, 5W, 4H, 5–9 irons, PW/GW/SW/LW, putter. The fly chooses via the `club_reach` motor channel | ✅ |
 | Full-shot physics: drag + Magnus flight, spin, surface bounce and roll, penalties, lies | ✅ tested, replayable |
-| **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls; retrained on the Brian2-exact engine: 70.0 strokes per nine, half the holes holed out ([TRAINING.md](docs/TRAINING.md#engine-migration-2026-09-13)) | ✅ experimental |
+| **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls; retrained on the Brian2-exact engine: 70.0 strokes per nine, half the holes holed ([TRAINING.md](docs/TRAINING.md#engine-migration-2026-09-13)) | ✅ experimental |
 | **Switch brains mid-round** (Mock / MaleCNS / Trained); scorecard marks who played each hole, mixed rounds flagged | ✅ |
+| **Web demo**: Showcase Mode replays recorded MaleCNS rounds on GitHub Pages, no backend ([GITHUB_PAGES.md](docs/GITHUB_PAGES.md)) | ✅ |
 | `fly-golf bench`: complete front-nine rounds per brain (holes finished, strokes, trees, club by distance) | ✅ |
 | Deterministic, backend-authoritative putting physics (slope, stimp, cup capture, lip-outs) | ✅ tested |
 | Controller interface: SensoryEncoder → BrainController → MotorDecoder → MotorTarget | ✅ |
 | **MOCK CONTROLLER** (hand-written heuristic, labelled everywhere) | ✅ |
 | **MaleCNS controller**: full-graph LIF simulation (`fly-golf-lif-v1`, Brian2-exact), proxy sensory input, descending-neuron readout | ✅ ~1.2 s of compute per 400 ms decision |
-| 3D green, procedural fruit fly golfer, swing animation driven by decoded motor output | ✅ |
+| 3D course, procedural fruit fly golfer, swing animation driven by decoded motor output | ✅ |
 | Live WebSocket telemetry, brain panel, technical panel, run history, deterministic replay | ✅ |
-| **A body per brain**: Mock plays as a clockwork tin fly (no neurons inside), MaleCNS as the plain fly, Trained as the same fly in golf clothes; headshots rendered from the 3D models on the brain picker | ✅ |
+| **A body per brain**: Mock plays as a clockwork tin fly (no neurons inside), MaleCNS as the plain fly, Trained as the same fly in golf clothes | ✅ |
 | Experiment records (JSONL) with git commit, seeds, versions, neural summary and trajectory | ✅ |
-| **Does the connectome play well?** | ❌ Not yet. The untrained readout hits a 6-iron from everywhere and never finishes a hole. The v2 **trained readout** picks wedges around the green, putts every green shot and finishes a large share of holes, but a readout of the raw senses plays far better, and **a degree-preserving shuffled connectome trains better than the real one**. See [TRAINING.md](docs/TRAINING.md#results) |
+| **Does the connectome play well?** | ❌ Not yet. The untrained readout hits a mid iron from everywhere and never finishes a hole. The v2 **trained readout** picks wedges around the green, putts every green shot and finishes a large share of holes, but a readout of the raw senses plays far better, and **a degree-preserving shuffled connectome trains better than the real one**. See [TRAINING.md](docs/TRAINING.md#results) |
 
-## Quick start
+## Run it locally
 
-Requirements: [uv](https://docs.astral.sh/uv/), [pnpm](https://pnpm.io/) 10+, Node 22+. uv installs Python 3.12 for you.
+Requirements: [uv](https://docs.astral.sh/uv/), [pnpm](https://pnpm.io/) 10+, Node 22+. uv installs
+Python 3.12 for you.
 
 ```sh
 make setup      # uv sync + pnpm install
@@ -185,10 +214,11 @@ make dev        # backend http://127.0.0.1:8000  +  app http://localhost:5173
 make test       # all unit tests (no connectome needed)
 ```
 
-Open http://localhost:5173 and press **Hit** (or Space). The app starts on the **front nine** with the
-**MOCK CONTROLLER**. Switch to **Practice green** for seeded putts (putter only, recorded as `putting-v2` on v0.2
-sensing; the original v0.1 putts replay with `fly-golf replay`), click a hole
-number on the scorecard to jump to it, and press **C** to hide the card.
+Open http://localhost:5173 and press **Hit** (or Space). The header reads **LIVE SIMULATION** while
+the backend is connected. The app starts on the **front nine** with the **MOCK CONTROLLER**.
+Switch to **Practice green** for seeded putts (putter only, recorded as `putting-v2` on v0.2
+sensing; the original v0.1 putts replay with `fly-golf replay`), click a hole number on the
+scorecard to jump to it, and press **C** to hide the card.
 
 To let the real connectome play:
 
@@ -196,7 +226,15 @@ To let the real connectome play:
 make data       # downloads ~1.1 GB (public, CC BY 4.0), verifies SHA-256, compiles in ~10 s
 ```
 
-Then choose **MaleCNS** in the controller toggle. Details are in [data/README.md](data/README.md).
+Then choose **MaleCNS** or **Trained** in the brain picker. Details are in
+[data/README.md](data/README.md). The full graph needs about 1 GB of RAM while it runs.
+
+The web demo, locally and without a backend:
+
+```sh
+pnpm showcase                        # http://localhost:5173/fly-golf/
+pnpm build:showcase && pnpm preview  # the exact GitHub Pages build at http://localhost:4173/fly-golf/
+```
 
 Headless, from the command line:
 
@@ -208,6 +246,7 @@ uv --directory services/sim run fly-golf train --scale 4 --seed 2 --jobs 12     
 uv --directory services/sim run fly-golf bench --controller malecns-trained    # complete front-nine rounds
 uv --directory services/sim run fly-golf runs
 uv --directory services/sim run fly-golf replay <run_id>     # re-simulate; checks the trajectory is identical
+uv --directory services/sim run fly-golf export-showcase <run_id> --slug <id> --title "…"   # docs/GITHUB_PAGES.md
 ```
 
 ### Windows
@@ -230,18 +269,22 @@ WSL2 also works exactly like Linux, and this project was developed on WSL2.
 ## How it works
 
 This diagram shows what the code does today. The colours show what is **real data** (green),
-**modelled** (blue), **engineered by us** (orange), and **test infrastructure** (grey).
+**modelled** (blue), **engineered by us** (orange), **trained** (purple) and **test
+infrastructure** (grey).
 
 ```mermaid
 flowchart LR
-  G[GolfEnvironment<br/>deterministic physics] -->|Observation| S[SensoryEncoder<br/>proxy-v0]
-  S -->|SensoryFrame<br/>9 bounded channels| B{BrainController}
+  G[GolfEnvironment<br/>deterministic physics] -->|Observation| S[SensoryEncoder<br/>proxy-v0.2]
+  S -->|SensoryFrame<br/>14 bounded channels| B{BrainController}
   B --> M[MockBrainController<br/>MOCK — no neurons]
   B --> C[MaleCNSController]
   C --> E[LIF engine<br/>simulated dynamics]
   W1[(MaleCNS v1.0 wiring<br/>166,700 neurons · 25.6M connections)] --> E
-  M --> D[MotorDecoder<br/>embodiment]
-  C -->|MotorCommand<br/>7 bounded channels| D
+  E -->|descending-neuron rates| R[fixed readout rules]
+  E -->|descending-neuron rates| TR[trained readout<br/>optional, fitted offline]
+  R --> D[MotorDecoder<br/>embodiment]
+  TR --> D
+  M --> D
   D -->|DecodedStroke| T[MotorTarget<br/>Simulation / future Hardware]
   T --> G
   G -.->|WebSocket state + shot records| W[3D web app]
@@ -249,62 +292,69 @@ flowchart LR
   classDef real fill:#1f6b40,stroke:#39e08a,color:#fff
   classDef modeled fill:#1d4e7a,stroke:#6cc7ff,color:#fff
   classDef engineered fill:#7a4a12,stroke:#ffb938,color:#fff
+  classDef trained fill:#4b2a78,stroke:#c38bff,color:#fff
   classDef mock fill:#444,stroke:#999,color:#fff
   class W1 real
   class E modeled
-  class S,C,D,T,G engineered
+  class S,C,R,D,T,G engineered
+  class TR trained
   class M mock
 ```
 
-The loop runs **once per putt**. The fly senses the green, its brain simulates 400 ms, one stroke
-comes out, and the ball rolls. There is no arrow back into the brain, because **nothing learns
-yet**: the reward is recorded for analysis but never fed to the brain, and the neural state is
-reset to rest before every putt.
+The loop runs **once per stroke**. The fly senses the scene, its brain simulates 400 ms, one
+stroke comes out, and the ball flies and rolls. There is no arrow back into the brain: the reward
+is recorded for analysis but never fed to the brain, and the neural state is reset to rest before
+every stroke. The only learning is the optional readout, fitted offline, outside the connectome.
+
+The same app runs in two modes ([ARCHITECTURE.md](docs/ARCHITECTURE.md)): **live**, driven by the
+FastAPI + WebSocket backend above, and **showcase**, which replays exported shot records as static
+files on GitHub Pages.
 
 ```
-apps/web            React + three.js (R3F) spectator app: green, fly, brain panel, replay
-packages/protocol   Typed wire protocol (zod) + shared JSON fixtures, checked from both sides
+apps/web            React + three.js (R3F) app: course, fly, brain panel, replay; live and showcase builds
+packages/protocol   Typed wire protocol and showcase format (zod) + shared JSON fixtures, checked from both sides
 services/sim        Python backend (FastAPI, NumPy, Numba)
-  fly_golf/golf         physics.py, scenario.py, env.py
-  fly_golf/brain        interfaces.py, sensory.py, mock.py, motor.py, registry.py
+  fly_golf/golf         physics, course, clubs, environments
+  fly_golf/brain        interfaces, sensory, mock, motor, registry, trained readout
   fly_golf/brain/malecns  engine.py (LIF), graph.py, populations.py, controller.py
-  fly_golf/experiments  runner.py (sessions, JSONL records, replay)
-  fly_golf/data         prepare.py (make data)
+  fly_golf/experiments  runner.py (sessions, JSONL records, replay), bench, showcase exporter
+  fly_golf/training     the trained-readout pipeline
+  fly_golf/data         prepare.py + compiler.py (make data)
   fly_golf/api          app.py (REST + WS), schemas.py
 data/               lock file + README; downloads/compiled graph are git-ignored
-docs/               UPSTREAM, PROVENANCE, SENSORY_MAPPING, MOTOR_MAPPING, BUILD_LOG
+docs/               architecture, provenance, mappings, training, course, build log
 runs/               experiment records (git-ignored)
 ```
 
-**One putt, step by step:**
+**One stroke, step by step:**
 
-1. The backend generates a seeded green: distance, slope and stimp.
+1. The backend knows the hole, the ball, the lie and the target.
 2. The proxy encoder turns the golf state into perceptual channels: where the target is, how far
-   away, which way the ground falls, and how fast the green is. It never provides an aim angle or
-   a stroke power.
-3. In MaleCNS mode, those channels become constant current into documented sensory populations:
-   LC10 visual-target neurons (left/right) and Johnston's organ gravity neurons.
+   away, which way the ground falls, how fast the green is, the lie and whether water is on the
+   line. It never provides an aim angle, a club or a stroke power.
+3. In MaleCNS mode, those channels become constant current into documented sensory populations,
+   such as LC10 visual-target neurons and Johnston's organ gravity neurons.
 4. The network runs for 400 ms of neural time. Every retained neuron and connection takes part.
-5. Descending-neuron activity is read out: DNa01/DNa02 for aim, and the whole DN population for
-   power, tempo, face and strike. It becomes seven motor channels.
-6. The shared decoder turns those channels into a start direction and ball speed, and the physics
-   rolls the ball.
-7. The 3D fly animates the decoded stroke and the ball follows the backend trajectory.
-8. Everything is recorded. `fly-golf replay <run> --controller` re-simulates each trajectory and re-runs the
-   controller on the recorded sensory frame, and both must match exactly. The UI replay re-plays the recorded
-   shot.
+5. Descending-neuron activity is read out: by fixed a-priori rules, or by the optional trained
+   readout. It becomes eight motor channels, including `club_reach`, the club the fly reaches for.
+6. The shared decoder turns those channels into a club, a start direction and a ball launch, and
+   the physics flies and rolls the ball.
+7. The 3D fly pulls that club from its bag and animates the decoded stroke; the ball follows the
+   backend trajectory.
+8. Everything is recorded. `fly-golf replay <run> --controller` re-simulates each trajectory and
+   re-runs the controller on the recorded sensory frame, and both must match exactly.
 
-> **Honest caveat about aim:** the fly addresses the ball within ±10° of the cup line, so most of a putt's
-> direction comes from the embodiment. The connectome currently adds a small, left-biased offset that does not
-> track the target. See [MOTOR_MAPPING.md](docs/MOTOR_MAPPING.md#first-connectome-putt-2026-09-13-result).
+> **Honest caveat about aim:** the fly addresses the ball within ±10° of the target line, so most of
+> a shot's direction comes from the embodiment. See
+> [MOTOR_MAPPING.md](docs/MOTOR_MAPPING.md#first-connectome-putt-2026-09-13-result).
 
 ![The honest model section header](docs/screenshots/readme-header-honest-model.png)
 
-## Is this a digital fly? What's real, what's modelled, what's engineered
+## Scientific caveats
 
-Short answer: **no.** We have a real fly's *wiring diagram*. We run a *simplified simulation* of
-electricity flowing through it. We *choose* where golf information goes in and where the stroke
-comes out.
+**Is this a digital fly?** Short answer: **no.** We have a real fly's *wiring diagram*. We run a
+*simplified simulation* of electricity flowing through it. We *choose* where golf information goes
+in and where the stroke comes out.
 
 An analogy: imagine you had a perfect map of every road in a city, including every lane and
 every intersection. That map is real and hard-won. Now you simulate traffic on it using a few
@@ -321,24 +371,26 @@ Fly Golf is that, for a fly's nervous system:
 | **Excitatory or inhibitory** | Predicted from the neurotransmitter each neuron is likely to use (from the dataset) | 🟦 **Inferred** | A good estimate, but some cells are ambiguous; those default to excitatory. |
 | **Synapse strength** | Synapse count × 0.275 mV | 🟦 **Modelled** | A real synapse's strength depends on receptors, location and chemistry. We use one number for all. |
 | **How a neuron behaves** | "Leaky integrate-and-fire": charge builds up, the neuron fires, it resets. The same rules for every cell | 🟦 **Modelled** | Real neurons are far richer: ion channels, graded signals, neuromodulators such as dopamine, gap junctions. None of that is simulated. |
-| **Senses** | Golf facts ("hole is 3° left, 1.4 m away, ground falls left") turned into current injected into visual-target cells (LC10) and gravity-sensing antenna cells (Johnston's organ) | 🟧 **Engineered** | The fly does not *see* the green. We hand its brain a signal, in neurons we chose. |
-| **Body and muscles** | Firing of descending neurons (brain → body) is read out and turned into aim, power, tempo and strike | 🟧 **Engineered** | Real flies don't swing putters. We chose which neurons count as "the stroke". The 3D swing is a visualisation of that readout. |
-| **Where the fly stands** | The fly is placed roughly facing the hole (±10°) | 🟧 **Engineered** | Most of a putt's direction comes from this placement, not from neurons. See [MOTOR_MAPPING.md](docs/MOTOR_MAPPING.md). |
-| **Memory and learning** | None. Brain state resets before every putt | ❌ **Not present** | The fly can't improve or remember the last putt. Learning is future, experimental work. |
-| **Physics** | Deterministic ball roll: slope, green speed, cup capture | 🟧 **Engineered** | A simplified but calibrated golf model (see [PROVENANCE.md](docs/PROVENANCE.md)). |
+| **Senses** | Golf facts ("target is 3° left, 150 m away, ground falls left, water on the line") turned into current injected into visual-target cells (LC10) and gravity-sensing antenna cells (Johnston's organ) | 🟧 **Engineered** | The fly does not *see* the course. We hand its brain a signal, in neurons we chose. |
+| **Body and muscles** | Firing of descending neurons (brain → body) is read out and turned into club, aim, power, tempo and strike | 🟧 **Engineered** | Real flies don't swing golf clubs. We chose which neurons count as "the stroke". The 3D swing is a visualisation of that readout. |
+| **Where the fly stands** | The fly is placed roughly facing the target (±10°) | 🟧 **Engineered** | Most of a shot's direction comes from this placement, not from neurons. See [MOTOR_MAPPING.md](docs/MOTOR_MAPPING.md). |
+| **Trained readout** (optional) | Linear weights fitted offline on descending-neuron rates from practice shots | 🟪 **Trained** | Learning happens *outside* the connectome. It is not synaptic plasticity: MaleCNS is never changed. |
+| **Memory and learning inside the brain** | None. Brain state resets before every stroke | ❌ **Not present** | The connectome cannot improve or remember the last shot. |
+| **Physics** | Deterministic ball flight, bounce and roll: slope, green speed, cup capture, lies, hazards | 🟧 **Engineered** | A simplified but calibrated golf model (see [PROVENANCE.md](docs/PROVENANCE.md) and [COURSE.md](docs/COURSE.md)). |
+| **The web demo** | Shot records exported from real runs | 📼 **Recorded** | The browser replays what the simulator computed earlier. It simulates nothing. |
 
 **So what *is* the connectome contributing?** Everything between "current goes into the sensory
-neurons" and "descending neurons fire" is determined by the real wiring: which of the ~18,000
-neurons that activate on each putt light up, how strongly, and in what order. That is the part
-nobody hand-wrote. It is also why the results are honest and currently unimpressive: with our
-first choice of inputs and outputs, the real wiring does not turn "hole is close" into "hit it
-softly".
+neurons" and "descending neurons fire" is determined by the real wiring: which of the roughly
+10,000–20,000 neurons that activate on each shot light up, how strongly, and in what order. That is
+the part nobody hand-wrote. It is also why the results are honest and currently unimpressive: with
+our first choice of inputs and outputs, the real wiring does not yet turn "the hole is close" into
+"hit it softly", and a shuffled connectome trains a better readout than the real one.
 
 **What would make it more fly-like?** In rough order of scientific value:
 
-1. **Controls.** Run the same putts on a *shuffled* wiring diagram. If the real connectome does
-   no better, the wiring isn't doing the work.
-2. **Real vision.** Render the green through modelled fly eyes and drive the photoreceptors,
+1. **Controls.** Lesions of the chosen populations, alongside the shuffled-wiring control that
+   already exists ([TRAINING.md](docs/TRAINING.md#controls-and-baselines)).
+2. **Real vision.** Render the course through modelled fly eyes and drive the photoreceptors,
    instead of injecting summary numbers.
 3. **Richer neurons.** Graded signalling in the visual system, and neuromodulation.
 4. **Learning.** Plasticity rules, labelled experimental and tested against those controls.
@@ -369,37 +421,43 @@ hello (protocol v2) and then streams `state`, `shot_phase`, `shot_result` and `c
 
 ## Testing
 
-- **Backend:** `make test` runs 99 tests without the connectome, plus 4 real-data tests when it is compiled, covering physics invariants (rest, friction, stimp
-  calibration, determinism, cup capture, slope break), controllers (determinism, bounds,
-  malformed input), the runner and replay, the LIF engine (delay, refractory period, inhibition,
-  disconnection), the MaleCNS adapter on a synthetic graph, the API and WebSocket, and the
-  protocol fixtures.
+- **Backend:** `make test` runs about 300 tests without the connectome, and the real-data
+  integration tests when it is compiled. They cover physics invariants (rest, friction, stimp
+  calibration, determinism, cup capture, slope break), the course and full-shot physics,
+  controllers (determinism, bounds, malformed input), the runner and replay, the LIF engine and
+  its Brian2 parity, the MaleCNS adapter on a synthetic graph, training, the API and WebSocket,
+  the showcase exporter, and the protocol fixtures.
 - **Integration:** `make test-integration` adds the real-connectome tests. They auto-skip without
   data.
-- **Frontend:** protocol contract tests, including that the version matches the backend, plus
-  swing-timeline and coordinate tests.
-- **CI:** `.github/workflows/ci.yml` runs lint, tests, build and a real server smoke test. It
-  never downloads the connectome.
+- **Frontend:** protocol contract tests, including that the version matches the backend; swing
+  timeline and terrain tests; and showcase tests that validate every committed showcase file and
+  rebuild each round's scorecard from its shots.
+- **CI:** `.github/workflows/ci.yml` runs lint, tests, both builds and a real server smoke test.
+  It never downloads the connectome. `.github/workflows/pages.yml` deploys the web demo.
 
 ![Roadmap and documentation section header](docs/screenshots/readme-header-roadmap.png)
 
 ## Roadmap
 
-1. **Putting (now):** make the connectome's putts measurable. Add controls: a shuffled
-   connectome, lesions and a mock baseline.
-2. **Putting course:** break, speed, obstacles and multi-putt scoring.
-3. **Short game:** wedges, loft, carry, spin, bounce and roll.
-4. **Club selection** from lie, distance, elevation, wind and hazards.
-5. **Full swing** motor channels.
-6. **Full hole:** tee, fairway, rough, bunker, water and out of bounds.
-7. **Career:** handicap, GIR, putts and dispersion. Meet *Gary, Drosophila melanogaster, 166,700 neurons.*
-8. **Vision:** render the green through modelled fly eyes and drive the photoreceptors (see
+Done: putting, the front nine, club selection, full swings, hazards, the trained readout with its
+controls, and the web demo. Next:
+
+1. **Controls:** lesion experiments, and more rounds per brain on shared seeds.
+2. **Showcase comparisons:** first putt, before and after training, the shuffled-connectome
+   control, and the best round, side by side on the web demo.
+3. **Vision:** render the course through modelled fly eyes and drive the photoreceptors (see
    [SENSORY_MAPPING.md](docs/SENSORY_MAPPING.md)).
-9. **Physical world:** a `HardwareMotorTarget` for a robotic putter.
-10. **Graduate to 18 holes:** build the back nine once the model can reliably finish the front.
+4. **Career:** handicap, greens in regulation, putts and dispersion. Meet *Gary, Drosophila
+   melanogaster, 166,700 neurons.*
+5. **Physical world:** a `HardwareMotorTarget` for a robotic putter.
+6. **Graduate to 18 holes:** build the back nine once the model can reliably finish the front.
 
 ## Documentation
 
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): live and showcase modes, the data flow and the code
+  layout.
+- [docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md): the web demo, deployment, and exporting a new
+  showcase run.
 - [docs/LIF_ENGINE.md](docs/LIF_ENGINE.md): the neural engine, the model it implements, and how it
   is validated against the Brian2 reference.
 - [docs/UPSTREAM.md](docs/UPSTREAM.md): the upstream projects inspected, their commits, and what
@@ -412,12 +470,15 @@ hello (protocol v2) and then streams `state`, `shot_phase`, `shot_result` and `c
 - [docs/COURSE.md](docs/COURSE.md): the front nine, the bag, full-shot physics and rules.
 - [docs/TRAINING.md](docs/TRAINING.md): the trained readout, its controls and results.
 - [docs/BUILD_LOG.md](docs/BUILD_LOG.md): decisions, what works, what failed, and next steps.
+- [docs/PUBLIC_RELEASE_AUDIT.md](docs/PUBLIC_RELEASE_AUDIT.md): what was checked, and left out,
+  before this repository was published.
 - [data/README.md](data/README.md): connectome setup.
 
 ## Attribution
 
 - **Connectome:** MaleCNS v1.0 © the MaleCNS collaboration (FlyEM/HHMI Janelia, Cambridge, MRC
-  LMB, Google Research), CC BY 4.0. Cite https://doi.org/10.1016/j.cell.2026.08.015.
+  LMB, Google Research), CC BY 4.0. Cite https://doi.org/10.1016/j.cell.2026.08.015. No
+  connectome data is stored in this repository; `make data` fetches it from the official release.
 - **Neural model:** the whole-brain LIF model of Shiu *et al.* 2024 (reference implementation MIT).
   Fly Golf's engine, data compiler and source lock are implemented in this repository.
 - **History:** early versions of Fly Golf used portions of the open-source
@@ -426,3 +487,7 @@ hello (protocol v2) and then streams `state`, `shot_phase`, `shot_result` and `c
   ([UPSTREAM.md](docs/UPSTREAM.md)).
 - **Licenses:** full notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Fly Golf's
   own code is MIT.
+
+This repository is Fly Golf's public home and the place for new work. The project was incubated
+in a private repository; that history was not carried over, so this repository starts at the
+first public release.

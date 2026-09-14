@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { RunSummary, ShotRecord } from "@fly-golf/protocol";
-import { api } from "../lib/api";
+import { dataSource } from "../lib/dataSource";
 import { replay } from "../actions";
 import { useStore } from "../store";
 import { metresToFeet } from "../lib/coords";
@@ -15,12 +15,12 @@ export function RunsPanel() {
 
   useEffect(() => {
     if (!open) return;
-    api.runs().then(setRuns, (e) => setErr(String(e)));
+    dataSource.getRuns().then(setRuns, (e) => setErr(String(e)));
   }, [open]);
 
   useEffect(() => {
     if (!selected) return;
-    api.run(selected).then(
+    dataSource.getRun(selected).then(
       (d) => setShots(d.shots),
       (e) => setErr(String(e)),
     );

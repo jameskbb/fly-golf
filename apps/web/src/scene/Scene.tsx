@@ -122,7 +122,7 @@ export function Scene() {
   const shownStrokes =
     playback && !playback.replay ? playback.record.initial_state.strokes_before : session?.strokes;
   const viewKey = playback?.replay
-    ? `replay-${playback.record.shot_id}-${playback.startedAt}`
+    ? `replay-${playback.record.shot_id}-${playback.id}`
     : `live-${session?.run_id}-${session?.hole_index}-${shownStrokes}`;
 
   return (
