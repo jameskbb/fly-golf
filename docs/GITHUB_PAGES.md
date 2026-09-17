@@ -101,22 +101,27 @@ and commit. The Pages workflow deploys on the next push to `main`.
 
 ## Current showcase
 
-Ten rounds per brain, round seeds 7–16, all recorded from a clean tree at commit `dd1e393`
+Ten rounds per brain, round seeds 7–16, all recorded from a clean tree whose contents are those
+of commit `04a148d` (the runs record its pre-publication sha `43f6d6b`, see BUILD_LOG.md)
 (each run's `source.run_id` is in its showcase file):
 
 | ids | Controller | Strokes, seeds 7 to 16 | Summary |
 | --- | --- | --- | --- |
-| `trained-front-nine-s07` … `-s16` (`-s07` featured) | MaleCNS + trained readout (`hindsight-gated-v2`, readout `20260914T191715Z-refit`, engine `fly-golf-lif-v1`) | 60, 70, 71, 72, 64, 70, 57, 75, 71, 75 | mean 68.5, 56 of 90 holes holed |
+| `trained-front-nine-s07` … `-s16` (`-s07` featured) | MaleCNS + trained readout (`hindsight-gated-v2`, readout `20260917T165536Z`, engine `fly-golf-lif-v1`, injection `malecns-sensory-v0.3`) | 54, 50, 53, 50, 48, 48, 49, 51, 48, 42 | mean 49.3, 89 of 90 holes holed |
 | `untrained-front-nine-s07` … `-s16` | MaleCNS, fixed a-priori readout (engine `fly-golf-lif-v1`) | 81 in every round | no hole finished |
 | `mock-front-nine-s07` … `-s16` | MOCK controller: hand-written heuristic, no neurons | 35, 36, 37, 36, 36, 37, 37, 37, 39, 35 | mean 36.5, every hole holed |
 
 The seeds were fixed before any round was played, and every round recorded for the showcase is in
-it. None was selected from several attempts. 23 of the 30 were recorded twice: the first
-recording of them was stamped `dirty` because an untracked directory of agent worktrees sat in the
-checkout. They were re-recorded from a clean worktree, and every re-recording is identical, stroke
-for stroke. On an 18-hole pace the trained fly averages 137 and the untrained fly 162: neither
-breaks 100 yet. The mock, which reads the golf state directly and has no neurons, is the
-reference.
+it. None was selected from several attempts. All 30 were recorded from a clean worktree, because
+an untracked directory of agent worktrees in the main checkout stamps a run `dirty`. On an 18-hole
+pace the trained fly averages 98.6 and the untrained fly 162: the trained fly breaks 100, the
+untrained one is nowhere near. The mock, which reads the golf state directly and has no neurons,
+is the reference.
+
+These thirty replaced the previous set on 2026-09-17, when the sensory injection was rebuilt
+(`malecns-sensory-v0.3`). The untrained rounds are re-recorded too, because the injection changes
+what every brain perceives; the fixed readout still picks up all nine holes, so its 81 is
+unchanged.
 
 ## What visitors see
 

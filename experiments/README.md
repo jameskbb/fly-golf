@@ -24,6 +24,12 @@ runs/<run_id>/traces/*.json   optional per-bin population traces (--traces)
 | 2026-09-14 | 30 rounds (see docs/GITHUB_PAGES.md) | Trained readout `20260914T191715Z-refit`, untrained MaleCNS, Mock (`dd1e393`, clean) | Front nine, round seeds 7–16 for each brain, all exported to the web demo | Trained 68.5 per nine (57–75), 56 of 90 holes holed; untrained 81 every round; Mock 36.5. Trained seed 7: 60 (the previous readout's seed-7 round was 58) |
 | 2026-09-14 | refit `20260914T212017Z-shuffled-refit` | Shuffled-wiring control, PCA ≤ 256 (`109c4a1`, clean) | The shuffled control's saved practice, re-fitted the same way | Still better than the real wiring on every held-out kind except the median leave of green putts. Real wiring is not an advantage |
 
+| 2026-09-17 | `runs/screen/` | MaleCNS, 20 injection variants (`a071534`) | How much of each scene quantity survives into DN-type rates, 840 situations per variant, brain simulation only | Under v0.2 the target's bearing is unrecoverable off the green (R² 0.03 short, −0.04 full). Picked `malecns-sensory-v0.3`. See docs/SENSORY_MAPPING.md |
+| 2026-09-17 | training `20260917T155555Z` | MaleCNS + trained readout, v0.3 injection (`0db6dcd`, clean) | 3,360 practice situations, 1,008 held out | Bench 54.3 / 52.0 / 51.0 per nine on seeds 100–111 / 200–211 / 300–311 (previous readout: 66.9 / 66.6 / 65.9) |
+| 2026-09-17 | training `20260917T165536Z` (installed) | MaleCNS + trained readout, v0.3 injection (`0db6dcd`, clean) | 6,720 practice situations, 2,016 held out | Bench 50.3 / 51.4 / 49.8 per nine, 97 % of holes holed, best round 43. The installed readout |
+| 2026-09-17 | training `20260917T180643Z-shuffled` | Shuffled-wiring control, v0.3 injection (`0db6dcd`, clean) | The same 6,720 situations and seed as the installed run | Better than the real wiring on **every** held-out kind (putts 0.33 m against 0.54 m, full shots 58.6 m against 61.2 m). Real wiring is still not an advantage |
+| 2026-09-17 | 30 rounds (see docs/GITHUB_PAGES.md) | Trained readout `20260917T165536Z`, untrained MaleCNS, Mock (`43f6d6b`, clean) | Front nine, round seeds 7–16 for each brain, all exported to the web demo | Trained 49.3 per nine (42–54), 89 of 90 holes holed, a 98.6 eighteen-hole pace; untrained 81 every round; Mock 36.5 |
+
 Recorded runs stay out of git. Selected runs are exported, validated, into the web demo's static
 showcase (`apps/web/public/showcase/`) with `fly-golf export-showcase`; see docs/GITHUB_PAGES.md.
 
@@ -33,7 +39,9 @@ Nothing here is claimed until these comparisons run on the same seeds:
 
 1. **Mock baseline** vs **MaleCNS v0.1**: holes holed and strokes per hole over N seeded holes.
 2. **Shuffled connectivity** (`CTRL2-01`): the same degree sequence with rewired targets, to test
-   whether the specific wiring matters at all.
+   whether the specific wiring matters at all. Run on held-out shots under both the v0.2 and v0.3
+   injections; the control wins both times. Still to do: the shuffled graph is built in memory and
+   thrown away, so the control cannot be compared over complete rounds.
 3. **Lesions** (`CTRL2-02`): silence LC10 or DNa01/02, and check that aim-related variance changes
    as predicted.
 4. **Plasticity** (`CTRL2-03`): only after 1–3, with before/after weight snapshots and held-out

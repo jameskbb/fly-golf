@@ -407,6 +407,89 @@ stands:** under this proxy sensing and DN readout, the reconstructed wiring is n
 (The shuffle's calibration chose a grid edge for the swing power scale; its CV kept 64 components
 for the club head.)
 
+## Sensory injection v0.3 (2026-09-17)
+
+This is the largest single change to how well the fly plays so far, and it is not a change to the
+readout at all. It is a change to how the golf scene is injected into the connectome, made after
+measuring that most of the scene was not reaching the readout.
+
+### The measurement that prompted it
+
+For 840 practice situations we injected the v0.2 drive, simulated the 400 ms decision window and
+asked how much of each scene quantity a ridge regression can recover from the DN-type rates the
+readout actually reads (PCA size and ridge strength chosen inside the training split, R² on
+held-out situations; `runs/screen/`, seed 11, used for nothing else):
+
+| recovered from DN rates | putt | green | short | full |
+| --- | --- | --- | --- | --- |
+| target bearing, v0.2 | 0.30 | 0.17 | **0.03** | **−0.04** |
+| target bearing, v0.3 | 0.71 | 0.54 | 0.78 | 0.80 |
+| distance to target (log), v0.2 | **0.15** | 0.72 | **0.02** | 0.61 |
+| distance to target (log), v0.3 | 0.57 | 0.83 | 0.22 | 0.76 |
+| green speed, v0.2 | −0.08 | 0.05 | −0.06 | 0.02 |
+| green speed, v0.3 | 0.20 | −0.01 | −0.03 | 0.01 |
+
+Off the green the fly could not perceive **which way its target lay at all**. No readout can aim a
+shot from a signal that is not there, which is why the trained readout's full shots had been barely
+better than the untrained fly's. The causes were in the injection formulas, not the connectome:
+v0.1 multiplies the bearing difference by apparent size, and off the green `target_distance`
+saturates so size sits at its floor; and distance had one code that flattens between 10 m and 70 m.
+[SENSORY_MAPPING.md](SENSORY_MAPPING.md#v03-one-quantity-per-population-malecns-sensory-v03) has
+the formulas, the 20 variants screened, and why LC10a carries bearing.
+
+### Held-out shots
+
+`v6-sens03-seed3-x12` (readout `20260917T165536Z`, clean `0db6dcd`): 6,720 practice situations,
+2,016 held out, DN-type features, PCA ≤ 256. Median leave, and the share of shots holed:
+
+| Held-out shots | Practice putts | Course-green putts | Chips and pitches | Full shots |
+| --- | --- | --- | --- | --- |
+| Trained readout, v0.2 injection | 0.71 m (10.6 %) | 1.12 m (6.5 %) | 13.36 m | 73.26 m |
+| **Trained readout, v0.3 injection** | **0.54 m (12.7 %)** | **0.76 m (7.9 %)** | **6.77 m** | **61.16 m** |
+| Shuffled-wiring control, v0.3 | 0.33 m (24.5 %) | 0.53 m (17.4 %) | 5.40 m | 58.60 m |
+| No-brain sensory readout | 0.07 m (45.4 %) | 0.10 m (45.6 %) | 5.85 m | 23.60 m |
+| Mock heuristic | 0.26 m (31.9 %) | 0.52 m (18.3 %) | 2.48 m | 22.59 m |
+| Untrained fixed readout, v0.3 | 7.34 m (0.2 %) | 7.30 m | 35.33 m | 96.12 m |
+| Trial-and-error upper bound | 0.00 m (100 %) | 0.00 m (100 %) | 0.47 m | 6.62 m |
+
+The untrained fixed readout gets *worse* under v0.3 (full shots 96 m against 91 m under v0.2). Its
+thresholds were hand-written against v0.2 activity, and nothing re-tuned them; it picks up all nine
+holes either way.
+
+### Complete rounds
+
+`fly-golf bench`, 12 fresh rounds per seed block, front nine, par 36:
+
+| Readout | seeds 100–111 | seeds 200–211 | seeds 300–311 | Holes holed | Best round |
+| --- | --- | --- | --- | --- | --- |
+| `20260914T191715Z-refit` (v0.2 injection) | 66.9 | 66.6 | 65.9 | 62 % | 52 |
+| `20260917T155555Z` (v0.3, 3,360 situations) | 54.3 | 52.0 | 51.0 | 96 % | 45 |
+| **`20260917T165536Z` (v0.3, 6,720 situations, installed)** | **50.3** | **51.4** | **49.8** | **97 %** | **43** |
+
+Holes picked up fall from 41 per twelve rounds to 1, and shots that finish in trees from 3.0 a
+round to 1.3. More practice helped here (6,720 beat 3,360 by 1.9 strokes) where under v0.2 it had
+not, which is what you would expect once the features carry the scene.
+
+### The control still wins
+
+The degree-preserving shuffled-wiring control (`v7-sens03-shuffled-seed3-x12`, the same 6,720
+situations and seed) is **better than the real wiring on every held-out kind** under v0.3, as it
+was under v0.2. Nothing here says the real MaleCNS connectivity helps the fly play golf. What v0.3
+changed is how much of the scene reaches the readout through *any* wiring.
+
+A control readout cannot be benched over rounds: `fly-golf bench` runs on the real compiled graph,
+and a readout fitted to shuffled activity applied to real activity degenerates (it picked up all
+108 holes). Comparing the control over rounds needs the shuffled graph saved and loadable, which
+the CLI does not do yet.
+
+### Honest limits of this change
+
+- The gains (bearing gain 8, the log distance constants, the green-speed scale) were chosen on the
+  screening measurement, which is a different thing from the golf score. They were fixed before
+  any round was played with them.
+- Distance for chips and pitches is still the weakest signal (0.22).
+- This is still a proxy encoder. No image is formed, and the populations are labelled stand-ins.
+
 ## Honest limits
 
 - **It is a readout, not learning in the brain.** Synapses are fixed. The claim is only that the

@@ -59,17 +59,22 @@ one of them is in the demo; none was picked from several attempts:
 
 | Brain | Ten rounds (seeds 7–16) | Holes holed out | What happens |
 | --- | --- | --- | --- |
-| **Trained MaleCNS** (featured) | **68.5** strokes per nine on average (57–75) | 56 of 90 | Drivers off the tee and wedges around the greens, read out of descending-neuron activity by a readout fitted from practice |
+| **Trained MaleCNS** (featured) | **49.3** strokes per nine on average (42–54) | 89 of 90 | Drivers off the tee and wedges around the greens, read out of descending-neuron activity by a readout fitted from practice |
 | **Untrained MaleCNS** | **81** in every round | 0 of 90 | The fixed readout rules hit a mid iron from everywhere and pick up every hole |
 | **Mock** | **36.5** (35–39) | 90 of 90 | The no-neuron reference. It reads the distance and lie directly, so it plays well |
 
 [![The web demo at the end of a mixed trained round: the scorecard reads Round complete: 74 (+38), on pace for 148 over eighteen, not breaking 100 yet, with a ROUND row giving the recorded round each hole was drawn from (six of the trained brain's ten rounds), and the recorded neural telemetry in the brain panel](docs/screenshots/web-demo-round-complete.png)](https://jameskbb.github.io/fly-golf/)
 
-*One random mix, captured as it came: every visit draws a new one.*
+*One random mix, captured as it came: every visit draws a new one. This shot of the demo was
+taken with the previous readout, so its scorecard reads 74; the rounds in the demo today are the
+ones in the table above.*
 
-On an 18-hole pace the trained fly averages 137 and the untrained fly 162. **The fly does not
-break 100 yet.** All thirty rounds were recorded from a clean tree at commit `dd1e393`, and every
-round re-simulates bit for bit (`fly-golf replay`).
+On an 18-hole pace the trained fly averages 98.6 and the untrained fly 162. **The fly breaks
+100** — just, and only since the sensory injection was rebuilt so that it can actually perceive
+which way its target lies (see [SENSORY_MAPPING.md](docs/SENSORY_MAPPING.md#v03-one-quantity-per-population-malecns-sensory-v03));
+its best nine of the ten, 42, is an 84 pace. All thirty rounds were recorded from a clean tree whose
+contents are those of commit `04a148d` (the runs record its pre-publication sha `43f6d6b`; see
+[BUILD_LOG.md](docs/BUILD_LOG.md)), and every round re-simulates bit for bit (`fly-golf replay`).
 How the demo works and how to publish another run: [GITHUB_PAGES.md](docs/GITHUB_PAGES.md).
 
 ![Meet the three brains section header](docs/screenshots/readme-header-brains.png)
@@ -203,7 +208,7 @@ A cross bunker divides the fairway before a big, fast finishing green.
 | **Front nine**: 9 hand-designed holes, fairways, bunkers, water on holes 3/4/5/8, tree-lined out of bounds ([COURSE.md](docs/COURSE.md)) | ✅ |
 | **Full bag**: driver, 3W, 5W, 4H, 5–9 irons, PW/GW/SW/LW, putter. The fly chooses via the `club_reach` motor channel | ✅ |
 | Full-shot physics: drag + Magnus flight, spin, surface bounce and roll, penalties, lies | ✅ tested, replayable |
-| **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls; retrained on the Brian2-exact engine, then refitted with more PCA components: 66.6 strokes per nine on fresh rounds (was 71.9), 70 % of holes holed ([TRAINING.md](docs/TRAINING.md#readout-capacity-and-side-resolved-features-2026-09-14)) | ✅ experimental |
+| **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls. Refitted onto the v0.3 sensory injection: 50.5 strokes per nine over 36 fresh rounds (was 66.5), 97 % of holes holed ([TRAINING.md](docs/TRAINING.md#sensory-injection-v03-2026-09-17)) | ✅ experimental |
 | **Switch brains mid-round** (Mock / MaleCNS / Trained); scorecard marks who played each hole, mixed rounds flagged | ✅ |
 | **Web demo**: Showcase Mode replays recorded MaleCNS rounds on GitHub Pages, no backend ([GITHUB_PAGES.md](docs/GITHUB_PAGES.md)) | ✅ |
 | `fly-golf bench`: complete front-nine rounds per brain (holes finished, strokes, trees, club by distance) | ✅ |

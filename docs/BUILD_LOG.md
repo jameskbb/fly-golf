@@ -385,3 +385,53 @@ readout's seed-7 round is 60; the old readout's was 58. Over ten rounds it avera
   of the 23 had only their later shots stamped. All 23 were re-recorded from a separate clean
   worktree (`FLY_GOLF_DATA_DIR`/`FLY_GOLF_RUNS_DIR` pointing at the main checkout's data), and
   every re-recording is identical, stroke for stroke.
+
+## 2026-09-17: the fly can see where it is aiming, and breaks 100
+
+### What changed
+
+- **Sensory injection v0.3** (`malecns-sensory-v0.3`). Measured first: under v0.2, a ridge
+  regression cannot recover the target's bearing from descending-neuron rates off the green at all
+  (R² 0.03 on chips, −0.04 on full shots), because v0.1 multiplies the bearing difference by
+  apparent size and `target_distance` saturates past 10 m. v0.3 gives each quantity its own
+  population over the full drive range: bearing to LC10a, apparent size to the other LC10 types,
+  range to LC15 as a log code, and green speed onto the tarsal drive (v0.2 injected no green-speed
+  signal at all). 20 variants were screened on the real connectome before picking this one.
+- Readouts record the injection they were fitted under (`meta.malecns_sensory_mapping`) and
+  `TrainedReadoutController` pins the controller to it, so readouts fitted before v0.3 keep
+  running on the v0.2 drive and older records still replay.
+- **Readout `20260917T165536Z` installed**, fitted under v0.3 from 6,720 practice situations.
+- The brain soma map gained the four new populations; the web app's brain-firing view lights them.
+- The 30 showcase rounds were re-recorded at `43f6d6b` from a clean worktree.
+
+### Results
+
+Bearing recovery goes to 0.71 / 0.54 / 0.78 / 0.80 (putt / green / short / full) and distance to
+0.57 / 0.83 / 0.22 / 0.76, with no probe worse than v0.2. Over 36 fresh bench rounds the installed
+readout plays **50.5 strokes per nine** against 66.5 for the readout it replaces; holes holed 62 %
+→ 97 %, holes picked up 41 per twelve rounds → 1, trees 3.0 a round → 1.3, best round 43. The ten
+showcase rounds average **49.3** (42–54), an eighteen-hole pace of 98.6: the fly breaks 100.
+
+### What this does not show
+
+The degree-preserving shuffled-wiring control, trained on the same 6,720 situations under v0.3, is
+still better than the real wiring on every held-out kind (putts 0.33 m against 0.54 m). The
+no-brain sensory readout still putts far better than either. v0.3 improved how much of the scene
+reaches the readout through any wiring; it is not evidence that the MaleCNS connectivity helps.
+The control still cannot be compared over complete rounds, because the shuffled graph is built in
+memory and thrown away.
+
+### Provenance note: the shas the runs record
+
+The readout was trained, and the thirty showcase rounds were recorded, against commits that were
+re-authored before publishing (they carried the wrong committer email, which GitHub rejects). The
+trees are byte-identical, so every run still reproduces from the published history; only the sha
+in each record differs from the published one:
+
+| recorded in the run | published commit | tree (identical) |
+| --- | --- | --- |
+| `0db6dcd` (injection v0.3; the readout was trained here) | `16219ad` | `bb322f36` |
+| `43f6d6b` (readout installed; the showcase rounds were recorded here) | `04a148d` | `07e2f8da` |
+| `4dfc615` (this write-up) | `2871827` | `5aeefbaa` |
+
+`git cat-file -p <published sha>^{tree}` shows the match. Nothing else about the runs changed.
