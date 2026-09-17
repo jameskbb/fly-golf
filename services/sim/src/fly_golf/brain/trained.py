@@ -37,6 +37,7 @@ from .malecns.graph import CompiledGraph
 
 # Every readout made before `fly-golf-lif-v1` existed was fitted to the legacy engine's activity.
 LEGACY_ENGINE_VERSION = "lif-doomfly-r2-adapted-v1"
+LEGACY_SENSORY_MAPPING = "malecns-sensory-v0.2"  # readouts fitted before v0.3 recorded no mapping
 
 READOUT_FORMAT = "fly-golf-linear-readout-v1"
 READOUT_FORMAT_V2 = "fly-golf-gated-readout-v2"
@@ -261,6 +262,11 @@ def readout_engine(meta: dict) -> str:
     return meta.get("neural_engine") or LEGACY_ENGINE_VERSION
 
 
+def readout_sensory_mapping(meta: dict) -> str:
+    """The sensory injection the practice that fitted this readout was run under."""
+    return meta.get("malecns_sensory_mapping") or LEGACY_SENSORY_MAPPING
+
+
 def trained_channels(fixed: dict[str, float], pred: dict) -> dict[str, float]:
     """Merge a readout prediction into the fixed readout's channels."""
     aim = pred["aim"]
@@ -284,7 +290,8 @@ class TrainedReadoutController(MaleCNSController):
                 f"readout {readout.meta.get('training_id')!r} was trained on neural engine {trained_on!r}; "
                 f"refusing to run it on {engine!r} (retrain it, or use the engine it was trained on)"
             )
-        super().__init__(graph, engine=trained_on)
+        injected_with = readout_sensory_mapping(readout.meta)
+        super().__init__(graph, engine=trained_on, sensory_mapping=injected_with)
         self.feature_space = getattr(readout, "feature_space", FEATURE_SPACE)  # v1 readouts: DN types
         if list(readout.feature_names) != self.feature_names_for(self.feature_space):
             raise ValueError("readout was trained on a different set of descending-neuron types")
@@ -315,6 +322,7 @@ class TrainedReadoutController(MaleCNSController):
                     "id": readout.meta.get("training_id"),
                     "neural_engine": trained_on,
                     "current_engine": trained_on == ENGINE_VERSION,
+                    "sensory_mapping": injected_with,
                     "method": readout.meta.get("method"),
                     "feature_space": self.feature_space,
                     "trained_utc": readout.meta.get("created_utc"),

@@ -34,6 +34,9 @@ def build_synthetic_graph(tmp_path):
 
     lc_l = add("LC10a", "visual_projection", "L", 6)
     lc_r = add("LC10a", "visual_projection", "R", 6)
+    # LC10b/d stand for the non-LC10a subtypes, which carry apparent size from v0.3 on
+    lcrest_l = add("LC10b", "visual_projection", "L", 3) + add("LC10d", "visual_projection", "L", 3)
+    lcrest_r = add("LC10b", "visual_projection", "R", 3) + add("LC10d", "visual_projection", "R", 3)
     joc_l = add("JO-CM", "cb_sensory", "L", 3)
     joc_r = add("JO-CM", "cb_sensory", "R", 3)
     joe_l = add("JO-EV1", "cb_sensory", "L", 3)
@@ -57,6 +60,8 @@ def build_synthetic_graph(tmp_path):
                 edges.append((i, j, w))
 
     # Invented wiring: ipsilateral LC10 -> steering DN and DN pool; JO -> interneurons.
+    connect(lcrest_l, dna_l + dn_l, 6.0)
+    connect(lcrest_r, dna_r + dn_r, 6.0)
     connect(lc_l, dna_l + dn_l, 12.0)
     connect(lc_r, dna_r + dn_r, 12.0)
     connect(joc_l + joe_l, inter[:2], 6.0)

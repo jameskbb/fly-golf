@@ -12,6 +12,7 @@ functions in a real fly playing golf.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -42,6 +43,7 @@ class PopulationSpec:
     role: str  # "sensory" | "motor"
     description: str
     type_prefixes: tuple[str, ...] = ()
+    exclude_type_prefixes: tuple[str, ...] = ()
     types: tuple[str, ...] = ()
     superclass: str | None = None
     side: str | None = None  # "L" | "R" | None
@@ -57,6 +59,8 @@ class PopulationSpec:
             if self.types:
                 m |= t.isin(self.types).to_numpy()
             mask &= m
+        for p in self.exclude_type_prefixes:
+            mask &= ~t.str.startswith(p).to_numpy()
         if self.superclass:
             mask &= (neurons["superclass"].astype(object).fillna("") == self.superclass).to_numpy()
         if self.subclass:
@@ -164,8 +168,83 @@ SENSORY_POPULATIONS_V2 = [
 ]
 
 
+# --- v0.3: one scene quantity per population (see docs/SENSORY_MAPPING.md) ------------------
+# v0.1/v0.2 drive LC10 with I_MAX * size * w_left, so the left-right difference that carries the
+# target's BEARING is multiplied by its apparent SIZE. Off the green `target_distance` saturates,
+# size sits at its floor, and the bearing difference shrinks to under 1 mV -- measurably, almost
+# no bearing survives into descending-neuron rates for anything but a putt. v0.3 gives each
+# quantity its own population over the full drive range and multiplies nothing by anything else.
+MALECNS_SENSORY_MAPPING_VERSION_V3 = "malecns-sensory-v0.3"
+BEARING_GAIN = 8.0  # bearing drive per unit (target_left - target_right); the channels are full
+# scale at 45 deg while a fly addresses its target within about +-6 deg, so v0.1's implicit gain
+# of 1 spent 1/8 of the available range on the whole spread of real bearings.
+RANGE_HALF_M, RANGE_TOP_M = 0.5, 500.0  # log range code: clip(log1p(d / half) / log1p(top))
+GREEN_SMOOTH_BASE, GREEN_SMOOTH_GAIN = 0.30, 0.20  # tarsal drive on a green: faster = smoother
+
+SENSORY_POPULATIONS_V3 = [
+    PopulationSpec(
+        "LC10a_L",
+        "sensory",
+        "LC10a visual projection neurons, left optic lobe (target bearing)",
+        type_prefixes=("LC10a",),
+        side="L",
+    ),
+    PopulationSpec(
+        "LC10a_R", "sensory", "LC10a visual projection neurons, right optic lobe", type_prefixes=("LC10a",), side="R"
+    ),
+    PopulationSpec(
+        "LC10rest_L",
+        "sensory",
+        "LC10b/c/d/e visual projection neurons, left optic lobe (target apparent size)",
+        type_prefixes=("LC10",),
+        exclude_type_prefixes=("LC10a",),
+        side="L",
+    ),
+    PopulationSpec(
+        "LC10rest_R",
+        "sensory",
+        "LC10b/c/d/e visual projection neurons, right optic lobe",
+        type_prefixes=("LC10",),
+        exclude_type_prefixes=("LC10a",),
+        side="R",
+    ),
+]
+
+
+def range_code(distance_m: float) -> float:
+    """Log-compressed distance on [0, 1]: fine resolution over a putt, still graded at 250 m."""
+    return _clip(math.log1p(max(distance_m, 0.0) / RANGE_HALF_M) / math.log1p(RANGE_TOP_M))
+
+
+def sensory_drive_v3(channels: dict[str, float]) -> dict[str, float]:
+    """v0.3 injection: bearing on LC10a, apparent size on the other LC10 types, range on LC15.
+
+    The JO, tarsal and dorsal-rim drives are v0.2's, except that on a green the tarsal drive now
+    carries green speed (a faster green is a smoother surface under the feet); v0.2 injected no
+    green-speed signal at all, so the connectome could not perceive it.
+    """
+    size = SIZE_BASE + SIZE_SPAN * (1.0 - channels["target_distance"])
+    w_left = _clip(0.5 + 0.5 * BEARING_GAIN * (channels["target_left"] - channels["target_right"]))
+    lie = _lie(channels)
+    roughness = ROUGHNESS[lie]
+    if lie == "green":
+        roughness = GREEN_SMOOTH_BASE - GREEN_SMOOTH_GAIN * _clip(channels["green_speed"])
+    d = sensory_drive(channels)
+    d.pop("LC10_L")
+    d.pop("LC10_R")
+    return d | {
+        "LC10a_L": I_MAX_MV * w_left,
+        "LC10a_R": I_MAX_MV * (1.0 - w_left),
+        "LC10rest_L": I_MAX_MV * size,
+        "LC10rest_R": I_MAX_MV * size,
+        "LC15": I_MAX_MV * range_code(250.0 * channels["target_far"]),
+        "leg_bristle": I_MAX_MV * roughness,
+        "R7d_R8d": I_MAX_MV * WATER_GAIN * channels["water_on_line"],
+    }
+
+
 def all_population_specs() -> list[PopulationSpec]:
-    return SENSORY_POPULATIONS + SENSORY_POPULATIONS_V2 + MOTOR_POPULATIONS
+    return SENSORY_POPULATIONS + SENSORY_POPULATIONS_V2 + SENSORY_POPULATIONS_V3 + MOTOR_POPULATIONS
 
 
 def resolve_populations(neurons: pd.DataFrame) -> dict[str, np.ndarray]:

@@ -54,12 +54,14 @@ from ..brain.interfaces import MotorCommand, SensoryFrame
 from ..brain.malecns.controller import FEATURE_SPACE, FEATURE_SPACE_SIDE, FEATURE_SPACES, MaleCNSController
 from ..brain.malecns.engine import ENGINE_VERSION
 from ..brain.malecns.graph import CompiledGraph
+from ..brain.malecns.populations import MALECNS_SENSORY_MAPPING_VERSION_V3
 from ..brain.mock import MockBrainController
 from ..brain.motor import MotorDecoderV2
 from ..brain.sensory import ProxySensoryEncoderV2
 from ..brain.trained import (
     HEADS,
     LEGACY_ENGINE_VERSION,
+    LEGACY_SENSORY_MAPPING,
     OUTPUTS,
     GatedReadout,
     Readout,
@@ -667,6 +669,7 @@ def train(
         "edges": graph.edges,
         "control": control,
         "neural_engine": ENGINE_VERSION,
+        "malecns_sensory_mapping": MALECNS_SENSORY_MAPPING_VERSION_V3,
     }
     counts = {"putt": n_putt, "green": n_green, "short": n_short, "full": n_full, "seed": seed}
     return fit_and_report(
@@ -763,6 +766,8 @@ def fit_and_report(
         "graph": graph_meta,
         # the engine whose activity these weights read; a refit keeps its source run's engine
         "neural_engine": graph_meta.get("neural_engine") or LEGACY_ENGINE_VERSION,
+        # the sensory injection the practice ran under; the trained controller refuses any other
+        "malecns_sensory_mapping": graph_meta.get("malecns_sensory_mapping") or LEGACY_SENSORY_MAPPING,
         "feature_space": feature_space,
         "situations": counts | {"train": len(train_idx), "test": evaluation["n_test"]},
         "decision_window_ms": DECISION_WINDOW_MS,

@@ -151,6 +151,10 @@ def test_real_populations_resolve(real_graph):
     assert sizes == {
         "LC10_L": 479,
         "LC10_R": 481,
+        "LC10a_L": 135,
+        "LC10a_R": 140,
+        "LC10rest_L": 344,
+        "LC10rest_R": 341,
         "JO-C_L": 46,
         "JO-C_R": 22,
         "JO-E_L": 157,

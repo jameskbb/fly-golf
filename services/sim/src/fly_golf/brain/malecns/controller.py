@@ -22,7 +22,14 @@ import math
 
 import numpy as np
 
-from ..interfaces import ControllerInfo, ControllerKind, MotorCommand, NeuralSummary, SensoryFrame
+from ..interfaces import (
+    SENSORY_CHANNELS,
+    ControllerInfo,
+    ControllerKind,
+    MotorCommand,
+    NeuralSummary,
+    SensoryFrame,
+)
 from .engine import ENGINE_VERSION, make_engine
 from .graph import CompiledGraph
 from .populations import (
@@ -31,15 +38,18 @@ from .populations import (
     MALECNS_MOTOR_MAPPING_VERSION_V2,
     MALECNS_SENSORY_MAPPING_VERSION,
     MALECNS_SENSORY_MAPPING_VERSION_V2,
+    MALECNS_SENSORY_MAPPING_VERSION_V3,
     NAMED_READOUT_TYPES,
     REACH_HALF_HZ,
     READOUT_START_MS,
     SENSORY_POPULATIONS_V2,
+    SENSORY_POPULATIONS_V3,
     decode_motor,
     decode_motor_v2,
     resolve_populations,
     sensory_drive,
     sensory_drive_v2,
+    sensory_drive_v3,
     spec_by_name,
 )
 
@@ -49,19 +59,42 @@ FEATURE_SPACE_SIDE = "dn-type-side"
 FEATURE_SPACES = (FEATURE_SPACE, FEATURE_SPACE_SIDE)
 
 
+# Course frames are injected with the mapping the controller was built for; v0.1 frames always
+# replay through the v0.1 drive. A trained readout pins this to the mapping it was fitted under.
+NEUTRAL_CHANNELS = dict.fromkeys(SENSORY_CHANNELS, 0.0)
+
+SENSORY_DRIVES = {
+    MALECNS_SENSORY_MAPPING_VERSION_V2: sensory_drive_v2,
+    MALECNS_SENSORY_MAPPING_VERSION_V3: sensory_drive_v3,
+}
+
+
 class MaleCNSController:
-    def __init__(self, graph: CompiledGraph, readout_start_ms: float = READOUT_START_MS, engine: str = ENGINE_VERSION):
+    def __init__(
+        self,
+        graph: CompiledGraph,
+        readout_start_ms: float = READOUT_START_MS,
+        engine: str = ENGINE_VERSION,
+        sensory_mapping: str = MALECNS_SENSORY_MAPPING_VERSION_V3,
+    ):
         self.graph = graph
         self.engine_version = engine
+        if sensory_mapping not in SENSORY_DRIVES:
+            raise ValueError(f"unknown sensory mapping {sensory_mapping!r} (known: {sorted(SENSORY_DRIVES)})")
+        self.sensory_mapping = sensory_mapping
+        self._drive_fn = SENSORY_DRIVES[sensory_mapping]
+        self._driven = frozenset(self._drive_fn(NEUTRAL_CHANNELS))
         self.engine = make_engine(engine, graph.ptr, graph.post, graph.weight)
         self.populations = resolve_populations(graph.neurons)
         # v0.1 populations are required (recorded runs must replay); the v0.2 additions are only
         # required once a v0.2 frame arrives, so an older compiled graph can still replay v0.1.
         empty = [k for k, v in self.populations.items() if len(v) == 0]
-        v2_only = {s.name for s in SENSORY_POPULATIONS_V2}
-        if [k for k in empty if k not in v2_only]:
+        course_only = {s.name for s in SENSORY_POPULATIONS_V2} | {s.name for s in SENSORY_POPULATIONS_V3}
+        if [k for k in empty if k not in course_only]:
             raise ValueError(f"populations resolved to zero neurons: {empty}")
-        self._missing_v2 = [k for k in empty if k in v2_only]
+        # Only the populations this controller's own mapping drives have to be present, so a
+        # graph without (say) the LC10 subtypes can still replay v0.1 and v0.2 records.
+        self._missing_v2 = [k for k in empty if k in self._driven]
         self.readout_start_ms = readout_start_ms
         types = graph.neurons["type"].astype(object).fillna("").astype(str).to_numpy()
         sides = graph.neurons["side"].astype(object).fillna("?").astype(str).to_numpy()
@@ -96,9 +129,13 @@ class MaleCNSController:
             connectome=graph.manifest.get("release", "MaleCNS v1.0"),
             model=engine,
             config={
-                "sensory_mapping": MALECNS_SENSORY_MAPPING_VERSION_V2,
+                "sensory_mapping": self.sensory_mapping,
                 "motor_mapping": MALECNS_MOTOR_MAPPING_VERSION_V2,
-                "legacy_mappings": [MALECNS_SENSORY_MAPPING_VERSION, MALECNS_MOTOR_MAPPING_VERSION],
+                "legacy_mappings": [
+                    MALECNS_SENSORY_MAPPING_VERSION,
+                    MALECNS_SENSORY_MAPPING_VERSION_V2,
+                    MALECNS_MOTOR_MAPPING_VERSION,
+                ],
                 "engine": engine,
                 "readout_start_ms": readout_start_ms,
                 "bin_ms": BIN_MS,
@@ -127,7 +164,7 @@ class MaleCNSController:
         if not frame.is_legacy and self._missing_v2:
             raise ValueError(f"v0.2 frames need populations missing from this graph: {self._missing_v2}")
         self._frame = frame
-        drive_fn = sensory_drive if frame.is_legacy else sensory_drive_v2
+        drive_fn = sensory_drive if frame.is_legacy else self._drive_fn
         self._drive_by_pop = drive_fn(dict(frame.channels))
         drive = np.zeros(self.engine.n, dtype=np.float64)
         for name, value in self._drive_by_pop.items():
