@@ -435,3 +435,28 @@ in each record differs from the published one:
 | `4dfc615` (this write-up) | `2871827` | `5aeefbaa` |
 
 `git cat-file -p <published sha>^{tree}` shows the match. Nothing else about the runs changed.
+
+## 2026-09-17: the README's Pond Hop clip, re-shot with the current readout
+
+The README's gameplay clip showed the readout from 2026-09-13 hitting a 4-hybrid into the rough.
+It now shows the current readout (`20260917T165536Z`) on the same tee: the tee shot of the web
+demo's featured round, seed 7, shot 14. The fly takes a 7-iron, carries the pond and stops 1.43 m
+(4.7 ft) from the flag.
+
+How it was captured, so it can be redone:
+
+- `FLY_GOLF_BASE=/ pnpm --filter @fly-golf/web build:showcase`, then `npx vite preview --port 4173`
+  in `apps/web`.
+- Playwright's Chromium, headless, `--enable-unsafe-swiftshader`, with `DISPLAY`,
+  `WAYLAND_DISPLAY` and `XDG_RUNTIME_DIR` **unset**: under WSLg those make Chromium's GPU process
+  hang on the first WebGL context, while 2D canvas and plain script run normally. SwiftShader
+  renders the scene at about 14 frames per second, the same rate as the original clip.
+- Open `/?run=trained-front-nine-s07&shot=14`, add the style `.showcase-controls{display:none}`
+  (the playback panel otherwise covers the fly at address), press `c` to close the scorecard and
+  Space to play, and record the page at 1280×720 with `recordVideo`.
+- Trim 15.5 s from the moment Space is pressed. MP4: H.264, CRF 26, `+faststart`. GIF: 800×450,
+  7 fps, an 80-colour palette with no dithering (4.5 MB; 96 colours and 8 fps looked the same and
+  cost 5.3 MB). Playwright's bundled ffmpeg only writes VP8, so the encoding used the static
+  ffmpeg from `imageio-ffmpeg`.
+
+Nothing in the app changed for the capture; the shot is the recorded one, bit for bit.

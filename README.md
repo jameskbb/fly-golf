@@ -13,12 +13,14 @@ readout of descending-neuron activity to make its golf decisions.
 [How It Works](#how-it-works) · [Run It Locally](#run-it-locally) ·
 [Scientific Caveats](#scientific-caveats)
 
-[![Animated gameplay from Pond Hop: the trained MaleCNS readout chooses a club, swings, and sends a shot across the water while live neural telemetry updates](docs/media/trained-pond-hop-gameplay.gif)](docs/media/trained-pond-hop-gameplay.mp4)
+[![Animated gameplay from Pond Hop: the trained fly addresses the ball, its readout picks the 7-iron, and the shot carries the pond and rolls up 4.7 feet from the flag while the recorded neural telemetry updates](docs/media/trained-pond-hop-gameplay.gif)](docs/media/trained-pond-hop-gameplay.mp4)
 
-*One real shot on Pond Hop, the 164-yard third, recorded with the previous trained readout
-(`20260913T220118Z`). The readout runs 400 ms of MaleCNS activity, chooses the 4-hybrid, and sends
-it over the pond while the telemetry and follow camera tell the story.
-[Open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp4).*
+*One real shot on Pond Hop, the 164-yard third: the tee shot of the web demo's featured round
+(seed 7), played by the current trained readout (`20260917T165536Z`). 400 ms of MaleCNS activity
+become a 7-iron that carries the pond and stops 4.7 ft (1.4 m) from the flag. It is the recorded
+shot replayed by the web demo, with the demo's playback buttons hidden so the fly is in view;
+[watch it there](https://jameskbb.github.io/fly-golf/?run=trained-front-nine-s07&shot=14) or
+[open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp4).*
 
 > **What is real, and what is not**
 >
