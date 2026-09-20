@@ -13,6 +13,8 @@ import { Scorecard } from "./ui/Scorecard";
 import { ModesPanel } from "./ui/ModesPanel";
 import { ShowcaseApp } from "./showcase/ShowcaseApp";
 import { BrainFiring, toggleFiring } from "./ui/BrainFiring";
+import { CinemaHint } from "./ui/CinemaHint";
+import { cinemaKey, watchFullscreenExit } from "./ui/cinema";
 
 /** One app, two data sources: the live backend, or recorded runs on GitHub Pages (lib/source.ts). */
 export function App() {
@@ -22,6 +24,7 @@ export function App() {
 function LiveApp() {
   const connection = useStore((s) => s.connection);
   const connectionMessage = useStore((s) => s.connectionMessage);
+  const cinema = useStore((s) => s.cinema);
 
   useEffect(() => {
     void refreshStatus();
@@ -32,6 +35,7 @@ function LiveApp() {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
       const st = useStore.getState();
+      if (cinemaKey(e)) return;
       if (e.code === "Space") {
         e.preventDefault();
         if (!st.busy && !st.playback) advance();
@@ -42,12 +46,13 @@ function LiveApp() {
       else if (e.key === "m") st.set({ modesOpen: !st.modesOpen, techOpen: false, runsOpen: false });
       else if (e.key === "b") toggleFiring();
     };
+    watchFullscreenExit();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   return (
-    <div className="app">
+    <div className={`app${cinema ? " cinema" : ""}`}>
       <Header />
       <main className="stage">
         <Scene />
@@ -69,6 +74,7 @@ function LiveApp() {
       <BrainPanel />
       <ShotBar />
       <BrainFiring />
+      <CinemaHint />
     </div>
   );
 }

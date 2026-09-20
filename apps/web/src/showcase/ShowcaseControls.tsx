@@ -4,6 +4,7 @@ import { timelineFor } from "../lib/playback";
 import { holeOf, holeStarts, isMixed, runsForBrain } from "../lib/showcase";
 import { useFrameClock } from "../lib/useFrameClock";
 import { playbackTime, useStore } from "../store";
+import { toggleCinema } from "../ui/cinema";
 import { BRAINS } from "../ui/brains";
 import { Headshot } from "../ui/Headshot";
 import { fmt } from "../ui/widgets";
@@ -141,6 +142,9 @@ export function ShowcaseControls() {
             title="M"
           >
             What&apos;s the difference?
+          </button>
+          <button className="btn ghost" onClick={toggleCinema} title="Fullscreen: hide every panel (F)">
+            ⛶ Fullscreen
           </button>
           <button className="btn ghost" onClick={openSplash}>
             About this demo

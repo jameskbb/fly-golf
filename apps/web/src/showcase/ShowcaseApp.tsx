@@ -8,6 +8,8 @@ import { TechPanel } from "../ui/TechPanel";
 import { Scorecard } from "../ui/Scorecard";
 import { ModesPanel } from "../ui/ModesPanel";
 import { BrainFiring, toggleFiring } from "../ui/BrainFiring";
+import { CinemaHint } from "../ui/CinemaHint";
+import { cinemaKey, watchFullscreenExit } from "../ui/cinema";
 import { ShowcaseControls } from "./ShowcaseControls";
 import { ShowcaseSplash } from "./ShowcaseSplash";
 import { closeSplash, initShowcase, nextShot, prevShot, primaryAction, replayShot } from "./controller";
@@ -15,8 +17,10 @@ import "./showcase.css";
 
 /** The GitHub Pages build: the same scene and panels, driven by recorded runs instead of a backend. */
 export function ShowcaseApp() {
+  const cinema = useStore((s) => s.cinema);
   useEffect(() => {
     initShowcase();
+    watchFullscreenExit();
   }, []);
 
   useEffect(() => {
@@ -35,6 +39,7 @@ export function ShowcaseApp() {
         if (e.key === "Escape" && st.showcase?.run) closeSplash();
         return;
       }
+      if (cinemaKey(e)) return;
       if (e.code === "Space") {
         e.preventDefault();
         primaryAction();
@@ -51,7 +56,7 @@ export function ShowcaseApp() {
   }, []);
 
   return (
-    <div className="app showcase">
+    <div className={`app showcase${cinema ? " cinema" : ""}`}>
       <Header />
       <main className="stage">
         <Scene />
@@ -64,6 +69,7 @@ export function ShowcaseApp() {
       <BrainPanel />
       <ShotBar />
       <BrainFiring />
+      <CinemaHint />
     </div>
   );
 }

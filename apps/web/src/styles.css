@@ -952,3 +952,80 @@ code,
   border: 1px solid currentColor;
   opacity: 0.85;
 }
+
+/* ---------- cinema mode (ui/cinema.ts): the course fills the window, every panel hidden */
+.app.cinema {
+  height: 100vh;
+  height: 100dvh;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "stage";
+}
+.app.cinema > .hdr,
+.app.cinema > .brain,
+.app.cinema > .shotbar,
+.app.cinema .stage > .controls,
+.app.cinema .stage > .scorecard,
+.app.cinema .stage > .drawer,
+.app.cinema .firing:not(.open) {
+  display: none !important;
+}
+/* The brain-firing card stays available (B), tucked into the corner the panels left free. */
+.app.cinema .firing.open {
+  top: 14px;
+  right: 14px;
+}
+.cinema-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 20;
+  transform: translateX(-50%);
+  padding: 7px 14px;
+  font: 600 13px var(--body);
+  color: var(--text);
+  background: rgba(8, 12, 10, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  pointer-events: none;
+  animation: cinema-hint 3.2s ease forwards;
+}
+.cinema-hint kbd {
+  padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  font: 600 12px var(--mono, monospace);
+}
+@keyframes cinema-hint {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cinema-hint {
+    animation: none;
+  }
+}
+
+/* On narrow screens the brain card is normally a row of the page; in cinema mode it floats over
+   the top of the course instead, so the course keeps the whole window. */
+@media (max-width: 1000px) {
+  .app.cinema:has(> .firing) {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "stage";
+  }
+  .app.cinema > .firing.open {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    padding: 0;
+    background: none;
+  }
+}

@@ -1,5 +1,6 @@
 import { advance, newHole, replay, selectController, selectMode } from "../actions";
 import { useStore } from "../store";
+import { toggleCinema } from "./cinema";
 import { BRAINS } from "./brains";
 import { Headshot } from "./Headshot";
 
@@ -91,6 +92,9 @@ export function Controls() {
             onClick={() => set({ runsOpen: !runsOpen, techOpen: false, modesOpen: false })}
           >
             Runs
+          </button>
+          <button className="btn ghost" onClick={toggleCinema} title="Fullscreen: hide every panel (F)">
+            ⛶ Fullscreen
           </button>
         </div>
         <div className="brains-head">
