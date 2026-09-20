@@ -1,5 +1,6 @@
 import { advance, newHole, replay, selectController, selectMode } from "../actions";
 import { useStore } from "../store";
+import { toggleSound } from "../lib/sound";
 import { toggleCinema } from "./cinema";
 import { BRAINS } from "./brains";
 import { Headshot } from "./Headshot";
@@ -9,6 +10,7 @@ export function Controls() {
   const status = useStore((s) => s.status);
   const busy = useStore((s) => s.busy);
   const playback = useStore((s) => s.playback);
+  const sound = useStore((s) => s.sound);
   const loading = useStore((s) => s.controllerLoading);
   const history = useStore((s) => s.history);
   const error = useStore((s) => s.error);
@@ -92,6 +94,14 @@ export function Controls() {
             onClick={() => set({ runsOpen: !runsOpen, techOpen: false, modesOpen: false })}
           >
             Runs
+          </button>
+          <button
+            className="btn ghost"
+            onClick={toggleSound}
+            title={sound ? "Sound on: the club-on-ball hit (S)" : "Sound off (S)"}
+            aria-pressed={sound}
+          >
+            {sound ? "\u{1F50A}" : "\u{1F507}"} Sound
           </button>
           <button className="btn ghost" onClick={toggleCinema} title="Fullscreen: hide every panel (F)">
             ⛶ Fullscreen

@@ -14,6 +14,7 @@ import { ModesPanel } from "./ui/ModesPanel";
 import { ShowcaseApp } from "./showcase/ShowcaseApp";
 import { BrainFiring, toggleFiring } from "./ui/BrainFiring";
 import { CinemaHint } from "./ui/CinemaHint";
+import { soundKey } from "./lib/sound";
 import { cinemaKey, watchFullscreenExit } from "./ui/cinema";
 
 /** One app, two data sources: the live backend, or recorded runs on GitHub Pages (lib/source.ts). */
@@ -35,7 +36,7 @@ function LiveApp() {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
       const st = useStore.getState();
-      if (cinemaKey(e)) return;
+      if (cinemaKey(e) || soundKey(e)) return;
       if (e.code === "Space") {
         e.preventDefault();
         if (!st.busy && !st.playback) advance();

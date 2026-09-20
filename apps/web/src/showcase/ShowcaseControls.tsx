@@ -4,6 +4,7 @@ import { timelineFor } from "../lib/playback";
 import { holeOf, holeStarts, isMixed, runsForBrain } from "../lib/showcase";
 import { useFrameClock } from "../lib/useFrameClock";
 import { playbackTime, useStore } from "../store";
+import { toggleSound } from "../lib/sound";
 import { toggleCinema } from "../ui/cinema";
 import { BRAINS } from "../ui/brains";
 import { Headshot } from "../ui/Headshot";
@@ -63,6 +64,7 @@ function Scrubber({ shot, stage }: { shot: ShotRecord; stage: string }) {
 export function ShowcaseControls() {
   const view = useStore((s) => s.showcase);
   const playback = useStore((s) => s.playback);
+  const sound = useStore((s) => s.sound);
   const course = useStore((s) => s.course);
   const error = useStore((s) => s.error);
   const techOpen = useStore((s) => s.techOpen);
@@ -142,6 +144,14 @@ export function ShowcaseControls() {
             title="M"
           >
             What&apos;s the difference?
+          </button>
+          <button
+            className="btn ghost"
+            onClick={toggleSound}
+            title={sound ? "Sound on: the club-on-ball hit (S)" : "Sound off (S)"}
+            aria-pressed={sound}
+          >
+            {sound ? "\u{1F50A}" : "\u{1F507}"} Sound
           </button>
           <button className="btn ghost" onClick={toggleCinema} title="Fullscreen: hide every panel (F)">
             ⛶ Fullscreen

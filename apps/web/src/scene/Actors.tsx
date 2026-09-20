@@ -12,6 +12,7 @@ import { Line } from "@react-three/drei";
 import * as THREE from "three";
 import type { CourseHole, Scenario } from "@fly-golf/protocol";
 import { playbackTime, useStore } from "../store";
+import { crossedImpact, playImpact } from "../lib/sound";
 import { sampleTrajectory } from "../lib/coords";
 import { timelineFor } from "../lib/playback";
 import { groundFor, heightAt } from "../lib/terrain";
@@ -133,6 +134,8 @@ export function Actors({ scenario, hole }: { scenario: Scenario; hole: CourseHol
   }, []);
   const trailKey = useRef("");
   const trailHole = useRef(""); // run/hole the drawn tracer belongs to
+  const impactKey = useRef(""); // playback whose strike has been armed
+  const impactAt = useRef<number | undefined>(undefined); // its playback time last frame
   const pickModels = useMemo(
     () => ({
       putter: <ClubModel style="putter" />,
@@ -172,7 +175,17 @@ export function Actors({ scenario, hole }: { scenario: Scenario; hole: CourseHol
       const key = `${rec.run_id}/${rec.shot_id}/${pb.id}`;
       if (cache.current?.key !== key) cache.current = { key, tl: timelineFor(rec) };
       tl = cache.current.tl;
-      const pose = poseAt(tl, playbackTime(pb));
+      const now = playbackTime(pb);
+      // The club meets the ball: play it once per swing (lib/sound.ts decides if sound is on).
+      if (impactKey.current !== key) {
+        impactKey.current = key;
+        impactAt.current = undefined;
+      }
+      if (crossedImpact(impactAt.current, now, tl.impact, rec.stroke.contact)) {
+        playImpact({ putter: rec.stroke.club?.kind === "putter", power: rec.stroke.power });
+      }
+      impactAt.current = now;
+      const pose = poseAt(tl, now);
       phase = pose.phase;
       anchor = rec.initial_state.ball;
       lineHeading = lerpAngle(rec.stroke.body_heading_rad, rec.stroke.heading_rad, pose.aimProgress);

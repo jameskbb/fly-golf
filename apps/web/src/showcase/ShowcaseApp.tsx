@@ -9,6 +9,7 @@ import { Scorecard } from "../ui/Scorecard";
 import { ModesPanel } from "../ui/ModesPanel";
 import { BrainFiring, toggleFiring } from "../ui/BrainFiring";
 import { CinemaHint } from "../ui/CinemaHint";
+import { soundKey } from "../lib/sound";
 import { cinemaKey, watchFullscreenExit } from "../ui/cinema";
 import { ShowcaseControls } from "./ShowcaseControls";
 import { ShowcaseSplash } from "./ShowcaseSplash";
@@ -39,7 +40,7 @@ export function ShowcaseApp() {
         if (e.key === "Escape" && st.showcase?.run) closeSplash();
         return;
       }
-      if (cinemaKey(e)) return;
+      if (cinemaKey(e) || soundKey(e)) return;
       if (e.code === "Space") {
         e.preventDefault();
         primaryAction();

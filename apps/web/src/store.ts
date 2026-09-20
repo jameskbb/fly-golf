@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { initialSound } from "./lib/sound";
 import { initialCinema } from "./ui/cinema";
 import type {
   CourseHole,
@@ -54,6 +55,7 @@ export interface AppState {
   modesOpen: boolean;
   firingOpen: boolean; // the "Brain firing" view (ui/BrainFiring.tsx)
   cinema: boolean; // fullscreen course, every panel hidden (ui/cinema.ts)
+  sound: boolean; // club-on-ball sound on impact (lib/sound.ts)
   cinemaHintAt?: number; // when cinema mode was entered by hand (shows the way out); unset for ?cinema=1
   set: (patch: Partial<AppState>) => void;
   startPlayback: (record: ShotRecord, replay: boolean) => void;
@@ -77,6 +79,7 @@ export const useStore = create<AppState>((set) => ({
   modesOpen: false,
   firingOpen: false,
   cinema: initialCinema(),
+  sound: initialSound(),
   set: (patch) => set(patch),
   startPlayback: (record, replay) =>
     set({ playback: { record, replay, id: ++nextPlaybackId, startedAt: performance.now() } }),

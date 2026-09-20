@@ -66,7 +66,9 @@ page. Pick a brain and watch nine holes one shot at a time: each hole is drawn a
 that brain's recorded rounds, so every visit shows different play, and the scorecard says which
 round each hole came from. Pause, scrub through a swing, jump to any hole or stroke, orbit the
 camera, and read each shot's recorded spikes, active neurons, population rates, motor channels
-and club choice. Press **Watch the brain fire** (or **B**) to see each shot's recorded 400 ms of
+and club choice. Each strike plays a club-on-ball hit, synthesized in the browser rather than sampled: **🔊 Sound**
+(or **S**) turns it off, and **⛶ Fullscreen** (or **F**) hides every panel so the course fills the
+window. Press **Watch the brain fire** (or **B**) to see each shot's recorded 400 ms of
 activity light up a map of the fly's brain, slowed down while the fly lines up. The dots are the
 real MaleCNS v1.0 cell-body positions, binned; the light is only what each shot recorded:
 network spikes per 10 ms, each sensory and descending-neuron population's mean rate before and
