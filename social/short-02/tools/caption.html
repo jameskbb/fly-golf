@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Fly Golf short captions</title>
+<!--
+  Caption template used by tools/lib/captions.mjs (Playwright screenshots each layer to a transparent PNG).
+  Open this file in a browser and call renderCaption({...}) in the console to preview a style.
+  Fonts are cached locally in ./fonts (Google Fonts, OFL); emoji are Twemoji SVGs (CC-BY 4.0) in ./emoji.
+  The stage is the 1080x1920 video frame, offset by MARGIN so padded screenshots may extend past the frame.
+-->
+<style>
+  @font-face { font-family: "Anton"; src: url(fonts/Anton-Regular.ttf); font-weight: 400; }
+  @font-face { font-family: "Barlow Condensed"; src: url(fonts/BarlowCondensed-SemiBold.ttf); font-weight: 600; }
+  @font-face { font-family: "Barlow Condensed"; src: url(fonts/BarlowCondensed-ExtraBold.ttf); font-weight: 800; }
+  @font-face { font-family: "Barlow Condensed"; src: url(fonts/BarlowCondensed-Black.ttf); font-weight: 900; }
+  @font-face { font-family: "JetBrains Mono"; src: url(fonts/JetBrainsMono-Medium.ttf); font-weight: 500; }
+  @font-face { font-family: "JetBrains Mono"; src: url(fonts/JetBrainsMono-Bold.ttf); font-weight: 700; }
+
+  :root { --yellow: #ffc81e; --ink: #000; --paper: #fff; --margin: 200px; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  body { width: 1480px; height: 2320px; position: relative; overflow: hidden;
+         -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+  /* the video frame */
+  #stage { position: absolute; left: var(--margin); top: var(--margin); width: 1080px; height: 1920px; }
+  #stage.debug { outline: 2px solid magenta; background: repeating-linear-gradient(45deg,#333 0 20px,#444 20px 40px); }
+  #stage.debug::after { content: ""; position: absolute; left: 80px; top: 260px; width: 920px; height: 1240px;
+                        outline: 3px dashed cyan; }
+
+  .block { position: absolute; left: 80px; width: 920px; display: flex; justify-content: center; }
+  .cap { position: relative; text-align: center; text-wrap: balance; max-width: 920px; }
+  .cap .stroke, .cap .fill { display: block; }
+  .cap .stroke { position: absolute; inset: 0; color: var(--ink); -webkit-text-stroke-color: var(--ink);
+                 -webkit-text-stroke-width: var(--stroke); }
+  .cap .stroke img.emoji { visibility: hidden; }
+  .cap .fill { position: relative; color: var(--paper); }
+  .cap .fill .hl { color: var(--yellow); }
+  .cap .stroke .hl { color: var(--ink); }
+  img.emoji { height: 0.92em; width: 0.92em; vertical-align: -0.08em; margin: 0 0.03em;
+              filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 3px 6px rgba(0,0,0,.6)); }
+  .shadow { filter: drop-shadow(0 8px 14px rgba(0,0,0,.45)); }
+
+  /* hook: huge heavy condensed caps, thick stroke, <= 3 lines */
+  .s-hook .cap { font-family: "Anton"; font-size: 112px; line-height: 1.04; text-transform: uppercase;
+                 letter-spacing: 0.5px; --stroke: 20px; }
+  /* big: one punchy word/phrase */
+  .s-big .cap { font-family: "Anton"; font-size: 140px; line-height: 1.02; text-transform: uppercase;
+                letter-spacing: 1px; --stroke: 22px; }
+  /* normal: 3-7 words, sentence case or caps (as typed) */
+  .s-normal .cap { font-family: "Barlow Condensed"; font-weight: 800; font-size: 84px; line-height: 1.02;
+                   --stroke: 16px; }
+  /* small: deadpan lowercase aside, lab-notebook mono on a dark pill */
+  .s-small .cap { font-family: "JetBrains Mono"; font-weight: 700; font-size: 56px; line-height: 1.18;
+                  letter-spacing: -1.5px; color: #f4f4f0; background: rgba(12,14,12,.78);
+                  padding: 16px 30px 18px; border-radius: 22px; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+                  --stroke: 0px; }
+  .s-small .cap .stroke { display: none; }
+  .s-small .cap img.emoji { filter: none; }
+
+  /* end card */
+  .end-dim { position: absolute; inset: 0;
+             background: linear-gradient(180deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.48) 28%, rgba(0,0,0,.60) 50%,
+                                         rgba(0,0,0,.48) 72%, rgba(0,0,0,.20) 100%); }
+  .s-endq .cap { font-family: "Anton"; font-size: 120px; line-height: 1.04; --stroke: 20px; }
+  .s-endt .cap { font-family: "Anton"; font-size: 176px; line-height: 1.0; letter-spacing: 3px; --stroke: 22px; }
+  .s-endt .cap .fill { color: var(--yellow); }
+  .s-endt .url { margin-top: 26px; font-family: "JetBrains Mono"; font-weight: 500; font-size: 34px;
+                 color: rgba(255,255,255,.82); letter-spacing: -0.5px; text-shadow: 0 2px 6px rgba(0,0,0,.9); }
+  .s-endt .col { display: flex; flex-direction: column; align-items: center; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+const MARGIN = 200;
+// Frame-space anchors (the safe area is x 80-1000, y 260-1500).
+const POS = {
+  top:    { mode: "top",    y: 270 },
+  upper:  { mode: "center", y: 560 },
+  middle: { mode: "center", y: 900 },
+  lower:  { mode: "bottom", y: 1490 },
+};
+const MAX_LINES = { hook: 3, big: 2, normal: 3, small: 3, endq: 3, endt: 1 };
+
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+// "*word*" -> highlighted span; "\n" or " | " -> forced line break; emoji -> Twemoji <img>.
+function markup(text, emojiMap) {
+  let out = "";
+  const parts = text.split(/(\*[^*]+\*)/g);
+  for (const p of parts) {
+    if (!p) continue;
+    const hl = p.startsWith("*") && p.endsWith("*") && p.length > 2;
+    let body = esc(hl ? p.slice(1, -1) : p);
+    body = body.replace(/\s*\|\s*/g, "<br>").replace(/\n/g, "<br>");
+    body = body.replace(/\p{Extended_Pictographic}️?/gu, m => {
+      const cp = m.codePointAt(0).toString(16);
+      const src = emojiMap[cp];
+      return src ? `<img class="emoji" alt="${m}" src="${src}">` : m;
+    });
+    out += hl ? `<span class="hl">${body}</span>` : body;
+  }
+  return out;
+}
+
+function capEl(style, html) {
+  const block = document.createElement("div");
+  block.className = `block s-${style}`;
+  block.innerHTML = `<div class="shadow"><div class="cap"><span class="stroke" aria-hidden="true">${html}</span><span class="fill">${html}</span></div></div>`;
+  return block;
+}
+
+function lineCount(cap) {
+  const fill = cap.querySelector(".fill");
+  const lh = parseFloat(getComputedStyle(fill).lineHeight);
+  return Math.round(fill.getBoundingClientRect().height / lh);
+}
+
+// Shrink the font until the caption fits its line budget (and never wider than the safe area).
+function fit(block, style) {
+  const cap = block.querySelector(".cap");
+  let size = parseFloat(getComputedStyle(cap).fontSize);
+  const maxLines = MAX_LINES[style] || 3;
+  let guard = 0;
+  while ((lineCount(cap) > maxLines || cap.scrollWidth > 921) && size > 30 && guard++ < 60) {
+    size -= 3; cap.style.fontSize = size + "px";
+  }
+  return { fontSize: size, lines: lineCount(cap) };
+}
+
+function place(block, pos) {
+  const a = POS[pos] || POS.middle;
+  const h = block.getBoundingClientRect().height;
+  const top = a.mode === "top" ? a.y : a.mode === "bottom" ? a.y - h : a.y - h / 2;
+  block.style.top = Math.round(top) + "px";
+}
+
+// Bounding box (page coords) of what is actually painted, padded for stroke, shadow and pop overshoot.
+function layerRect(el, padFrac = 0.12, minPad = 40) {
+  const r = el.getBoundingClientRect();
+  const pad = Math.max(minPad, Math.round(Math.max(r.width, r.height) * padFrac));
+  let x = Math.floor(r.left - pad), y = Math.floor(r.top - pad);
+  let w = Math.ceil(r.width + 2 * pad), h = Math.ceil(r.height + 2 * pad);
+  w += w % 2; h += h % 2;
+  return { x, y, w, h };
+}
+
+function toFrame(rect) { return { x: rect.x - MARGIN, y: rect.y - MARGIN, w: rect.w, h: rect.h }; }
+
+async function imagesReady() {
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(im => im.decode().catch(() => {})));
+}
+
+window.renderCaption = async function (spec) {
+  const stage = document.getElementById("stage");
+  stage.innerHTML = "";
+  stage.className = spec.debug ? "debug" : "";
+  const emojiMap = spec.emojiMap || {};
+  const layers = [];
+  if (spec.style === "end") {
+    const dim = document.createElement("div"); dim.className = "end-dim"; stage.appendChild(dim);
+    const q = capEl("endq", markup(spec.text, emojiMap)); stage.appendChild(q);
+    const qi = fit(q, "endq");
+    const title = spec.title ?? "FLY GOLF 🪰⛳";
+    const t = capEl("endt", markup(title, emojiMap));
+    if (spec.url) {
+      const col = document.createElement("div"); col.className = "col";
+      t.replaceChildren(col); col.innerHTML = `<div class="shadow"><div class="cap"><span class="stroke" aria-hidden="true">${markup(title, emojiMap)}</span><span class="fill">${markup(title, emojiMap)}</span></div></div><div class="url">${esc(spec.url)}</div>`;
+    }
+    stage.appendChild(t);
+    await imagesReady();
+    fit(t, "endt");
+    // question centred around y=780, title block below it
+    const qh = q.getBoundingClientRect().height;
+    q.style.top = Math.round(800 - qh / 2) + "px";
+    const th = t.getBoundingClientRect().height;
+    t.style.top = Math.round(Math.max(800 + qh / 2 + 90, 1080 - th / 2)) + "px";
+    layers.push({ name: "dim", rect: { x: MARGIN, y: MARGIN, w: 1080, h: 1920 }, frame: { x: 0, y: 0, w: 1080, h: 1920 } });
+    layers.push({ name: "question", ...(() => { const r = layerRect(q.querySelector(".shadow")); return { rect: r, frame: toFrame(r) }; })(), fontSize: qi.fontSize, lines: qi.lines });
+    layers.push({ name: "title", ...(() => { const r = layerRect(t.querySelector(".col") || t.querySelector(".shadow")); return { rect: r, frame: toFrame(r) }; })() });
+    return { layers, ids: ["dim", "question", "title"] };
+  }
+  const block = capEl(spec.style, markup(spec.text, emojiMap));
+  stage.appendChild(block);
+  await imagesReady();
+  const info = fit(block, spec.style);
+  place(block, spec.pos);
+  const r = layerRect(block.querySelector(".shadow"));
+  layers.push({ name: "main", rect: r, frame: toFrame(r), fontSize: info.fontSize, lines: info.lines });
+  return { layers };
+};
+
+// Show only one layer (others hidden) so each can be screenshotted separately.
+window.soloLayer = function (name) {
+  const stage = document.getElementById("stage");
+  const map = { dim: ".end-dim", question: ".s-endq", title: ".s-endt" };
+  for (const [k, sel] of Object.entries(map)) {
+    const el = stage.querySelector(sel);
+    if (el) el.style.visibility = (name === k || name === "main") ? "visible" : "hidden";
+  }
+};
+</script>
+</body>
+</html>

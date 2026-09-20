@@ -10,6 +10,7 @@ club from a full bag, sets up every shot, records its neural telemetry, and can 
 readout of descending-neuron activity to make its golf decisions.
 
 **[▶ Watch the Web Demo](https://jameskbb.github.io/fly-golf/)** ·
+[▶ Watch the 25-second short](https://jameskbb.github.io/fly-golf/watch.html) ·
 [How It Works](#how-it-works) · [Run It Locally](#run-it-locally) ·
 [Scientific Caveats](#scientific-caveats)
 
@@ -37,6 +38,24 @@ shot replayed by the web demo, with the demo's playback buttons hidden so the fl
 >   synaptic plasticity inside MaleCNS ([TRAINING.md](docs/TRAINING.md)).
 > - This is **not a digital copy of a fly's mind**, and no fly understands golf. It is simulated
 >   neural dynamics operating over a real wiring diagram, wired to golf by hand.
+
+## The 25-second short
+
+<a href="https://jameskbb.github.io/fly-golf/watch.html">
+  <img src="apps/web/public/media/fly-golf-short-02-poster.jpg" alt="The fly at address with its 7-iron, captioned 7-IRON" width="240" align="left" hspace="18" vspace="4">
+</a>
+
+**[▶ Watch it here](https://jameskbb.github.io/fly-golf/watch.html)** (25 s, sound on) — one hole,
+cut for a phone: the fly's readout picks a 7-iron, carries the pond to 4.7 feet, and then takes
+three putts, including a lip-out from 14 inches.
+
+Every frame is the web demo replaying the same recorded hole you can
+[open yourself](https://jameskbb.github.io/fly-golf/?run=trained-front-nine-s07&shot=14); the
+video adds captions, synthesized sound and speed changes, and nothing else. How it was cut, shot
+by shot, is in [social/short-02](social/short-02/README.md), together with the capture and render
+tools that rebuild it from the recorded run.
+
+<br clear="left">
 
 ## The web demo
 

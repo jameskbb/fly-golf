@@ -1,0 +1,423 @@
+{
+ "_comment": "Short 02 — same cut as short 01 '4 feet. 3 putts.', re-captured in the app's cinema mode (?cinema=1: no HUD/panels in frame), with a vine-boom hit on the lip-out. Every clip is the web demo replaying trained-front-nine-s07 shots 14-17 (Pond Hop).",
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "duration": 25.0,
+ "audio": {
+  "target_lufs": -16,
+  "ceiling_dbtp": -2.0
+ },
+ "segments": [
+  {
+   "t0": 0.0,
+   "t1": 2.3,
+   "clip": "clips/pondhop-tee.mp4",
+   "in": 1.25,
+   "speed": 1.0,
+   "zoom": [
+    1.3,
+    1.42
+   ],
+   "focus": [
+    0.56,
+    0.62
+   ],
+   "note": "hook: address -> swing, cut on impact (src 3.533)"
+  },
+  {
+   "t0": 2.3,
+   "t1": 4.6,
+   "clip": "clips/brainfire.mp4",
+   "in": 0.0,
+   "speed": 1.1,
+   "zoom": [
+    1.0,
+    1.05
+   ],
+   "focus": [
+    0.5,
+    0.3
+   ],
+   "note": "brain card replays the 400 ms decision (counter 0-400 ms by src 2.5)"
+  },
+  {
+   "t0": 4.6,
+   "t1": 7.2,
+   "clip": "clips/pondhop-tee.mp4",
+   "in": 0.0,
+   "speed": 0.415,
+   "zoom": [
+    1.0,
+    1.2
+   ],
+   "focus": [
+    0.55,
+    0.62
+   ],
+   "note": "back on the tee, HUD 'choosing...' (slowed: nothing moves)"
+  },
+  {
+   "t0": 7.2,
+   "t1": 8.4,
+   "clip": "clips/pondhop-tee.mp4",
+   "in": 1.09,
+   "speed": 1.0,
+   "zoom": [
+    1.22,
+    1.34
+   ],
+   "focus": [
+    0.565,
+    0.615
+   ],
+   "note": "club reveal at src 1.1: 7-iron (punch-in framed on the fly, club head and ball kept in)"
+  },
+  {
+   "t0": 8.4,
+   "t1": 9.6,
+   "clip": "clips/pondhop-tee.mp4",
+   "in": 2.29,
+   "speed": 1.05,
+   "zoom": [
+    1.0,
+    1.0
+   ],
+   "focus": [
+    0.5,
+    0.4
+   ],
+   "note": "swing, impact at t~9.58"
+  },
+  {
+   "t0": 9.6,
+   "t1": 12.4,
+   "clip": "clips/pondhop-tee.mp4",
+   "in": 4.0,
+   "speed": 1.94,
+   "zoom": [
+    1.15,
+    1.2
+   ],
+   "focus": [
+    0.5,
+    0.22
+   ],
+   "note": "flight over the pond at ~2x, cut after the follow-cam settles (src 4.0)"
+  },
+  {
+   "t0": 12.4,
+   "t1": 15.8,
+   "clip": "clips/pondhop-tee.mp4",
+   "in": 9.436,
+   "speed": 1.0,
+   "zoom": [
+    1.0,
+    1.1
+   ],
+   "focus": [
+    0.56,
+    0.5
+   ],
+   "note": "lands on the green (src 9.425), bounces, stops 4.7 ft short; the push-in is the capture crop (1.15x -> 2.2x)"
+  },
+  {
+   "t0": 15.8,
+   "t1": 17.3,
+   "clip": "clips/pondhop-putt1.mp4",
+   "in": 3.1,
+   "speed": 1.7,
+   "zoom": [
+    1.3,
+    1.35
+   ],
+   "focus": [
+    0.45,
+    0.46
+   ],
+   "note": "the 4-footer slides by (impact src 3.40)"
+  },
+  {
+   "t0": 17.3,
+   "t1": 18.4,
+   "clip": "clips/pondhop-lipout.mp4",
+   "in": 3.05,
+   "speed": 0.545,
+   "zoom": [
+    1.0,
+    1.2
+   ],
+   "focus": [
+    0.2,
+    0.3
+   ],
+   "note": "the 14-inch putt, easing into slow motion (impact src 3.40 -> t 17.94)"
+  },
+  {
+   "t0": 18.4,
+   "t1": 18.7,
+   "clip": "clips/pondhop-lipout.mp4",
+   "in": 3.65,
+   "speed": 0.25,
+   "zoom": [
+    1.7,
+    1.8
+   ],
+   "focus": [
+    0.18,
+    0.48
+   ],
+   "note": "slow-mo 1/4x into the cup: lip at src 3.725 (t 18.70)"
+  },
+  {
+   "t0": 18.7,
+   "t1": 19.0,
+   "clip": "clips/pondhop-lipout.mp4",
+   "in": 3.725,
+   "speed": 0.05,
+   "zoom": [
+    1.8,
+    1.9
+   ],
+   "focus": [
+    0.18,
+    0.48
+   ],
+   "note": "freeze on the lip under the boom"
+  },
+  {
+   "t0": 19.0,
+   "t1": 19.8,
+   "clip": "clips/pondhop-lipout.mp4",
+   "in": 3.74,
+   "speed": 1.0,
+   "zoom": [
+    1.9,
+    1.05
+   ],
+   "focus": [
+    0.18,
+    0.48
+   ],
+   "note": "pull back as the ball rolls 3.8 ft away, real speed"
+  },
+  {
+   "t0": 19.8,
+   "t1": 20.9,
+   "clip": "clips/pondhop-tapin.mp4",
+   "in": 3.05,
+   "speed": 1.0,
+   "zoom": [
+    1.15,
+    1.15
+   ],
+   "focus": [
+    0.43,
+    0.48
+   ],
+   "note": "the 3.8-footer coming back"
+  },
+  {
+   "t0": 20.9,
+   "t1": 21.4,
+   "clip": "clips/pondhop-tapin.mp4",
+   "in": 4.15,
+   "speed": 1.0,
+   "zoom": [
+    1.3,
+    1.6
+   ],
+   "focus": [
+    0.25,
+    0.42
+   ],
+   "note": "push into the cup as it drops (holed src 4.45 -> t 21.2)"
+  },
+  {
+   "t0": 21.4,
+   "t1": 25.0,
+   "clip": "clips/pondhop-tapin.mp4",
+   "in": 4.65,
+   "speed": 0.69,
+   "zoom": [
+    1.15,
+    1.3
+   ],
+   "focus": [
+    0.5,
+    0.42
+   ],
+   "note": "hold on the fly and the cup"
+  }
+ ],
+ "captions": [
+  {
+   "t0": 0.0,
+   "t1": 2.3,
+   "text": "A FRUIT FLY BRAIN IS PLAYING *GOLF*",
+   "style": "hook",
+   "pos": "upper",
+   "pop": false
+  },
+  {
+   "t0": 2.3,
+   "t1": 3.4,
+   "text": "*166,700* SIMULATED NEURONS",
+   "style": "normal",
+   "pos": "middle"
+  },
+  {
+   "t0": 3.4,
+   "t1": 4.8,
+   "text": "and apparently a tee time",
+   "style": "small",
+   "pos": "middle"
+  },
+  {
+   "t0": 4.8,
+   "t1": 7.2,
+   "text": "164 YARDS. *OVER WATER.*",
+   "style": "normal",
+   "pos": "upper"
+  },
+  {
+   "t0": 7.2,
+   "t1": 8.4,
+   "text": "*7-IRON.*",
+   "style": "big",
+   "pos": "upper"
+  },
+  {
+   "t0": 13.6,
+   "t1": 14.55,
+   "text": "*4.7 FEET.*",
+   "style": "big",
+   "pos": "upper"
+  },
+  {
+   "t0": 14.55,
+   "t1": 15.8,
+   "text": "wait. that's *good.*",
+   "style": "normal",
+   "pos": "upper"
+  },
+  {
+   "t0": 15.8,
+   "t1": 17.3,
+   "text": "then the putt…",
+   "style": "small",
+   "pos": "upper"
+  },
+  {
+   "t0": 17.4,
+   "t1": 18.65,
+   "text": "14 inches.",
+   "style": "normal",
+   "pos": "upper"
+  },
+  {
+   "t0": 18.7,
+   "t1": 19.8,
+   "text": "*LIPPED OUT.*",
+   "style": "big",
+   "pos": "upper"
+  },
+  {
+   "t0": 21.35,
+   "t1": 22.6,
+   "text": "*3 PUTTS.* FROM 4 FEET.",
+   "style": "big",
+   "pos": "upper"
+  },
+  {
+   "t0": 22.6,
+   "t1": 25.0,
+   "text": "49.3 a nine.|Can it *break 100?*",
+   "style": "end",
+   "title": "FLY GOLF 🪰⛳",
+   "title_t0": 22.9
+  }
+ ],
+ "sfx": [
+  {
+   "t": 0.0,
+   "name": "music",
+   "gain_db": -6
+  },
+  {
+   "t": 1.95,
+   "name": "whoosh",
+   "gain_db": -7
+  },
+  {
+   "t": 2.28,
+   "name": "impact",
+   "gain_db": -3
+  },
+  {
+   "t": 2.32,
+   "name": "neural",
+   "gain_db": -9
+  },
+  {
+   "t": 7.2,
+   "name": "click",
+   "gain_db": -10
+  },
+  {
+   "t": 9.25,
+   "name": "whoosh",
+   "gain_db": -7
+  },
+  {
+   "t": 9.58,
+   "name": "impact",
+   "gain_db": -3
+  },
+  {
+   "t": 13.4,
+   "name": "pop",
+   "gain_db": -14
+  },
+  {
+   "t": 15.98,
+   "name": "impact",
+   "gain_db": -14
+  },
+  {
+   "t": 16.45,
+   "name": "ooh",
+   "gain_db": -15
+  },
+  {
+   "t": 17.94,
+   "name": "impact",
+   "gain_db": -14
+  },
+  {
+   "t": 18.7,
+   "name": "clink",
+   "gain_db": -5
+  },
+  {
+   "t": 18.7,
+   "name": "vineboom",
+   "gain_db": -11
+  },
+  {
+   "t": 20.18,
+   "name": "impact",
+   "gain_db": -14
+  },
+  {
+   "t": 21.2,
+   "name": "clink",
+   "gain_db": -8
+  },
+  {
+   "t": 21.25,
+   "name": "cheer",
+   "gain_db": -13
+  }
+ ]
+}
