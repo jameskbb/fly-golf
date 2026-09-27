@@ -106,27 +106,51 @@ and commit. The Pages workflow deploys on the next push to `main`.
 
 ## Current showcase
 
-Ten rounds per brain, round seeds 7–16, all recorded from a clean tree whose contents are those
-of commit `04a148d` (the runs record its pre-publication sha `43f6d6b`, see BUILD_LOG.md)
-(each run's `source.run_id` is in its showcase file):
+Ten 18-hole rounds per brain, round seeds 7–16 (the seeds of the earlier front-nine showcase),
+all recorded from a clean tree at commit `6eceef0` on course `eighteen-v1` (physics
+`course-physics-v2`). Each run's `source.run_id` is in its showcase file and in `index.json`.
+Strokes are total (out + in):
 
 | ids | Controller | Strokes, seeds 7 to 16 | Summary |
 | --- | --- | --- | --- |
-| `trained-front-nine-s07` … `-s16` (`-s07` featured) | MaleCNS + trained readout (`hindsight-gated-v2`, readout `20260917T165536Z`, engine `fly-golf-lif-v1`, injection `malecns-sensory-v0.3`) | 54, 50, 53, 50, 48, 48, 49, 51, 48, 42 | mean 49.3, 89 of 90 holes holed |
-| `untrained-front-nine-s07` … `-s16` | MaleCNS, fixed a-priori readout (engine `fly-golf-lif-v1`) | 81 in every round | no hole finished |
-| `mock-front-nine-s07` … `-s16` | MOCK controller: hand-written heuristic, no neurons | 35, 36, 37, 36, 36, 37, 37, 37, 39, 35 | mean 36.5, every hole holed |
+| `trained-eighteen-s07` … `-s16` (`-s07` featured) | MaleCNS + trained readout (`hindsight-gated-v2`, readout `20260917T165536Z`, engine `fly-golf-lif-v1`, injection `malecns-sensory-v0.3`) | 115 (54+61), 98 (50+48), 97 (53+44), 103 (50+53), 101 (48+53), 94 (48+46), 93 (49+44), 100 (51+49), 101 (48+53), 94 (42+52) | mean 99.6 (out 49.3, in 50.3), 176 of 180 holes holed, 5 of 10 under 100 |
+| `untrained-eighteen-s07` … `-s16` | MaleCNS, fixed a-priori readout (engine `fly-golf-lif-v1`) | 162 (81+81) in every round | no hole finished |
+| `mock-eighteen-s07` … `-s16` | MOCK controller: hand-written heuristic, no neurons | 75 (35+40), 73 (36+37), 75 (37+38), 72 (36+36), 75 (36+39), 75 (37+38), 75 (37+38), 74 (37+37), 74 (39+35), 68 (35+33) | mean 73.6 (out 36.5, in 37.1), every hole holed |
+
+Source runs, seeds 7 to 16:
+
+- trained: `20260927T203242Z-f3246f`, `20260927T203530Z-62eb5c`, `20260927T203725Z-e1492e`,
+  `20260927T203926Z-15d379`, `20260927T204138Z-79bc76`, `20260927T204351Z-51d8f5`,
+  `20260927T204558Z-53936b`, `20260927T204841Z-3ed9b1`, `20260927T205105Z-f3750b`,
+  `20260927T205333Z-270f47`
+- untrained: `20260927T203242Z-a3f9de`, `20260927T203509Z-fff7a6`, `20260927T203720Z-a8f4b7`,
+  `20260927T203928Z-ece591`, `20260927T204138Z-4ab5b8`, `20260927T204344Z-9391cf`,
+  `20260927T204604Z-91af3d`, `20260927T204845Z-69a44d`, `20260927T205107Z-db77cd`,
+  `20260927T205330Z-5e391a`
+- mock: `20260927T203221Z-70984b`, `20260927T203222Z-0c5e0c`, `20260927T203223Z-cdb51f`,
+  `20260927T203224Z-dd82c1`, `20260927T203225Z-c3bad6`, `20260927T203227Z-c30c51`,
+  `20260927T203228Z-e8f9b4`, `20260927T203229Z-3fd924`, `20260927T203230Z-2a45ca`,
+  `20260927T203231Z-4517df`
 
 The seeds were fixed before any round was played, and every round recorded for the showcase is in
-it. None was selected from several attempts. All 30 were recorded from a clean worktree, because
-an untracked directory of agent worktrees in the main checkout stamps a run `dirty`. On an 18-hole
-pace the trained fly averages 98.6 and the untrained fly 162: the trained fly breaks 100, the
-untrained one is nowhere near. The mock, which reads the golf state directly and has no neurons,
-is the reference.
+it. None was selected from several attempts. Holes 1-9 of every round are stroke for stroke the
+earlier front-nine round with the same seed (the trained OUT scores are the old front-nine
+scores), so a deep link keeps its shot number: `?run=trained-front-nine-s07&shot=14` is now
+`?run=trained-eighteen-s07&shot=14`.
 
-These thirty replaced the previous set on 2026-09-17, when the sensory injection was rebuilt
-(`malecns-sensory-v0.3`). The untrained rounds are re-recorded too, because the injection changes
-what every brain perceives; the fixed readout still picks up all nine holes, so its 81 is
-unchanged.
+**Does the trained fly break 100?** Sometimes. Five of these ten rounds are under 100; seed 14 is
+exactly 100, which does not break 100. On 36 more rounds from fresh seeds (`fly-golf bench`,
+seeds 100–111, 200–211, 300–311) it averages 102.6 and breaks 100 in 8 of 36
+([TRAINING.md](TRAINING.md#18-hole-results-2026-09-27)): 13 of 46 real 18-hole rounds in all. The
+"98.6 over eighteen" quoted before 2026-09-27 was the front-nine average doubled. The back nine,
+never practised on, costs it about one to two strokes; that says the readout transfers to unseen
+holes, not that the real wiring helps (on the front nine the shuffled-wiring control and the
+no-brain readout both beat it, and neither has been run on the back nine). The untrained fly is
+nowhere near 100. The mock, which reads the golf state directly and has no neurons, is the
+reference, not the fly.
+
+These thirty replaced the 30 front-nine rounds (`*-front-nine-sNN`, commit `04a148d`, recorded as
+`43f6d6b`) on 2026-09-27; those slugs no longer exist.
 
 ## What visitors see
 
