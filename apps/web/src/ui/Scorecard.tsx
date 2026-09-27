@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { playHole } from "../actions";
 import { holeOf, isMixed } from "../lib/showcase";
 import { IS_SHOWCASE } from "../lib/source";
@@ -140,12 +141,39 @@ function NineTable({
  *  ninth, IN and TOTAL after the eighteenth, side by side when there is room and stacked when there
  *  is not. Click a hole number to play it. Each hole shows which brain(s) played it, so a round with
  *  a mid-round switch is visibly mixed. */
+/**
+ * Keep the card clear of the controls panel below it on the stage: on a short desktop stage the
+ * stacked 18-hole card would slide under the controls, so its height is capped to the space above
+ * them and it scrolls instead. On narrow screens both are blocks of the page and nothing is capped.
+ */
+function useClearOfControls(card: React.RefObject<HTMLDivElement | null>) {
+  useLayoutEffect(() => {
+    const el = card.current;
+    const controls = el?.parentElement?.querySelector<HTMLElement>(":scope > .controls");
+    if (!el || !controls) return;
+    const fit = () => {
+      el.style.maxHeight = "";
+      if (getComputedStyle(el).position !== "absolute") return;
+      const room = controls.getBoundingClientRect().top - el.getBoundingClientRect().top - 8;
+      if (room > 0 && el.scrollHeight > room) el.style.maxHeight = `${Math.floor(room)}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(controls);
+    ro.observe(el.parentElement!);
+    for (const child of el.children) ro.observe(child);
+    return () => ro.disconnect();
+  });
+}
+
 export function Scorecard() {
   const session = useStore((s) => s.session);
   const course = useStore((s) => s.course);
   const open = useStore((s) => s.cardOpen);
   const busy = useStore((s) => s.busy);
   const recorded = useStore((s) => s.showcase?.run);
+  const ref = useRef<HTMLDivElement>(null);
+  useClearOfControls(ref);
   if (!open || session?.mode !== "course" || !session.scorecard) return null;
   const recordedHoles = new Set(recorded?.shots.map(holeOf) ?? []);
   const card = session.scorecard;
@@ -182,7 +210,7 @@ export function Scorecard() {
     ? (session.course?.name ?? course?.name ?? "Eighteen holes").toUpperCase()
     : blocks[0].name.toUpperCase();
   return (
-    <div className={`scorecard${eighteen ? " eighteen" : ""}`} aria-label="Scorecard">
+    <div ref={ref} className={`scorecard${eighteen ? " eighteen" : ""}`} aria-label="Scorecard">
       <div className="sc-title">
         {title}{" "}
         <span className="muted">

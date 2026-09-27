@@ -681,12 +681,29 @@ code,
 .scorecard.eighteen th,
 .scorecard.eighteen td {
   min-width: 24px;
-  padding: 2px 4px;
+  padding: 1px 4px;
+}
+/* the 18-hole card is twice as tall: keep it compact so it clears the controls below it */
+.scorecard.eighteen .fly-row td {
+  padding-top: 2px;
+}
+.scorecard.eighteen .score {
+  height: 18px;
+}
+.scorecard.eighteen .sc-nines {
+  gap: 2px 14px;
+}
+.scorecard.eighteen .sc-nine-name {
+  margin: 0 0 0 5px;
+}
+.scorecard.eighteen .sc-final {
+  margin-top: 4px;
+  line-height: 1.35;
 }
 /* keep the two nines clear of the "Watch the brain fire" button in the stage's top-right corner:
    they sit side by side on a wide stage and stack on a laptop-width one */
 .scorecard.eighteen {
-  max-width: calc(100% - 32px - 210px);
+  max-width: calc(100% - 32px);
 }
 
 /* On narrow screens the course, the controls and the scorecard would all share one short stage,
