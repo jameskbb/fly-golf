@@ -8,6 +8,7 @@ interface RunLike {
   mode?: string | null;
   holes?: unknown; // hole numbers (showcase index entries)
   holes_played?: unknown;
+  round_complete?: unknown;
   course_version?: unknown;
   round?: unknown; // the live backend's run.json round summary (with its scorecard)
 }
@@ -15,19 +16,27 @@ interface RunLike {
 const numbers = (v: unknown): number[] =>
   Array.isArray(v) ? v.filter((n): n is number => typeof n === "number") : [];
 
-/** "18 HOLES" for a round on the 18-hole course, "FRONT 9" for one recorded on the front nine. */
+/**
+ * "18 HOLES" for a round on the 18-hole course, "FRONT 9" for one recorded on the front nine, and
+ * plain "COURSE" while a run says too little to tell (a live run before its first hole is holed
+ * out has no scorecard yet).
+ */
 export function courseTag(run: RunLike): string | null {
   if (run.mode !== "course") return null;
   const round = (run.round ?? {}) as { scorecard?: { hole?: unknown }[]; course_version?: unknown };
-  const card = Array.isArray(round.scorecard) ? round.scorecard.map((c) => c?.hole) : [];
-  const holes = [...numbers(run.holes), ...numbers(card)];
+  const card = numbers(Array.isArray(round.scorecard) ? round.scorecard.map((c) => c?.hole) : []);
+  const holes = [...numbers(run.holes), ...card];
   const version = String(run.course_version ?? round.course_version ?? "");
-  const eighteen =
-    holes.some((n) => n > 9) ||
-    card.length >= 18 ||
-    (typeof run.holes_played === "number" && run.holes_played > 9) ||
-    version.startsWith("eighteen");
-  return eighteen ? "18 HOLES" : "FRONT 9";
+  const played = typeof run.holes_played === "number" ? run.holes_played : undefined;
+  if (holes.some((n) => n > 9) || card.length >= 18 || version.startsWith("eighteen") || (played ?? 0) > 9)
+    return "18 HOLES";
+  if (
+    card.length ||
+    version.startsWith("front-nine") ||
+    (run.round_complete === true && played !== undefined)
+  )
+    return "FRONT 9";
+  return "COURSE";
 }
 
 /** The mode button: "18 holes", or "Front 9" while the course has only its front nine. */

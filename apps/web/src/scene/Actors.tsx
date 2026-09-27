@@ -9,6 +9,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
+import { themeFor } from "./theme";
 import * as THREE from "three";
 import type { CourseHole, Scenario } from "@fly-golf/protocol";
 import { playbackTime, useStore } from "../store";
@@ -102,6 +103,7 @@ function Bag({ bagRef, colors }: { bagRef: React.RefObject<THREE.Group | null>; 
 
 export function Actors({ scenario, hole }: { scenario: Scenario; hole: CourseHole | null }) {
   const ground = useMemo(() => groundFor(scenario, hole), [scenario, hole]);
+  const trailColor = themeFor(hole).trail;
   // the model is the brain that is swinging: the shot being shown, else the session's brain
   // (no fly until that is known, so a mock session never flashes a real fly's body first)
   const persona = useStore((s) => {
@@ -409,8 +411,8 @@ export function Actors({ scenario, hole }: { scenario: Scenario; hole: CourseHol
       </mesh>
       <primitive
         object={useMemo(
-          () => new THREE.Line(trailGeom, new THREE.LineBasicMaterial({ color: "#ffb938" })),
-          [trailGeom],
+          () => new THREE.Line(trailGeom, new THREE.LineBasicMaterial({ color: trailColor })),
+          [trailGeom, trailColor],
         )}
       />
       <mesh ref={splash} rotation={[-Math.PI / 2, 0, 0]} visible={false}>

@@ -6,10 +6,14 @@ describe("courseTag", () => {
     expect(courseTag({ mode: "practice" })).toBeNull();
   });
   it("a round recorded on the front nine still says FRONT 9", () => {
-    expect(courseTag({ mode: "course" })).toBe("FRONT 9");
-    expect(courseTag({ mode: "course", holes_played: 9 })).toBe("FRONT 9");
+    expect(courseTag({ mode: "course", holes_played: 9, round_complete: true })).toBe("FRONT 9");
+    expect(courseTag({ mode: "course", course_version: "front-nine-v2" })).toBe("FRONT 9");
     const card = Array.from({ length: 9 }, (_, i) => ({ hole: i + 1 }));
     expect(courseTag({ mode: "course", round: { scorecard: card } })).toBe("FRONT 9");
+  });
+  it("says only COURSE when the run does not tell which course", () => {
+    expect(courseTag({ mode: "course" })).toBe("COURSE");
+    expect(courseTag({ mode: "course", round: null, holes_played: 3 })).toBe("COURSE");
   });
   it("an 18-hole round says 18 HOLES", () => {
     const card = Array.from({ length: 18 }, (_, i) => ({ hole: i + 1 }));

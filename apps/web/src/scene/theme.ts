@@ -68,6 +68,7 @@ export interface Theme {
     reflect?: { zenith: string; horizon: string; glow: string; intensity: number };
   };
   trees: { conifer: TreeTint; round: TreeTint; trunk: string; coniferShare: number };
+  trail: string; // the ball's flight trace: it must stand out against the sky
 }
 
 const parkland: Theme = {
@@ -108,6 +109,7 @@ const parkland: Theme = {
     trunk: "#4a3423",
     coniferShare: 0.5,
   },
+  trail: "#ffb938",
 };
 
 // The sun sets to the west: its glow sits on the horizon ahead and to the left of a hole played
@@ -145,7 +147,7 @@ const dusk: Theme = {
     normalScale: 0.5,
     bank: "#d3e4e4",
     bankOpacity: 0.8,
-    reflect: { zenith: "#2c3a6e", horizon: "#9a6a78", glow: "#ffcf8a", intensity: 0.55 },
+    reflect: { zenith: "#2c3a6e", horizon: "#5f79a8", glow: "#ffcf8a", intensity: 0.6 },
   },
   trees: {
     conifer: { hue: 0.41, hueSpread: 0.04, sat: 0.34, light: 0.13, lightSpread: 0.06 },
@@ -153,6 +155,7 @@ const dusk: Theme = {
     trunk: "#3a2a20",
     coniferShare: 0.62,
   },
+  trail: "#6fe3ff", // cool against the warm sky; the parkland amber would vanish into it
 };
 
 export const THEMES: Record<HoleTheme, Theme> = { parkland, dusk };
