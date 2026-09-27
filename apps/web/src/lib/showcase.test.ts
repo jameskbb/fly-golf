@@ -169,7 +169,8 @@ describe("18 holes", () => {
     .map((e) => ShowcaseRun.parse(load(e.file)));
   /** A committed round cut back to the shape of a round recorded on the front-nine course. */
   const asOld = (run: ShowcaseRun): ShowcaseRun => {
-    const { holes: _holes, ...round } = run.round;
+    const round = { ...run.round };
+    delete round.holes;
     return {
       ...run,
       id: run.id.replace("eighteen", "front-nine"),
