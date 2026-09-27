@@ -36,7 +36,7 @@ const DETAIL: Record<string, { what: string[]; honest: string }> = {
       "The weights come from practice: the fly tried thousands of shots in the simulator and kept what worked (see below).",
     ],
     honest:
-      "Every number that reaches the body still comes from simulated neural activity, never from the golf state.",
+      "Every number that reaches the body still comes from simulated neural activity, never from the golf state. On the front nine a readout fitted to a shuffled-wiring connectome plays better than one fitted to the real wiring, and a readout of the raw senses with no brain beats both; neither control has been run on the back nine.",
   },
 };
 

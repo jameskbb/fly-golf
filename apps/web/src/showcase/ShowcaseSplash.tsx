@@ -111,8 +111,10 @@ export function ShowcaseSplash() {
         {error && <p className="splash-error">{error}</p>}
         <p className="splash-honest">
           The wiring is real (MaleCNS v1.0, CC BY 4.0). The neuron dynamics are a model, and the senses and
-          the swing are engineered by hand. The trained brain learns only a readout outside the connectome.
-          This is not a digital copy of a fly.
+          the swing are engineered by hand. The trained brain learns only a readout outside the connectome. On
+          the front nine a readout fitted to a shuffled-wiring connectome plays better than one fitted to the
+          real wiring, and a readout of the raw senses with no brain beats both; neither control has been run
+          on the back nine. This is not a digital copy of a fly.
         </p>
       </div>
     </div>
