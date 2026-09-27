@@ -320,7 +320,7 @@ for (const f of frames) {
   }
 }
 const firstWhere = (pred) => frames.find(pred)?.t ?? null;
-const clubRevealed = firstWhere((f) => f.t >= 0 && f.club && f.club !== "choosing…" && f.club !== "—" && frames.some((g) => g.t < f.t && g.club === "choosing…"));
+const clubRevealed = firstWhere((f) => f.t >= 0 && f.club && f.club !== "choosing…" && f.club !== "·" && frames.some((g) => g.t < f.t && g.club === "choosing…"));
 const impact = firstWhere((f) => f.t >= 0 && (f.phase === "ball in the air" || f.phase === "ball rolling"));
 const resultRevealed = firstWhere((f) => f.t >= 0 && f.result && f.result !== "…" && frames.some((g) => g.t < f.t && g.result === "…"));
 // Ball events (lip-out, holed, ...) from the recorded trajectory; ball time 0 = impact.
