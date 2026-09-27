@@ -78,8 +78,8 @@ The decoder never sees the cup, the slope or the green speed.
 
 ## v0.2: choosing a club (`motor-mapping-v2`, `malecns-motor-v0.2`)
 
-The front nine adds an eighth channel, **`club_reach`** in [0, 1]. The decoder turns it into a
-club: `BAG[round(club_reach · 13)]`, evenly spaced slots from the putter (0) to the driver (1).
+The course (introduced with the front nine, now all 18 holes) adds an eighth channel,
+**`club_reach`** in [0, 1]. The decoder turns it into a club: `BAG[round(club_reach · 13)]`, evenly spaced slots from the putter (0) to the driver (1).
 **The environment never picks a club**, except on the practice green, which hands the fly a
 putter (recorded as `forced_club`).
 

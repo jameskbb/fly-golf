@@ -81,8 +81,8 @@ Population sizes are from the compiled v1.0 graph, and the integration test
 
 ## v0.2: the whole course (`proxy-sensory-v0.2`, `malecns-sensory-v0.2`)
 
-For the front nine the encoder emits **14** channels: the nine above, computed with the same
-formulas, plus five new ones. On the course the "target" is the fly's aiming point (the next
+On the course (all 18 holes; v0.2 was introduced with the front nine) the encoder emits **14**
+channels: the nine above, computed with the same formulas, plus five new ones. On the course the "target" is the fly's aiming point (the next
 routing point, or the pin once within 225 m; see [COURSE.md](COURSE.md)). Records keep the
 version, and `SensoryFrame` validates the channel set that version defines, so v0.1 records
 still replay.

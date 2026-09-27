@@ -83,8 +83,11 @@ described in [TRAINING.md](TRAINING.md). It never changes the connectome.
 
 ## Course assumptions
 
-The front nine, the club bag, full-shot physics (`course-physics-v2`), penalties and the course
-reward are documented in [COURSE.md](COURSE.md).
+The 18-hole course (`eighteen-v1`: the front nine, unchanged from `front-nine-v2`, and the back
+nine, The Neuropil Nine), the club bag, full-shot physics (`course-physics-v2`), penalties and the
+course reward are documented in [COURSE.md](COURSE.md). The hole designs, names and themes are
+engineered choices; naming back-nine holes after parts of the fly's nervous system is decoration,
+not something derived from the connectome.
 
 ## Physics assumptions (`golf/physics.py`, `putting-physics-v2`, practice green)
 
