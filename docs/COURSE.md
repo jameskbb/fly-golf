@@ -26,8 +26,10 @@ seeds, `hole_seed * 1000 + stroke`), from `hole_seed(round_seed, hole, attempt)`
 
 So holes 1-9 of an 18-hole round are the same situations they always were, and the back nine has
 a seed space of its own. No two (round, hole, attempt) share a seed for round seeds 0-999,999
-and attempts 0-99,999 (a test checks round seeds 0-5,000, every hole, attempts 0-3). Every
-controller seed stays below 2^53, so it is exact in JSON and JavaScript.
+and attempts 0-99,999 (a test checks round seeds 0-5,000, every hole, attempts 0-3). The largest
+hole seed in that range is 1,999,999,999,999, so every controller seed (`hole_seed * 1000 +
+stroke`) is at most 1,999,999,999,999,999, below 2^53 (9,007,199,254,740,992): exact in JSON and
+JavaScript.
 
 **Rounds over a range of holes.** A round is all 18 holes unless it is started on a range
 (`fly-golf round --first 10 --last 18`, `fly-golf bench --nine back`): its scorecard then holds
@@ -93,9 +95,11 @@ A few design notes on how the environment plays these holes:
   the lake.
 - **Mock controller check.** The mock controller (development only, not the connectome) holes
   out every hole on round seeds 7-16 and 100-111 (22 rounds, no pick-ups) and averages 38.0 on
-  the back nine and 36.5 on the front (74.5 for 18). Every back-nine hole averages within 0.6
-  strokes of par (the hardest is 18, +0.55, then 10, +0.41): every hole is finishable and none is
-  unfair to a player that aims where the environment points. A test repeats this check.
+  the back nine and 36.5 on the front (74.5 for 18). Measured over those 22 rounds, every
+  back-nine hole averaged within 0.6 strokes of par (the hardest is 18, +0.55, then 10, +0.41):
+  every hole is finishable and none is unfair to a player that aims where the environment points.
+  A test replays the 22 rounds and checks the looser bound: every hole is holed, and every hole
+  averages no more than 1.5 strokes over par.
 
 ### Held out from training
 

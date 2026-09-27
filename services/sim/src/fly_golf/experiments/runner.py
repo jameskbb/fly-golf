@@ -72,8 +72,10 @@ def hole_seed(round_seed: int, hole_number: int, attempt: int = 0) -> int:
     are the round seed, so seeds are unique while round_seed * 10 + 9 < 10_000_000, i.e. for
     round seeds 0-999,999; attempts add multiples of 10**7, and every front-nine seed stays below
     10**12 while attempt < 100,000. So over round seeds 0-999,999 and attempts 0-99,999 no two
-    (round, hole, attempt) share a seed. The largest seed there is about 1.001e12, and the
-    controller seed (hole seed * 1000 + stroke) stays below 2**53, exact in JSON and JavaScript.
+    (round, hole, attempt) share a seed. The largest seed there is 1,999,999,999,999 (hole 18,
+    round seed 999,999, attempt 99,999), so the largest controller seed (hole seed * 1000 + stroke,
+    stroke < 1000) is 1,999,999,999,999,999, below 2**53 = 9,007,199,254,740,992: exact in JSON and
+    JavaScript.
     """
     base = round_seed * 10 + attempt * SEED_ATTEMPT_STRIDE
     if hole_number <= 9:
