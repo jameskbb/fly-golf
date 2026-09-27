@@ -1,12 +1,14 @@
 import { advance, newHole, replay, selectController, selectMode } from "../actions";
 import { useStore } from "../store";
 import { toggleSound } from "../lib/sound";
+import { courseModeLabel } from "../lib/labels";
 import { toggleCinema } from "./cinema";
 import { BRAINS } from "./brains";
 import { Headshot } from "./Headshot";
 
 export function Controls() {
   const session = useStore((s) => s.session);
+  const holes = useStore((s) => s.course?.holes.length);
   const status = useStore((s) => s.status);
   const busy = useStore((s) => s.busy);
   const playback = useStore((s) => s.playback);
@@ -64,7 +66,7 @@ export function Controls() {
               disabled={busy || !!loading}
               onClick={() => !course && void selectMode("course")}
             >
-              Front 9
+              {courseModeLabel(holes)}
             </button>
             <button
               className={`seg-btn ${!course ? "on mode" : ""}`}

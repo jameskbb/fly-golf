@@ -1,6 +1,7 @@
 import { useStore } from "../store";
 import { BRAINS } from "./brains";
 import { Headshot } from "./Headshot";
+import { benchText, type Bench } from "../lib/labels";
 
 interface ReadoutMeta {
   id?: string | null;
@@ -8,7 +9,7 @@ interface ReadoutMeta {
   format?: string | null;
   git_commit?: string | null;
   test_metrics?: Record<string, { holed_pct?: number; median_leave_m?: number; penalty_pct?: number }> | null;
-  bench?: { mean_strokes?: number; holes_holed_pct?: number; rounds?: number } | null;
+  bench?: Bench | null;
   situations?: { train?: number; test?: number } | null;
 }
 
@@ -42,7 +43,7 @@ const DETAIL: Record<string, { what: string[]; honest: string }> = {
 const STEPS: [string, string][] = [
   [
     "Practice spots",
-    "Seeded situations: putts on the practice green and the course greens, chips and pitches around the greens, and full shots from tees, fairways, rough and sand. 30 % are held out and never trained on.",
+    "Seeded situations on the practice green and the front nine: putts, chips and pitches around the greens, and full shots from tees, fairways, rough and sand. 30 % are held out and never trained on. The back nine was never practised on.",
   ],
   [
     "Neural response",
@@ -62,7 +63,7 @@ const STEPS: [string, string][] = [
   ],
   [
     "Test honestly",
-    "Held-out shots, full front-nine rounds (fly-golf bench), a no-brain baseline fitted the same way on the raw senses, and a shuffled-wiring control.",
+    "Held-out shots, full rounds on the course (fly-golf bench), a no-brain baseline fitted the same way on the raw senses, and a shuffled-wiring control. On the back nine every shot is a situation the readout has never seen.",
   ],
 ];
 
@@ -126,12 +127,7 @@ export function ModesPanel() {
               {readout.situations.test ?? 0} held out, never trained on).
             </div>
           )}
-          {readout.bench?.mean_strokes != null && (
-            <div>
-              Front-nine bench: {readout.bench.mean_strokes} strokes per round on average over{" "}
-              {readout.bench.rounds} rounds, {readout.bench.holes_holed_pct}% of holes holed out.
-            </div>
-          )}
+          {readout.bench?.mean_strokes != null && <div>{benchText(readout.bench)}</div>}
         </div>
       )}
       <p className="muted small">

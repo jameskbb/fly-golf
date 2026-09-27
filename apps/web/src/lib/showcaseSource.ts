@@ -63,6 +63,9 @@ export class StaticShowcaseSource implements FlyGolfSource {
         shots: r.shots,
         holed: r.holed,
         mode: r.mode,
+        holes: r.holes,
+        holes_played: r.holes_played,
+        course_version: r.course_version,
         experiment_id: null,
       }),
     );

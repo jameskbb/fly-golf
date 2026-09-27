@@ -4,6 +4,7 @@ import { dataSource } from "../lib/dataSource";
 import { replay } from "../actions";
 import { useStore } from "../store";
 import { metresToFeet } from "../lib/coords";
+import { courseTag } from "../lib/labels";
 import { fmt } from "./widgets";
 
 export function RunsPanel() {
@@ -57,7 +58,7 @@ export function RunsPanel() {
                 MIXED
               </span>
             )}
-            {r.mode === "course" && <span className="tag course">FRONT 9</span>}
+            {courseTag(r) && <span className="tag course">{courseTag(r)}</span>}
             <span className="mono">{r.run_id}</span>
             <span className="muted">
               {r.shots} shots · {r.holed} holed

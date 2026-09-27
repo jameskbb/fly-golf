@@ -38,6 +38,7 @@ const toPar = (n: number) => (n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`);
 
 export function ShotBar() {
   const session = useStore((s) => s.session);
+  const courseHoles = useStore((s) => s.course?.holes);
   const record = useStore(selectLastRecord);
   const playPhase = useStore((s) => s.playPhase);
   const playback = useStore((s) => s.playback);
@@ -62,10 +63,15 @@ export function ShotBar() {
     const lie = (replayRec ? (replayRec.initial_state.lie as string) : session?.lie) ?? "tee";
     const onGreen = lie === "green" || lie === "fringe";
     const totals = session?.totals;
+    // the full name and description on hover: back-nine names can be longer than the cell
+    const full = courseHoles?.find((h) => h.number === holeInfo?.number);
+    const holeTitle = full
+      ? `Hole ${full.number}, ${full.name} (par ${full.par}): ${full.description}`
+      : undefined;
     const inCup = !replayRec && session?.episode_state === "holed";
     return (
       <div className="shotbar">
-        <div className="cell hole">
+        <div className="cell hole" title={holeTitle}>
           <span className="k">HOLE {holeInfo?.number ?? "—"}</span>
           <span className="v">PAR {holeInfo?.par ?? "—"}</span>
           <span className="s">{holeInfo?.name ?? ""}</span>
