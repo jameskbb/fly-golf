@@ -5,9 +5,10 @@
 **Can a fruit fly break 100?**
 
 Fly Golf connects simulated neural activity running over the reconstructed **MaleCNS v1.0**
-fruit-fly connectome to a fully 3D golf environment. The fly plays a front nine, chooses its own
-club from a full bag, sets up every shot, records its neural telemetry, and can use a trained
-readout of descending-neuron activity to make its golf decisions.
+fruit-fly connectome to a fully 3D golf environment. The fly plays an 18-hole course, chooses its
+own club from a full bag, sets up every shot, records its neural telemetry, and can use a trained
+readout of descending-neuron activity to make its golf decisions. It practised only on the front
+nine; the back nine is held out, so every shot it plays there is on holes it has never seen.
 
 **[▶ Watch the Web Demo](https://jameskbb.github.io/fly-golf/)** ·
 [▶ Watch the 25-second short](https://jameskbb.github.io/fly-golf/watch.html) ·
@@ -150,10 +151,11 @@ the same procedural 3D models.
 
 ## Around the front nine
 
-Nine hand-built holes, 3,352 yards and par 36. These north-up renders come from the course itself,
-so every stripe, bunker, water line, green and tree boundary matches the geometry used by the
-physics. The front nine stays the front nine; the back nine is the graduation round once the model
-can play this side a little more convincingly.
+Fly Golf National is 18 hand-built holes, par 72 and 6,831 yards. The front nine is the parkland
+half: 3,352 yards and par 36, straight holes and gentle doglegs with one kind of hazard at a time.
+It is also the only ground the trained fly has ever practised on. These north-up renders come from
+the course itself, so every stripe, bunker, water line, green and tree boundary matches the
+geometry used by the physics.
 
 <details>
 <summary><strong>Open the full front-nine yardage book</strong> · bird's-eye renders and strategy for all nine holes</summary>
@@ -183,13 +185,13 @@ All carry over the pond to a green that tilts back toward the water.
 <td width="33%">
 <img src="docs/screenshots/course-hole-4-long-haul.webp" alt="Bird's-eye render of hole 4, Long Haul"><br>
 <strong>4 · Long Haul</strong><br>
-Par 5 · 523 yd<br>
+Par 5 · 522 yd<br>
 A creek crosses just past driving distance: lay up, or commit to the carry.
 </td>
 <td width="33%">
 <img src="docs/screenshots/course-hole-5-lakeside.webp" alt="Bird's-eye render of hole 5, Lakeside"><br>
 <strong>5 · Lakeside</strong><br>
-Par 4 · 379 yd<br>
+Par 4 · 380 yd<br>
 The lake owns the entire left side, and the green leans toward it.
 </td>
 <td width="33%">
@@ -222,19 +224,142 @@ A cross bunker divides the fairway before a big, fast finishing green.
 </table>
 </details>
 
+![Around the back nine section header](docs/screenshots/readme-header-back-nine.png)
+
+## Around the back nine: The Neuropil Nine
+
+Holes 10 to 18, 3,479 yards and par 36, played at dusk under a low golden sun. The back nine
+brings the hole types the front nine lacks: an island green, a drivable par 4, a double dogleg, a
+cape hole, a long par 3, a narrow chute and a wide-open hole of waste sand, with bunkers laid in
+patterns (a hexagonal cluster, church pews, curved bands) and greens that vary far more (radius
+10 to 17 m, stimp 9.5 to 12.5). Each hole is named after a part of the fly's nervous system or
+body, its shape echoes that part, and it borrows its strategy from a famous golf hole, from the
+Redan at North Berwick to the island green at TPC Sawgrass. The holes, their names and the dusk
+theme are engineered design choices: nothing about a hole comes from the connectome, and naming a
+hole after a neuropil is decoration (that neuropil does not play it). Every fact below is from
+[COURSE.md](docs/COURSE.md).
+
+**The trained fly has never practised a single shot here.** Its readout was fitted on front-nine
+situations only, so every back-nine score is a test of how what it learnt transfers to holes it has
+never seen. `fly-golf bench` reports front- and back-nine splits for that reason. As a check that
+every hole is fair to a player that aims where the environment points, the mock controller (a
+hand-written heuristic with no neurons, not the fly) holes out every back-nine hole over 22 rounds
+and averages within 0.6 strokes of par on each of them.
+
+<table>
+<tr>
+<td width="50%">
+<img src="docs/screenshots/back-nine-mock-island-green.webp" alt="Dusk on hole 15, Ellipsoid Body: a tee shot's white trace falls toward the island green inside its ring of water, with autumn trees behind"><br>
+<em>15 · Ellipsoid Body: an 8-iron dropping toward the island green.</em>
+</td>
+<td width="50%">
+<img src="docs/screenshots/back-nine-mock-cape-tee-shot.webp" alt="Dusk on hole 18, Descending Neurons: the view down the fairway as the tee shot flies, the clubhouse lake cutting in from the left"><br>
+<em>18 · Descending Neurons: the tee shot flies past the clubhouse lake.</em>
+</td>
+</tr>
+</table>
+
+*Both stills are from a recorded **mock** round (round seed 7), replayed by the web app in cinema
+mode: the wind-up tin fly, a hand-written heuristic with no neurons, not the connectome. Its 8-iron
+on 15 finishes on the fringe; its 3-wood on 18 finishes in the rough.*
+
+<details>
+<summary><strong>Open the full back-nine yardage book</strong> · bird's-eye renders and strategy for holes 10 to 18</summary>
+<br>
+<table>
+<tr>
+<td width="33%">
+<img src="docs/screenshots/course-hole-10-ommatidia.webp" alt="Bird's-eye render of hole 10, Ommatidia, at dusk"><br>
+<strong>10 · Ommatidia</strong><br>
+Par 4 · 408 yd<br>
+Seven pot bunkers packed in a hexagon, like the facets of the compound eye, wait just past the
+drive, in the manner of the Old Course and Royal Lytham. Stay left of the cluster.
+</td>
+<td width="33%">
+<img src="docs/screenshots/course-hole-11-johnstons-organ.webp" alt="Bird's-eye render of hole 11, Johnston's Organ, at dusk"><br>
+<strong>11 · Johnston's Organ</strong><br>
+Par 3 · 220 yd<br>
+A long par 3 after the Redan: one curved bunker sweeps across the front-left like an antenna's
+arista, and the big green, the steepest on the course, falls away to the back-left. Run it in
+from the right.
+</td>
+<td width="33%">
+<img src="docs/screenshots/course-hole-12-halteres.webp" alt="Bird's-eye render of hole 12, Halteres, at dusk"><br>
+<strong>12 · Halteres</strong><br>
+Par 5 · 561 yd<br>
+A double dogleg, right and then left, like the balance organs that beat opposite the wings. A
+burn crosses the line of play twice, as the Barry Burn does at Carnoustie.
+</td>
+</tr>
+<tr>
+<td width="33%">
+<img src="docs/screenshots/course-hole-13-protocerebral-bridge.webp" alt="Bird's-eye render of hole 13, Protocerebral Bridge, at dusk"><br>
+<strong>13 · Protocerebral Bridge</strong><br>
+Par 4 · 274 yd<br>
+Drivable on paper, after Riviera's 10th: Oakmont-style church pews guard the direct line to a
+small, fast green with water to its right. "Drivable" describes the geometry, not a choice the fly
+makes: the pin is 242 m from the tee, beyond the 225 m inside which the pin becomes its target,
+so the fly is shown the lay-up area on the left. Only a full-speed driver within about 2 degrees
+of the pin line would hold the green.
+</td>
+<td width="33%">
+<img src="docs/screenshots/course-hole-14-mushroom-body.webp" alt="Bird's-eye render of hole 14, Mushroom Body, at dusk"><br>
+<strong>14 · Mushroom Body</strong><br>
+Par 4 · 425 yd<br>
+The tee sits in a cup of sand, the calyx. A narrow stalk of fairway runs out and splits into two
+lobes, one straight up to the green and one off to the right, a split fairway in the spirit of
+Riviera's 8th.
+</td>
+<td width="33%">
+<img src="docs/screenshots/course-hole-15-ellipsoid-body.webp" alt="Bird's-eye render of hole 15, Ellipsoid Body, at dusk"><br>
+<strong>15 · Ellipsoid Body</strong><br>
+Par 3 · 139 yd<br>
+An island green inside a ring of water, the fly's compass neuropil played as TPC Sawgrass's 17th.
+Short means a drop on the tee side; long means a drop back on the island. A causeway at the back
+right is the only way on foot.
+</td>
+</tr>
+<tr>
+<td width="33%">
+<img src="docs/screenshots/course-hole-16-fan-shaped-body.webp" alt="Bird's-eye render of hole 16, Fan-shaped Body, at dusk"><br>
+<strong>16 · Fan-shaped Body</strong><br>
+Par 4 · 418 yd<br>
+The widest hole on the course fans out toward the biggest, slowest green. Curved bands of waste
+sand, broken into columns, cross the fairway, with more waste on both sides.
+</td>
+<td width="33%">
+<img src="docs/screenshots/course-hole-17-giant-fiber.webp" alt="Bird's-eye render of hole 17, Giant Fiber, at dusk"><br>
+<strong>17 · Giant Fiber</strong><br>
+Par 5 · 599 yd<br>
+The longest, straightest hole, after the fly's fastest escape pathway: a narrow chute through the
+trees, the tightest corridor on the course. Straight is the only strategy.
+</td>
+<td width="33%">
+<img src="docs/screenshots/course-hole-18-descending-neurons.webp" alt="Bird's-eye render of hole 18, Descending Neurons, at dusk"><br>
+<strong>18 · Descending Neurons</strong><br>
+Par 4 · 436 yd<br>
+A cape hole after Macdonald's at the National Golf Links, around the clubhouse lake: the more water
+the drive carries, the shorter the way in. Water waits short-left of the green too.
+</td>
+</tr>
+</table>
+</details>
+
 ![Status and quick start section header](docs/screenshots/readme-header-setup.png)
 
 ## Status
 
 | | |
 | --- | --- |
-| **Front nine**: 9 hand-designed holes, fairways, bunkers, water on holes 3/4/5/8, tree-lined out of bounds ([COURSE.md](docs/COURSE.md)) | ✅ |
+| **Front nine**: 9 hand-designed parkland holes, fairways, bunkers, water on holes 3/4/5/8, tree-lined out of bounds ([COURSE.md](docs/COURSE.md)) | ✅ |
+| **Back nine, The Neuropil Nine**: 9 more holes played at dusk (island green, drivable par 4, double dogleg, cape, long par 3, narrow chute, waste sand), water on holes 12/13/15/18, a corridor width per hole. Held out from training ([COURSE.md](docs/COURSE.md#the-neuropil-nine)) | ✅ |
+| **18-hole rounds**: `fly-golf round` plays all 18 by default (or `--first`/`--last`), the app's scorecard shows OUT, IN and TOT | ✅ |
 | **Full bag**: driver, 3W, 5W, 4H, 5–9 irons, PW/GW/SW/LW, putter. The fly chooses via the `club_reach` motor channel | ✅ |
 | Full-shot physics: drag + Magnus flight, spin, surface bounce and roll, penalties, lies | ✅ tested, replayable |
 | **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls. Refitted onto the v0.3 sensory injection: 50.5 strokes per nine over 36 fresh rounds (was 66.5), 97 % of holes holed ([TRAINING.md](docs/TRAINING.md#sensory-injection-v03-2026-09-17)) | ✅ experimental |
 | **Switch brains mid-round** (Mock / MaleCNS / Trained); scorecard marks who played each hole, mixed rounds flagged | ✅ |
 | **Web demo**: Showcase Mode replays recorded MaleCNS rounds on GitHub Pages, no backend ([GITHUB_PAGES.md](docs/GITHUB_PAGES.md)) | ✅ |
-| `fly-golf bench`: complete front-nine rounds per brain (holes finished, strokes, trees, club by distance) | ✅ |
+| `fly-golf bench`: complete 18-hole rounds per brain with front- and back-nine splits (holes finished, strokes, trees, club by distance); `--nine front` reproduces the earlier front-nine bench | ✅ |
 | Deterministic, backend-authoritative putting physics (slope, stimp, cup capture, lip-outs) | ✅ tested |
 | Controller interface: SensoryEncoder → BrainController → MotorDecoder → MotorTarget | ✅ |
 | **MOCK CONTROLLER** (hand-written heuristic, labelled everywhere) | ✅ |
@@ -257,7 +382,7 @@ make test       # all unit tests (no connectome needed)
 ```
 
 Open http://localhost:5173 and press **Hit** (or Space). The header reads **LIVE SIMULATION** while
-the backend is connected. The app starts on the **front nine** with the **MOCK CONTROLLER**.
+the backend is connected. The app starts on the **18-hole course** with the **MOCK CONTROLLER**.
 Switch to **Practice green** for seeded putts (putter only, recorded as `putting-v2` on v0.2
 sensing; the original v0.1 putts replay with `fly-golf replay`), click a hole number on the
 scorecard to jump to it, and press **C** to hide the card.
@@ -281,11 +406,11 @@ pnpm build:showcase && pnpm preview  # the exact GitHub Pages build at http://lo
 Headless, from the command line:
 
 ```sh
-uv --directory services/sim run fly-golf round --controller mock --seed 7      # the front nine
-uv --directory services/sim run fly-golf round --controller malecns --seed 7
+uv --directory services/sim run fly-golf round --controller mock --seed 7      # all 18 holes
+uv --directory services/sim run fly-golf round --controller malecns --seed 7 --first 10 --last 18   # the back nine only
 uv --directory services/sim run fly-golf putt --controller malecns --seed 7 --traces
 uv --directory services/sim run fly-golf train --scale 4 --seed 2 --jobs 12     # trained readout (docs/TRAINING.md)
-uv --directory services/sim run fly-golf bench --controller malecns-trained    # complete front-nine rounds
+uv --directory services/sim run fly-golf bench --controller malecns-trained    # 18-hole rounds, front/back splits (--nine front|back)
 uv --directory services/sim run fly-golf runs
 uv --directory services/sim run fly-golf replay <run_id>     # re-simulate; checks the trajectory is identical
 uv --directory services/sim run fly-golf export-showcase <run_id> --slug <id> --title "…"   # docs/GITHUB_PAGES.md
@@ -481,8 +606,10 @@ hello (protocol v2) and then streams `state`, `shot_phase`, `shot_result` and `c
 
 ## Roadmap
 
-Done: putting, the front nine, club selection, full swings, hazards, the trained readout with its
-controls, and the web demo. Next:
+Done: putting, the full 18-hole course (the front nine, and the back nine held out from training),
+club selection, full swings, hazards, the trained readout with its controls, and the web demo. The
+back nine is a transfer test, not a practice ground: the trained fly plays it without ever having
+practised there. Next:
 
 1. **Controls:** lesion experiments, and more rounds per brain on shared seeds.
 2. **Showcase comparisons:** first putt, before and after training, the shuffled-connectome
@@ -492,7 +619,6 @@ controls, and the web demo. Next:
 4. **Career:** handicap, greens in regulation, putts and dispersion. Meet *Gary, Drosophila
    melanogaster, 166,700 neurons.*
 5. **Physical world:** a `HardwareMotorTarget` for a robotic putter.
-6. **Graduate to 18 holes:** build the back nine once the model can reliably finish the front.
 
 ## Documentation
 
@@ -509,7 +635,8 @@ controls, and the web demo. Next:
   physics assumptions.
 - [docs/SENSORY_MAPPING.md](docs/SENSORY_MAPPING.md) and
   [docs/MOTOR_MAPPING.md](docs/MOTOR_MAPPING.md): exactly which neurons are used, and why.
-- [docs/COURSE.md](docs/COURSE.md): the front nine, the bag, full-shot physics and rules.
+- [docs/COURSE.md](docs/COURSE.md): the 18-hole course (the front nine and The Neuropil Nine), the
+  bag, full-shot physics and rules.
 - [docs/TRAINING.md](docs/TRAINING.md): the trained readout, its controls and results.
 - [docs/BUILD_LOG.md](docs/BUILD_LOG.md): decisions, what works, what failed, and next steps.
 - [docs/PUBLIC_RELEASE_AUDIT.md](docs/PUBLIC_RELEASE_AUDIT.md): what was checked, and left out,
