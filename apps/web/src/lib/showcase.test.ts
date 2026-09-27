@@ -8,6 +8,7 @@ import {
   holeOf,
   holeStarts,
   holesOfRun,
+  recordedHoles,
   isMixed,
   mixRound,
   roundHoles,
@@ -276,5 +277,19 @@ describe("18 holes", () => {
     expect(before.hole_number).toBe(12);
     expect(before.hole?.theme).toBe("dusk");
     expect(before.ball).toEqual(full1.shots[k].initial_state.ball);
+  });
+});
+
+describe("recordedHoles", () => {
+  it("the committed rounds recorded all 18 holes, for every brain", () => {
+    expect(recordedHoles(index)).toEqual(course.holes.map((h) => h.number));
+    for (const b of ["mock", "malecns", "malecns-trained"]) expect(recordedHoles(index, b)).toHaveLength(18);
+  });
+  it("never claims more holes than the index lists", () => {
+    const [entry] = index.runs;
+    const nine = { ...index, runs: [{ ...entry, holes: [1, 2, 3, 4, 5, 6, 7, 8, 9], holes_played: 9 }] };
+    expect(recordedHoles(nine)).toHaveLength(9);
+    const old = { ...index, runs: [{ ...entry, holes: undefined, holes_played: 9 }] };
+    expect(recordedHoles(old)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 });

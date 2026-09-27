@@ -1,8 +1,11 @@
 import { useStore } from "../store";
 import { BRAINS, brainById } from "../ui/brains";
 import { Headshot } from "../ui/Headshot";
-import { runsForBrain } from "../lib/showcase";
+import { recordedHoles, runsForBrain } from "../lib/showcase";
 import { closeSplash, selectBrain } from "./controller";
+
+const WORDS: Record<number, string> = { 9: "nine", 18: "eighteen" };
+const numberWord = (n: number) => (n ? (WORDS[n] ?? String(n)) : "");
 
 export const REPO_URL = "https://github.com/jameskbb/fly-golf";
 
@@ -17,13 +20,15 @@ make dev    # http://localhost:5173`;
 export function ShowcaseSplash() {
   const view = useStore((s) => s.showcase);
   const error = useStore((s) => s.error);
-  const holes = useStore((s) => s.course?.holes.length);
   if (!view || view.started) return null;
   const index = view.index;
   const current = view.run?.shots[0]?.controller.id;
   const watching = brainById(current);
-  // the recorded course: the front nine until the showcase is re-recorded on all 18 holes
-  const eighteen = holes === undefined || holes > 9;
+  // what the recorded rounds contain, never the course's hole count: the page can only show holes
+  // that were recorded
+  const recorded = index ? recordedHoles(index, current) : [];
+  const holeCount = numberWord(recorded.length);
+  const backNine = recorded.some((n) => n > 9);
 
   return (
     <div className="overlay splash" role="dialog" aria-modal="true" aria-labelledby="splash-title">
@@ -33,10 +38,10 @@ export function ShowcaseSplash() {
           <h2 id="splash-title">Can a fruit fly break 100?</h2>
           <p className="splash-lede">
             A simulated fruit-fly brain, running on the real wiring diagram of a male fly&apos;s nervous
-            system, plays {eighteen ? "eighteen" : "nine"} holes of golf.{" "}
+            system, plays {holeCount ? `${holeCount} holes of golf` : "golf"}.{" "}
             <strong>This page shows pre-generated plays.</strong> Every shot was simulated before the page was
             built, and your browser only replays the recordings.
-            {eighteen &&
+            {backNine &&
               " The trained fly practised only on the front nine, so the back nine, played at dusk, is ground it has never seen."}
           </p>
         </header>

@@ -41,6 +41,16 @@ export function runsForBrain(index: ShowcaseIndex, brainId: string): ShowcaseRun
 /** The hole numbers a recorded run has strokes on, in the order they were played. */
 export const holesOfRun = (run: ShowcaseRun): number[] => [...holeStarts(run.shots).keys()];
 
+/** Every hole the index says was recorded: by one brain's solo rounds (the rounds its mix is drawn
+ *  from), or by any round. An entry without a hole list counts its holes played from hole 1. */
+export function recordedHoles(index: ShowcaseIndex, brainId?: string): number[] {
+  const entries = brainId && runsForBrain(index, brainId).length ? runsForBrain(index, brainId) : index.runs;
+  const out = new Set<number>();
+  for (const r of entries)
+    for (const n of r.holes ?? Array.from({ length: r.holes_played }, (_, i) => i + 1)) out.add(n);
+  return [...out].sort((a, b) => a - b);
+}
+
 /**
  * For every hole, one of the run ids that recorded it, at random. `has` says whether a run has a
  * hole (by default every run has every hole); a hole no run has is left out of the draw. While
