@@ -23,12 +23,17 @@ runs/<run_id>/traces/*.json   optional per-bin population traces (--traces)
 | 2026-09-14 | training `20260914T192725Z` | MaleCNS + trained readout on DN type × side rates (`28b7a06`, clean) | 6,720 practice situations, 2,016 held out, both feature spaces saved | PCA ≤ 64: bench 73.6 per nine on seeds 100–111, worse than the installed 70.0 |
 | 2026-09-14 | 30 rounds (see docs/GITHUB_PAGES.md) | Trained readout `20260914T191715Z-refit`, untrained MaleCNS, Mock (`dd1e393`, clean) | Front nine, round seeds 7–16 for each brain, all exported to the web demo | Trained 68.5 per nine (57–75), 56 of 90 holes holed; untrained 81 every round; Mock 36.5. Trained seed 7: 60 (the previous readout's seed-7 round was 58) |
 | 2026-09-14 | refit `20260914T212017Z-shuffled-refit` | Shuffled-wiring control, PCA ≤ 256 (`109c4a1`, clean) | The shuffled control's saved practice, re-fitted the same way | Still better than the real wiring on every held-out kind except the median leave of green putts. Real wiring is not an advantage |
-
 | 2026-09-17 | `runs/screen/` | MaleCNS, 20 injection variants (`a071534`) | How much of each scene quantity survives into DN-type rates, 840 situations per variant, brain simulation only | Under v0.2 the target's bearing is unrecoverable off the green (R² 0.03 short, −0.04 full). Picked `malecns-sensory-v0.3`. See docs/SENSORY_MAPPING.md |
 | 2026-09-17 | training `20260917T155555Z` | MaleCNS + trained readout, v0.3 injection (`0db6dcd`, clean) | 3,360 practice situations, 1,008 held out | Bench 54.3 / 52.0 / 51.0 per nine on seeds 100–111 / 200–211 / 300–311 (previous readout: 66.9 / 66.6 / 65.9) |
 | 2026-09-17 | training `20260917T165536Z` (installed) | MaleCNS + trained readout, v0.3 injection (`0db6dcd`, clean) | 6,720 practice situations, 2,016 held out | Bench 50.3 / 51.4 / 49.8 per nine, 97 % of holes holed, best round 43. The installed readout |
 | 2026-09-17 | training `20260917T180643Z-shuffled` | Shuffled-wiring control, v0.3 injection (`0db6dcd`, clean) | The same 6,720 situations and seed as the installed run | Better than the real wiring on **every** held-out kind (putts 0.33 m against 0.54 m, full shots 58.6 m against 61.2 m). Real wiring is still not an advantage |
 | 2026-09-17 | 30 rounds (see docs/GITHUB_PAGES.md) | Trained readout `20260917T165536Z`, untrained MaleCNS, Mock (`43f6d6b`, clean) | Front nine, round seeds 7–16 for each brain, all exported to the web demo | Trained 49.3 per nine (42–54), 89 of 90 holes holed, a 98.6 eighteen-hole pace; untrained 81 every round; Mock 36.5 |
+
+Until 2026-09-27 the course was the front nine alone, so every round and bench result above is a
+front-nine round (par 36), and "eighteen-hole pace" means a front-nine score doubled, not an
+18-hole round. Since then `fly-golf round` and `fly-golf bench` play all 18 holes by default, with
+front- and back-nine splits; `fly-golf bench --nine front` reproduces the front-nine bench. The
+back nine is held out from training, so every back-nine result is a generalisation result.
 
 Recorded runs stay out of git. Selected runs are exported, validated, into the web demo's static
 showcase (`apps/web/public/showcase/`) with `fly-golf export-showcase`; see docs/GITHUB_PAGES.md.

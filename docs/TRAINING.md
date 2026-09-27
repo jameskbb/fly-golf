@@ -19,6 +19,8 @@ the end.
 - [Results](#results)
 - [Engine migration (2026-09-13)](#engine-migration-2026-09-13)
 - [Readout capacity and side-resolved features (2026-09-14)](#readout-capacity-and-side-resolved-features-2026-09-14)
+- [Sensory injection v0.3 (2026-09-17)](#sensory-injection-v03-2026-09-17)
+- [The back nine is held out (2026-09-27)](#the-back-nine-is-held-out-2026-09-27)
 - [Honest limits](#honest-limits)
 - [Reproduce](#reproduce)
 
@@ -66,12 +68,16 @@ A seeded, deterministic set of places to play from. Per `--scale 1`:
 | Kind | Count | What |
 | --- | --- | --- |
 | `putt` | 120 | practice-green putts, 1–6 m (the V1 putting generator) |
-| `green` | 120 | putts on the nine course greens, 1–14 m |
+| `green` | 120 | putts on the nine front-nine greens, 1–14 m |
 | `short` | 120 | **new in v2**: chips and pitches from 3–70 m around the greens (rough, fairway, sand, fringe) |
 | `full` | 200 | tee shots and shots along each hole from fairway, rough or sand |
 
 Every situation whose index ends in 1, 4 or 7 (30 %) is **held out**: it is never used for fitting
 or for choosing any setting, and all reported results are on those.
+
+Every course situation (`green`, `short`, `full`) is on the **front nine** (holes 1-9). The back
+nine, added on 2026-09-27, is held out as a whole: no practice situation is on it
+([below](#the-back-nine-is-held-out-2026-09-27)).
 
 ### 2. The neural response
 
@@ -152,10 +158,14 @@ readout next to the calibrated one (`trained_readout_uncalibrated`, `no_brain_un
 - **Held-out shots**: one stroke per held-out situation, real physics, per kind: holed %, median
   distance left, penalty %, **into the trees %**, and the club chosen compared with the practice
   target (exact, within one club).
-- **Complete rounds** (`fly-golf bench`): the fly plays whole front-nine rounds exactly as in the
+- **Complete rounds** (`fly-golf bench`): the fly plays whole rounds exactly as in the
   app (same session code, sensing, brain, decoder and physics), every shot from wherever the last
   one finished, until it holes out or picks up at par + 5. Reported: strokes per round, holes holed
-  out, trees and water per round, and which club it reaches for at each distance.
+  out, trees and water per round, and which club it reaches for at each distance. Until
+  2026-09-27 a round was the front nine (par 36), and every bench result on this page before the
+  [back-nine section](#the-back-nine-is-held-out-2026-09-27) is a front-nine round. Since then a
+  bench round is 18 holes by default, with front- and back-nine splits; `--nine front` plays the
+  front nine exactly as before.
 
 ## What went wrong in v1, and what v2 changes
 
@@ -490,6 +500,32 @@ the CLI does not do yet.
 - Distance for chips and pitches is still the weakest signal (0.22).
 - This is still a proxy encoder. No image is formed, and the populations are labelled stand-ins.
 
+## The back nine is held out (2026-09-27)
+
+The course grew from the front nine to 18 holes: the back nine, The Neuropil Nine (holes 10-18,
+par 36, played at dusk; [COURSE.md](COURSE.md#the-neuropil-nine)). Nothing about training
+changed. `training/situations.py` still draws every course situation from the front nine, so
+**the trained fly has never practised a single shot on the back nine**, and the installed readout
+(`20260917T165536Z`) was fitted before the back nine existed. The back nine also has hole types
+the front nine lacks (an island green, a drivable par 4, a double dogleg, a cape, a long par 3, a
+narrow chute, waste sand) and a wider range of greens. Every back-nine score is
+therefore a **generalisation result**, not a measure of how well it was trained.
+
+What changed is the bench:
+
+- `fly-golf bench` plays **18-hole rounds by default** and reports `summary.nines`, the front and
+  back nines separately, for exactly this reason. `--nine front` or `--nine back` plays one nine.
+- Holes 1-9 are unchanged bit for bit, and so are their seeds, so `--nine front` reproduces the
+  earlier front-nine bench shot for shot. **Every bench number above this section is a front-nine
+  round** (par 36) and is reproduced with `--nine front`, as in [Reproduce](#reproduce).
+- Statements above such as "an 18-hole pace of 98.6" were front-nine rounds doubled. A pace is not
+  an 18-hole round: it assumes the back nine plays like the front, and the fly never practised on
+  the back nine.
+
+The controls stand as they were. The shuffled-wiring control still beats the real wiring on held-out
+practice shots, and the no-brain sensory readout beats both; the back nine does not change that,
+and nothing here says the real MaleCNS wiring helps the fly play golf.
+
 ## Honest limits
 
 - **It is a readout, not learning in the brain.** Synapses are fixed. The claim is only that the
@@ -512,10 +548,13 @@ $SIM train --seed 2 --scale 6 --jobs 12 --out runs/training/v2-final-seed2-x6   
 $SIM refit runs/training/v2-final-seed2-x6 --out runs/training/v2-final-seed2-x6-oof   # no brain simulation
 $SIM train --seed 2 --scale 6 --jobs 12 --control shuffled --out runs/training/v2-shuffled-seed2-x6
 # choose on seeds 100-111, then confirm on fresh seeds 200-211 and record it in the readout:
-$SIM bench --controller malecns-trained --readout runs/training/v2-final-seed2-x6-oof/readout.json --rounds 12 --seed 100
-$SIM bench --controller malecns-trained --readout <chosen>/readout.json --rounds 12 --seed 200 --attach
-$SIM bench --controller malecns --rounds 12 --seed 100
-$SIM bench --controller mock --rounds 12 --seed 100
+# the front-nine numbers on this page (add --nine front; without it a bench round is 18 holes):
+$SIM bench --controller malecns-trained --readout runs/training/v2-final-seed2-x6-oof/readout.json --rounds 12 --seed 100 --nine front
+$SIM bench --controller malecns-trained --readout <chosen>/readout.json --rounds 12 --seed 200 --nine front --attach
+$SIM bench --controller malecns --rounds 12 --seed 100 --nine front
+$SIM bench --controller mock --rounds 12 --seed 100 --nine front
+# 18-hole rounds with front- and back-nine splits (the back nine is held out):
+$SIM bench --controller malecns-trained --rounds 12 --seed 100
 ```
 
 `fly-golf refit` re-fits, re-calibrates and re-evaluates from a run's saved practice
