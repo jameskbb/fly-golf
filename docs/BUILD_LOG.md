@@ -484,6 +484,75 @@ How it was captured:
 
 The profile page (`jameskbb/jameskbb`, `assets/fly-golf.gif`) uses the same GIF.
 
+## 2026-09-27: the back nine, 18 holes, and the first real 18-hole rounds
+
+### What was built
+
+- **The back nine, The Neuropil Nine** (holes 10-18, par 36, 3,479 yd; [COURSE.md](COURSE.md)).
+  Each hole is named after a structure of the fly's nervous system or body, shaped to echo it, and
+  borrows the strategy of a classic golf hole: a hexagonal pot-bunker cluster, a long Redan-style
+  par 3, a double dogleg with a burn crossing twice, a drivable par 4 over church pews, a split
+  fairway, an island green, a fan of waste sand, a narrow straight chute and a cape closing hole.
+  The names and themes are decoration; nothing about a hole comes from the connectome.
+- **A per-hole corridor** (`HoleSpec.corridor_half_width_m`, default 42 m), the only engine
+  addition: 30 m on Giant Fiber, 46 m on Mushroom Body, 58 m on Fan-shaped Body.
+- **18-hole rounds**: course `eighteen-v1`, par 72, 6,831 yd. `fly-golf round --first/--last`
+  (default all 18), `fly-golf bench --nine front|back|both` (default both, `summary.nines`),
+  `/api/reset` for holes 1-18, and the exporter for 18-hole rounds.
+- **A seed space for holes 10-18**: `10**12 + round_seed * 10 + (hole - 9) + attempt * 10**7`;
+  holes 1-9 keep their formula, so they are the same situations as before.
+- **The web app**: a theme table (`scene/theme.ts`) that draws the back nine at dusk while the front
+  nine stays pixel-identical; an 18-hole scorecard with OUT, IN and TOT; a verdict that names who
+  played (the mock is never called the fly) and says whether a full 18 broke 100; showcase mixing
+  that draws each hole only from a round that played it.
+
+### Decisions
+
+- **The front nine is frozen.** Its geometry is unchanged bit for bit and a test pins a hash of it,
+  so `front-nine-v2` records of holes 1-9 still replay and export.
+- **The back nine is held out and nothing was retrained.** Practice situations stay on the front
+  nine; the installed readout `20260917T165536Z` plays the back nine without ever having practised
+  a shot there, so every back-nine score is a generalisation result.
+- **Hole 17 widened from 27 m to 30 m** after an independent review found that its window equalled
+  the fly's aiming jitter at address.
+- **Hole 13's wording made honest.** "Drivable" describes the geometry: from the tee the pin is
+  beyond the 225 m at which the fly targets it, so it is shown the lay-up area; the description no
+  longer implies a go-for-it choice.
+
+### Review findings fixed
+
+- **Seed collisions across rounds.** The first back-nine seeds reused the front-nine formula, so
+  `hole_seed(7, 11)` equalled `hole_seed(8, 1)`: hole 11 of round 7 replayed hole 1 of round 8's
+  randomness. Holes 10-18 now have their own seed space, unique for round seeds 0-999,999 and
+  attempts 0-99,999, and a test checks it.
+- **Exporting old runs was broken behind a tautological test.** The exporter compared a real
+  `front-nine-v2` run's 9-entry scorecard with an 18-entry rebuilt one and refused it; the test
+  passed only because it relabelled a new run instead of using real old records. It now compares
+  hole by hole over the recorded round's holes, and the test builds its run from committed
+  `front-nine-v2` records.
+
+### Results
+
+The thirty showcase rounds were re-recorded as 18-hole rounds (seeds 7-16, clean tree at `6eceef0`)
+and replaced the front-nine set; holes 1-9 of each reproduce the old front-nine round stroke for
+stroke. The trained fly: 115, 98, 97, 103, 101, 94, 93, 100, 101, 94, mean **99.6** (out 49.3, in
+50.3), 176 of 180 holes holed, 5 of 10 under 100. The 18-hole bench of the same readout, 12 rounds
+each on seeds 100-111 (`6eceef0`), 200-211 and 300-311 (`bb1770e`): 102.17, 102.0 and 103.58, back
+nine 51.83, 50.58 and 53.75 against front 50.33, 51.42 and 49.83 (the front splits reproduce the
+earlier front-nine bench), 8 of 36 under 100, best 88, worst 119. In all, 13 of 46 real 18-hole
+rounds are under 100 (mean 101.9). The untrained fly scores 162 in every round; the mock, which has
+no neurons, averages 73.6.
+
+The "eighteen-hole pace of 98.6" in the 2026-09-17 entry was a front nine doubled. On 18 real
+holes the fly breaks 100 sometimes, and on average it does not quite.
+
+### What this does not show
+
+The back nine costs the fly about one to two strokes, so what the readout learnt transfers to
+unseen holes almost fully. That is about the sensory injection and the readout, not the wiring: the
+shuffled-wiring control and the no-brain baseline have not been run on the back nine, and on the
+front nine both beat the real wiring. The dusk look was tuned in a software renderer.
+
 ## 2026-09-27: the back nine in the README (yardage book, header, stills)
 
 The course is now 18 holes ([COURSE.md](COURSE.md)), and the README gained an "Around the back
@@ -508,6 +577,10 @@ ones were not recorded:
   headers for the front nine and the status section differ from the committed ones by 3 to 4 levels
   per channel on average, mostly in the diagonal lines. The accent is the scorecard's dusk colour,
   `#f0b27a`.
-- **Stills** (`back-nine-mock-island-green.webp`, `back-nine-mock-cape-tee-shot.webp`): the same
-  mock round replayed in cinema mode at 1280x720, captured mid-flight on the tee shots of 15 and
-  18. They are captioned as a mock round: the wind-up tin fly, with no neurons.
+- **Stills** (`back-nine-trained-s07-h15-tee-shot.webp`, `back-nine-trained-s07-h18-approach.webp`):
+  the committed recorded round `trained-eighteen-s07` replayed by the showcase dev server in cinema
+  mode at 1280x720 (shots 84 and 108), captured 2.0 s and 1.8 s after pressing play. Two stills of a
+  mock round were made first and replaced by these before publication.
+- **Round-complete screenshot** (`web-demo-round-complete.png`, 1440x900): the committed showcase,
+  Trained picked on the splash, a jump to the last stroke of hole 18 of the random mix, played to
+  the end. The first mix drawn is the one shown (102).
