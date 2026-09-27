@@ -4564,28 +4564,43 @@
   ],
   "bench": {
    "rounds": 12,
-   "mean_strokes": 49.83,
-   "best_round": 46,
-   "holes_holed_pct": 99.1,
-   "trees_per_round": 1.33,
-   "water_per_round": 0.42,
-   "bench": "front-nine-bench-v1",
+   "mean_strokes": 102.17,
+   "best_round": 93,
+   "holes_holed_pct": 96.3,
+   "trees_per_round": 3.0,
+   "water_per_round": 1.0,
+   "holes": "1-18",
+   "holes_covered": "1-18",
+   "par": 72,
+   "nines": {
+    "front": {
+     "mean_strokes": 50.33,
+     "best": 43,
+     "par": 36
+    },
+    "back": {
+     "mean_strokes": 51.83,
+     "best": 47,
+     "par": 36
+    }
+   },
+   "bench": "eighteen-bench-v1",
    "seeds": [
-    300,
-    301,
-    302,
-    303,
-    304,
-    305,
-    306,
-    307,
-    308,
-    309,
-    310,
-    311
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111
    ],
-   "git_commit": "0db6dcd7609d6c1b2bc35281c2f31483e805cce6",
-   "report": "/home/james/src/fly-golf/runs/bench/installed-v6-s300.json"
+   "git_commit": "6eceef0865d0f878b5ed9ec0ff08c6acb89d9b86",
+   "report": "/tmp/claude-1000/-home-james-src-fruit-fly-golf/392d8732-7352-4fe8-8510-e8938bb4dd0b/scratchpad/bench/trained-100.json"
   }
  }
 }
