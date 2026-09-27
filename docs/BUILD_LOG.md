@@ -460,3 +460,26 @@ How it was captured, so it can be redone:
   ffmpeg from `imageio-ffmpeg`.
 
 Nothing in the app changed for the capture; the shot is the recorded one, bit for bit.
+
+## 2026-09-27: the README's Pond Hop clip, re-shot in cinema mode
+
+Same shot as the entry above (seed 7, shot 14: a 7-iron over the pond to 4.7 ft), filmed again
+because the previous clip predates the water rendering fixes and cinema mode. The old clip was a
+real-time screen recording at about 14 frames per second with the HUD and brain panel in frame.
+The new one has no interface in it and every frame is rendered at an exact playback time.
+
+How it was captured:
+
+- `FLY_GOLF_BASE=/ pnpm --filter @fly-golf/web build:showcase`, then
+  `npx vite preview --port 4173 --strictPort` in `apps/web`.
+- `social/short-02/tools/capture.mjs --run trained-front-nine-s07 --shot 14 --width 1280
+  --height 720 --hold 1.0`, with `DISPLAY`, `WAYLAND_DISPLAY` and `XDG_RUNTIME_DIR` unset. The
+  tool opens the demo with `?cinema=1`, checks that nothing but the stage is visible, and steps a
+  virtual clock 1/30 s per frame. No `--frame` crop: the view is the app's own camera.
+- MP4: all 15.5 s at 1280x720, 30 fps, H.264, CRF 24, `+faststart` (1.7 MB).
+- GIF: the first 13.5 s at 720x405, 10 fps, 112 colours, no dithering (6.9 MB). The palette is
+  built from the clip plus enlarged crops of the fly and the flag. A palette built from the clip
+  alone, even at 256 colours, drops the red of the eyes, the purple of the vest and the yellow of
+  the flag, because they cover too few pixels to be counted.
+
+The profile page (`jameskbb/jameskbb`, `assets/fly-golf.gif`) uses the same GIF.
