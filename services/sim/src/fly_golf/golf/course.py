@@ -1,10 +1,15 @@
-"""The Fly Golf front nine: nine hand-authored holes (par 36).
+"""Fly Golf National: eighteen hand-authored holes (par 72).
+
+The front nine (holes 1-9, parkland) is unchanged since `front-nine-v2`. The back nine, "The
+Neuropil Nine" (holes 10-18, dusk), names each hole after a structure of the fly's nervous
+system or body and shapes it to echo that structure; see docs/COURSE.md. Training practises on
+the front nine only, so the back nine is a held-out course.
 
 Geometry lives in each hole's own frame: metres, the tee at the origin, the hole playing
 roughly north (+y). Surfaces are polygons (fairways, bunkers, water) plus a circular, tilted
-green. Everything outside the hole's corridor (a band around the routing line) is trees, i.e.
-out of bounds. Tree positions are generated deterministically for the renderer only; they do
-not collide with the ball.
+green. Everything outside the hole's corridor (a band around the routing line, 42 m either side
+unless the hole sets its own half-width) is trees, i.e. out of bounds. Tree positions are
+generated deterministically for the renderer only; they do not collide with the ball.
 
 The hole also defines its ROUTING: the sequence of aiming points a player follows (tee →
 landing areas → pin). The "target" the fly perceives is the pin once it is within
@@ -23,10 +28,10 @@ from functools import cached_property
 from .flight import Surface
 from .physics import Green
 
-COURSE_VERSION = "front-nine-v2"  # v2: routing skips near points; green collar height
-COURSE_NAME = "Fly Golf National · Front Nine"
+COURSE_VERSION = "eighteen-v1"  # 18 holes; holes 1-9 are identical to front-nine-v2
+COURSE_NAME = "Fly Golf National"
 
-CORRIDOR_HALF_WIDTH_M = 42.0  # beyond this distance from the routing line: trees (out of bounds)
+CORRIDOR_HALF_WIDTH_M = 42.0  # default corridor half-width (every front-nine hole); beyond it: trees
 GREEN_APRON_M = 26.0  # the corridor also includes a disc this much wider than the green
 TEE_RADIUS_M = 5.0
 FRINGE_M = 1.5
@@ -34,6 +39,7 @@ COLLAR_M = 4.0  # beyond the fringe, the green's rim height blends down to the f
 TARGET_REACH_M = 225.0  # the fly looks at the pin once it is this close
 TARGET_MIN_AHEAD_M = 60.0  # a routing point closer than this is skipped (never lay up a wedge short of it)
 WATER_LINE_STEP_M = 2.0
+NINE_THEMES = {"front": "parkland", "back": "dusk"}
 
 Point = tuple[float, float]
 
@@ -175,6 +181,17 @@ class HoleSpec:
     water: tuple[Polygon, ...] = ()
     trees_seed: int = 0
     extra_fields: dict = field(default_factory=dict)
+    corridor_half_width_m: float = CORRIDOR_HALF_WIDTH_M  # beyond this from the routing line: trees
+
+    @property
+    def nine(self) -> str:
+        """Which nine the hole belongs to: "front" (1-9) or "back" (10-18)."""
+        return "front" if self.number <= 9 else "back"
+
+    @property
+    def theme(self) -> str:
+        """The renderer's look for the hole: parkland on the front nine, dusk on the back."""
+        return NINE_THEMES[self.nine]
 
     # ---- Terrain protocol (flight.py) ----------------------------------------------------
     @property
@@ -188,7 +205,7 @@ class HoleSpec:
     def in_corridor(self, x: float, y: float) -> bool:
         if math.hypot(x - self.green.center[0], y - self.green.center[1]) <= self.green.radius_m + GREEN_APRON_M:
             return True
-        return _dist_to_polyline(x, y, self.route)[0] <= CORRIDOR_HALF_WIDTH_M
+        return _dist_to_polyline(x, y, self.route)[0] <= self.corridor_half_width_m
 
     def surface(self, x: float, y: float) -> Surface:
         for w in self.water:
@@ -287,7 +304,7 @@ class HoleSpec:
             while k < seg:
                 for side in (-1.0, 1.0):
                     for _row in range(2):
-                        off = CORRIDOR_HALF_WIDTH_M + rng.uniform(4.0, 30.0)
+                        off = self.corridor_half_width_m + rng.uniform(4.0, 30.0)
                         along = k + rng.uniform(-4.0, 4.0)
                         x = ax + ux * along + nx * off * side
                         y = ay + uy * along + ny * off * side
@@ -321,6 +338,8 @@ class HoleSpec:
             "tee": list(self.tee),
             "cup": list(self.cup),
             "has_water": bool(self.water),
+            "nine": self.nine,
+            "theme": self.theme,
         }
         if geometry:
             d |= {
@@ -335,7 +354,7 @@ class HoleSpec:
                 "fairways": [f.to_list() for f in self.fairways],
                 "bunkers": [b.to_list() for b in self.bunkers],
                 "water": [w.to_list() for w in self.water],
-                "corridor_half_width_m": CORRIDOR_HALF_WIDTH_M,
+                "corridor_half_width_m": self.corridor_half_width_m,
                 "green_apron_m": GREEN_APRON_M,
                 "fringe_m": FRINGE_M,
                 "tee_radius_m": TEE_RADIUS_M,
@@ -498,8 +517,276 @@ FRONT_NINE: tuple[HoleSpec, ...] = (
     ),
 )
 
-HOLE_BY_NUMBER: dict[int, HoleSpec] = {h.number: h for h in FRONT_NINE}
-COURSE_PAR = sum(h.par for h in FRONT_NINE)
+
+def _arc(center: Point, radius: float, a0_deg: float, a1_deg: float, n: int = 16) -> list[Point]:
+    """Points along a circular arc, counter-clockwise from a0 to a1 (degrees; 0 = +x, 90 = +y)."""
+    cx, cy = center
+    out = []
+    for k in range(n):
+        a = math.radians(a0_deg + (a1_deg - a0_deg) * k / (n - 1))
+        out.append((cx + radius * math.cos(a), cy + radius * math.sin(a)))
+    return out
+
+
+def _hex_pots(cx: float, cy: float, spacing: float, radius: float, seed: int, rot_deg: float = 0.0) -> tuple:
+    """Seven round pot bunkers packed like ommatidia: one in the middle, six around it."""
+    angles = [math.radians(rot_deg + 60.0 * k) for k in range(6)]
+    centres = [(cx, cy)] + [(cx + spacing * math.cos(a), cy + spacing * math.sin(a)) for a in angles]
+    return tuple(blob(x, y, radius, radius, 0.0, seed=seed + k, wobble=0.06, n=32) for k, (x, y) in enumerate(centres))
+
+
+def _pews(cx: float, y0: float, n: int, spacing: float, length: float, seed: int, rot_deg: float = 0.0) -> tuple:
+    """A row of long, narrow bunkers with strips of grass between them (church pews)."""
+    return tuple(
+        blob(cx, y0 + spacing * k, length / 2.0, 1.4, rot_deg, seed=seed + k, wobble=0.05, n=40) for k in range(n)
+    )
+
+
+def _fan(
+    pivot: Point, r0: float, r1: float, a0_deg: float, a1_deg: float, wobble: float = 0.0, seed: int = 0
+) -> Polygon:
+    """A sector of an annulus around `pivot` (radii r0..r1, angles a0..a1 degrees): a fan, or one
+    curved band of it. `wobble` roughens the edges a little (deterministic)."""
+    rng = random.Random(f"fan:{seed}:{pivot}:{r0}:{a0_deg}")
+    p1, p2 = rng.uniform(0, 2 * math.pi), rng.uniform(0, 2 * math.pi)
+    n = max(6, int((a1_deg - a0_deg) * 2))
+
+    def edge(a: float, r: float, ph: float) -> tuple[float, float]:
+        w = 0.6 * math.sin(math.radians(a) * 30.0 + ph) + 0.4 * math.sin(math.radians(a) * 70.0 + 2.0 * ph)
+        return a, r + wobble * (r1 - r0) * w
+
+    outer = [edge(a, r1, p1) for a in _lin(a0_deg, a1_deg, n)]
+    inner = [edge(a, r0, p2) for a in _lin(a1_deg, a0_deg, n)]
+    px, py = pivot
+    return Polygon(
+        tuple((px + r * math.cos(math.radians(a)), py + r * math.sin(math.radians(a))) for a, r in outer + inner)
+    )
+
+
+def _lin(a: float, b: float, n: int) -> list[float]:
+    return [a + (b - a) * k / (n - 1) for k in range(n)]
+
+
+FAN_16: Point = (0.0, -40.0)  # the pivot of hole 16's fan-shaped fairway and its bands of waste sand
+
+# The back nine, "The Neuropil Nine": each hole is named after a structure of the fly's nervous
+# system or body, and its shape echoes that structure (docs/COURSE.md). It uses only the
+# surfaces the front nine uses, plus a per-hole corridor half-width. Seeds follow the front
+# nine's numbering (hole 12 uses 121, 122, ...); a cluster of bunkers uses hole * 100 + k.
+BACK_NINE: tuple[HoleSpec, ...] = (
+    HoleSpec(
+        10,
+        "Ommatidia",
+        4,
+        "The compound eye opens the back nine: seven pot bunkers packed in a hexagon, like the facets "
+        "of a fly's eye, wait just past the drive. Stay left of the cluster.",
+        route=((0.0, 0.0), (-10.0, 232.0), (5.0, 372.0)),
+        green=_green((3.0, 375.0), 12.5, 11.0, -0.010, 0.008),
+        fairways=(ribbon([(0.0, 40.0), (-6.0, 150.0), (-6.0, 235.0), (0.0, 290.0), (3.0, 350.0)], 20.0, seed=101),),
+        bunkers=(
+            *_hex_pots(6.0, 262.0, 8.2, 3.3, seed=1001, rot_deg=90.0),
+            blob(-19.0, 380.0, 5.0, 7.0, 10.0, seed=102),
+            blob(22.0, 388.0, 5.0, 5.5, -20.0, seed=103),
+        ),
+        trees_seed=10,
+    ),
+    HoleSpec(
+        11,
+        "Johnston's Organ",
+        3,
+        "The fly's ear: a long par three to a big, tilted green. One long curved bunker sweeps across "
+        "the front-left like the arista that catches sound; run it in from the right.",
+        route=((0.0, 0.0), (-27.0, 199.0)),
+        green=_green((-20.0, 193.0), 16.0, 10.5, 0.016, -0.012),
+        fairways=(ribbon([(6.0, 120.0), (2.0, 150.0), (-6.0, 172.0)], 12.0, seed=111),),
+        bunkers=(
+            ribbon(_arc((-20.0, 193.0), 23.0, 172.0, 252.0, 10), 3.8, seed=112, wobble=0.12),
+            blob(2.0, 214.0, 5.0, 4.0, 30.0, seed=113),
+        ),
+        trees_seed=11,
+    ),
+    HoleSpec(
+        12,
+        "Halteres",
+        5,
+        "Named for the fly's balance organs, which beat opposite the wings: a double dogleg that swings "
+        "right, then left, with a burn crossing the line of play twice.",
+        route=((0.0, 0.0), (6.0, 232.0), (68.0, 392.0), (42.0, 498.0)),
+        green=_green((40.0, 501.0), 13.5, 11.0, -0.008, 0.012),
+        fairways=(
+            ribbon([(0.0, 40.0), (3.0, 150.0), (6.0, 232.0), (14.0, 268.0)], 18.0, seed=121),
+            ribbon([(28.0, 318.0), (52.0, 360.0), (68.0, 392.0), (62.0, 425.0)], 17.0, seed=122),
+            ribbon([(50.0, 466.0), (44.0, 482.0)], 13.0, seed=123),
+        ),
+        bunkers=(
+            blob(28.0, 240.0, 7.0, 11.0, -10.0, seed=124),
+            blob(46.0, 404.0, 6.0, 9.0, 20.0, seed=125),
+            blob(58.0, 510.0, 5.0, 7.0, 0.0, seed=126),
+            blob(22.0, 508.0, 5.0, 6.0, 20.0, seed=127),
+        ),
+        water=(
+            ribbon(
+                [
+                    (-70.0, 268.0),
+                    (-20.0, 280.0),
+                    (20.0, 292.0),
+                    (55.0, 300.0),
+                    (95.0, 318.0),
+                    (118.0, 350.0),
+                    (122.0, 395.0),
+                    (118.0, 425.0),
+                    (95.0, 448.0),
+                    (55.0, 455.0),
+                    (15.0, 448.0),
+                    (-30.0, 452.0),
+                ],
+                5.5,
+                seed=128,
+                wobble=0.2,
+            ),
+        ),
+        trees_seed=12,
+    ),
+    HoleSpec(
+        13,
+        "Protocerebral Bridge",
+        4,
+        "A drivable par four. The protocerebral bridge links the brain's two halves with a row of "
+        "glomeruli; here a row of church-pew bunkers bridges the direct line, with water right of a "
+        "small, fast green. Lay up left, or go for it.",
+        route=((0.0, 0.0), (-18.0, 175.0), (14.0, 242.0)),
+        green=_green((16.0, 245.0), 10.0, 12.5, -0.012, 0.006),
+        fairways=(
+            ribbon([(-2.0, 60.0), (-12.0, 130.0), (-18.0, 175.0), (-10.0, 205.0)], 16.0, seed=131),
+            ribbon([(6.0, 226.0), (10.0, 232.0)], 8.0, seed=132),
+        ),
+        bunkers=(
+            *_pews(12.0, 180.0, 9, 5.2, 19.0, seed=1301),
+            blob(-2.0, 236.0, 4.5, 5.5, 0.0, seed=134),
+        ),
+        water=(blob(44.0, 240.0, 11.0, 22.0, 10.0, seed=133, wobble=0.12),),
+        trees_seed=13,
+    ),
+    HoleSpec(
+        14,
+        "Mushroom Body",
+        4,
+        "The tee sits in a cup of sand like the calyx; a narrow stalk of fairway, the peduncle, runs out "
+        "and splits into lobes, one reaching straight up to the green and one turning off to the right.",
+        route=((0.0, 0.0), (0.0, 238.0), (-8.0, 388.0)),
+        green=_green((-6.0, 391.0), 12.0, 11.5, 0.010, -0.012),
+        fairways=(
+            ribbon([(0.0, 30.0), (0.0, 120.0), (0.0, 210.0)], 10.0, seed=141, wobble=0.05),
+            ribbon([(0.0, 205.0), (-2.0, 260.0), (-6.0, 300.0), (-6.0, 368.0)], 15.0, seed=142),
+            ribbon([(6.0, 226.0), (30.0, 252.0)], 11.0, seed=143),
+        ),
+        bunkers=(
+            ribbon(_arc((0.0, 0.0), 16.0, 160.0, 380.0, 14), 3.5, seed=144, wobble=0.1),
+            blob(22.0, 286.0, 8.0, 14.0, -30.0, seed=145),
+            blob(-24.0, 398.0, 5.0, 8.0, 15.0, seed=146),
+            blob(10.0, 404.0, 6.0, 5.0, -20.0, seed=147),
+            blob(8.0, 372.0, 4.0, 4.5, 0.0, seed=148),
+        ),
+        trees_seed=14,
+        corridor_half_width_m=46.0,
+    ),
+    HoleSpec(
+        15,
+        "Ellipsoid Body",
+        3,
+        "An island green inside a ring of water, the doughnut of neuropil where the fly keeps its "
+        "compass. A thin causeway at the back right is the only way on foot.",
+        route=((0.0, 0.0), (2.0, 127.0)),
+        green=_green((0.0, 128.0), 12.0, 11.0, 0.006, 0.010),
+        fairways=(
+            ribbon([(0.0, 62.0), (0.0, 84.0)], 12.0, seed=151),
+            blob(0.0, 128.0, 19.0, 19.0, 0.0, seed=152, wobble=0.02),
+        ),
+        bunkers=(blob(9.5, 115.0, 2.5, 2.5, 0.0, seed=153, wobble=0.05),),
+        water=(ribbon(_arc((0.0, 128.0), 27.0, 67.0, 383.0, 24), 7.0, seed=154, wobble=0.04),),
+        trees_seed=15,
+    ),
+    HoleSpec(
+        16,
+        "Fan-shaped Body",
+        4,
+        "The widest hole on the course fans out like the fan-shaped body, crossed by bands of waste "
+        "sand laid in arcs and broken into columns, as the neuropil is layered and segmented.",
+        route=((0.0, 0.0), (3.0, 236.0), (-4.0, 382.0)),
+        green=_green((-2.0, 385.0), 17.0, 9.5, 0.006, 0.004),
+        fairways=(_fan(FAN_16, 30.0, 380.0, 81.5, 98.5),),
+        bunkers=(
+            *(
+                _fan(FAN_16, 186.0, 197.0, a0, a1, wobble=0.25, seed=1601 + k)
+                for k, (a0, a1) in enumerate(((76.0, 81.0), (82.5, 88.0), (89.5, 94.5), (96.0, 100.5), (102.0, 106.0)))
+            ),
+            *(
+                _fan(FAN_16, 316.0, 325.0, a0, a1, wobble=0.25, seed=1611 + k)
+                for k, (a0, a1) in enumerate(((81.0, 85.0), (86.5, 89.0), (91.5, 94.5), (96.0, 99.5)))
+            ),
+            blob(-44.0, 92.0, 11.0, 44.0, 6.0, seed=163, wobble=0.15),
+            blob(46.0, 222.0, 10.0, 46.0, -5.0, seed=164, wobble=0.15),
+            blob(-28.0, 392.0, 6.0, 8.0, 0.0, seed=165),
+            blob(24.0, 378.0, 5.0, 6.0, 0.0, seed=166),
+        ),
+        trees_seed=16,
+        corridor_half_width_m=58.0,
+    ),
+    HoleSpec(
+        17,
+        "Giant Fiber",
+        5,
+        "The giant fiber is the fly's fastest escape pathway: one huge axon from the brain straight down "
+        "to the jump muscle's motor neuron. The longest, straightest hole on the course, a narrow chute "
+        "through the trees.",
+        route=((0.0, 0.0), (0.0, 240.0), (0.0, 450.0), (2.0, 548.0)),
+        green=_green((0.0, 551.0), 11.0, 12.0, -0.006, 0.012),
+        fairways=(ribbon([(0.0, 35.0), (0.0, 300.0), (0.0, 527.0)], 13.0, seed=171, wobble=0.05),),
+        bunkers=(
+            blob(-17.0, 300.0, 5.0, 14.0, 0.0, seed=172),
+            blob(17.0, 385.0, 5.0, 14.0, 0.0, seed=173),
+            blob(-19.0, 554.0, 4.5, 6.0, 0.0, seed=174),
+            blob(18.0, 544.0, 4.5, 5.5, 0.0, seed=175),
+        ),
+        trees_seed=17,
+        corridor_half_width_m=27.0,
+    ),
+    HoleSpec(
+        18,
+        "Descending Neurons",
+        4,
+        "Home, the way the brain's commands leave it: down the descending neurons to the body. A cape "
+        "hole around the clubhouse lake; the more of the water you carry, the shorter the way in.",
+        route=((0.0, 0.0), (-28.0, 226.0), (-160.0, 335.0)),
+        green=_green((-163.0, 338.0), 14.0, 11.5, 0.008, 0.010),
+        fairways=(
+            ribbon(
+                [(0.0, 40.0), (-12.0, 150.0), (-28.0, 226.0), (-70.0, 268.0), (-120.0, 305.0), (-142.0, 322.0)],
+                18.0,
+                seed=181,
+            ),
+        ),
+        bunkers=(blob(-2.0, 235.0, 7.0, 12.0, 0.0, seed=183), blob(-150.0, 356.0, 6.0, 5.0, 0.0, seed=184)),
+        water=(
+            blob(-92.0, 178.0, 48.0, 62.0, -40.0, seed=182, wobble=0.14),
+            blob(-160.0, 305.0, 22.0, 13.0, 20.0, seed=185, wobble=0.14),
+        ),
+        trees_seed=18,
+    ),
+)
+
+COURSE: tuple[HoleSpec, ...] = FRONT_NINE + BACK_NINE
+HOLE_BY_NUMBER: dict[int, HoleSpec] = {h.number: h for h in COURSE}
+FRONT_PAR = sum(h.par for h in FRONT_NINE)
+BACK_PAR = sum(h.par for h in BACK_NINE)
+COURSE_PAR = FRONT_PAR + BACK_PAR
+NINES: tuple[dict, ...] = (
+    {"id": "front", "name": "Front Nine", "holes": [h.number for h in FRONT_NINE], "par": FRONT_PAR},
+    {"id": "back", "name": "The Neuropil Nine", "holes": [h.number for h in BACK_NINE], "par": BACK_PAR},
+)
+# Holes whose geometry is unchanged since an earlier course version: a record of one of these
+# holes made under that version still replays against this code bit for bit.
+COMPATIBLE_COURSE_VERSIONS: dict[str, frozenset[int]] = {"front-nine-v2": frozenset(range(1, 10))}
 
 
 def course_summary() -> dict:
@@ -507,5 +794,6 @@ def course_summary() -> dict:
         "name": COURSE_NAME,
         "version": COURSE_VERSION,
         "par": COURSE_PAR,
-        "holes": [h.to_dict(geometry=False) for h in FRONT_NINE],
+        "nines": [dict(n) for n in NINES],
+        "holes": [h.to_dict(geometry=False) for h in COURSE],
     }
