@@ -483,3 +483,31 @@ How it was captured:
   the flag, because they cover too few pixels to be counted.
 
 The profile page (`jameskbb/jameskbb`, `assets/fly-golf.gif`) uses the same GIF.
+
+## 2026-09-27: the back nine in the README (yardage book, header, stills)
+
+The course is now 18 holes ([COURSE.md](COURSE.md)), and the README gained an "Around the back
+nine" section in the style of the front nine's. How its images were made, since the front-nine
+ones were not recorded:
+
+- **Yardage book** (`docs/screenshots/course-hole-10-ommatidia.webp` … `-18-descending-neurons`):
+  the real web renderer, the showcase dev server (`vite --mode showcase`) serving a mock 18-hole
+  round (round seed 7) through Playwright routes, headless Chromium with SwiftShader WebGL, a
+  1440x1000 viewport in cinema mode. A route patch exposed the R3F camera and controls; the camera
+  was placed straight above the tee-to-pin line, 0.487 of the way from the tee, high enough (40°
+  vertical field of view) that the tee-to-pin distance fills 77 % of the frame height, north up,
+  with the scene's distance fog switched off. That framing reproduces the front-nine renders to
+  within a few pixels (checked side by side on holes 2, 3 and 8, with matching mean colours), so the
+  front-nine renders were most likely made the same way. Hole 15 is framed wider (60 %, centred
+  further toward the green) so the whole ring of water and the causeway are in the picture. Each
+  frame was downscaled to 1008x700 and saved as WebP quality 72 (20 to 31 kB). The back nine
+  renders in its own dusk theme, unchanged.
+- **Section header** (`readme-header-back-nine.png`): the existing headers' template rebuilt as
+  HTML (1200x160, 2 px accent border, a dark green gradient with faint diagonal lines, a DejaVu
+  Sans Mono eyebrow and subtitle, a Liberation Sans Bold title) and rendered by Chromium. Rebuilt
+  headers for the front nine and the status section differ from the committed ones by 3 to 4 levels
+  per channel on average, mostly in the diagonal lines. The accent is the scorecard's dusk colour,
+  `#f0b27a`.
+- **Stills** (`back-nine-mock-island-green.webp`, `back-nine-mock-cape-tee-shot.webp`): the same
+  mock round replayed in cinema mode at 1280x720, captured mid-flight on the tee shots of 15 and
+  18. They are captioned as a mock round: the wind-up tin fly, with no neurons.
