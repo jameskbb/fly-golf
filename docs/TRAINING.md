@@ -522,9 +522,42 @@ What changed is the bench:
   an 18-hole round: it assumes the back nine plays like the front, and the fly never practised on
   the back nine.
 
-The controls stand as they were. The shuffled-wiring control still beats the real wiring on held-out
-practice shots, and the no-brain sensory readout beats both; the back nine does not change that,
-and nothing here says the real MaleCNS wiring helps the fly play golf.
+### 18-hole results (2026-09-27)
+
+The installed readout `20260917T165536Z`, unchanged, on the 18-hole course (`eighteen-v1`).
+`fly-golf bench --controller malecns-trained --rounds 12 --seed N --jobs 12`, clean trees:
+
+| Seeds | Commit | Mean, 18 holes | Median | Best | Front nine | Back nine | Holes holed | Picked up | Trees per round | Water per round | Under 100 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 100–111 | `6eceef0` | **102.17** | 101 | 93 | 50.33 | 51.83 | 96.3 % | 8 (2 front, 6 back) | 3.0 (front 1.67, back 1.33) | 1.0 (front 0.25, back 0.75) | 3 of 12 |
+| 200–211 | `bb1770e` | **102.0** | 103 | 88 | 51.42 | 50.58 | 95.4 % | 10 (5 front, 5 back) | 2.42 (1.33, 1.08) | 1.17 (0.25, 0.92) | 3 of 12 |
+| 300–311 | `bb1770e` | **103.58** | 103 | 89 | 49.83 | 53.75 | 98.1 % | 4 (1 front, 3 back) | 2.92 (1.33, 1.58) | 0.92 (0.42, 0.5) | 2 of 12 |
+
+`bb1770e` is `6eceef0` plus attaching the first bench to the readout's metadata (no code change);
+the seeds 100–111 bench is the one attached to `experiments/readouts/malecns-readout-v1.json`. The
+front-nine splits (50.33, 51.42, 49.83) reproduce the earlier front-nine bench (50.3, 51.4, 49.8).
+
+Over the 36 bench rounds the trained fly averages **102.6** and breaks 100 in **8 of 36** (best 88,
+worst 119). The ten recorded web-demo rounds (seeds 7–16, commit `6eceef0`, every round exported)
+average **99.6** (93–115), out 49.3 and in 50.3, with 176 of 180 holes holed and **5 of 10**
+under 100 (a round of exactly 100, seed 14, does not break 100). Together, 13 of 46 real 18-hole
+rounds are under 100, mean 101.9. It can break 100; on average it does not. For comparison on the
+same ten seeds: the untrained fixed readout scores 162 in every round (it picks up all 18 holes),
+and the mock controller, which has no neurons, averages 73.6.
+
+**Transfer.** The back nine costs about one to two strokes more than the front (demo 50.3 against
+49.3; bench back 51.83, 50.58, 53.75 against front 50.33, 51.42, 49.83), and more holes are picked up
+there (14 of the 22 holes picked up in the bench are on the back nine). What the readout learnt on
+the front nine carries over to holes it never saw almost fully. That is a property of the sensory
+injection plus the readout; it is not evidence that the real wiring helps.
+
+**Not done.** The shuffled-wiring control and the no-brain baseline have **not** been run on the
+back nine (the control still cannot be benched over rounds, see above), and the readout was not
+retrained for 18 holes.
+
+The controls stand as they were. On the front nine the shuffled-wiring control still beats the
+real wiring on held-out practice shots, and the no-brain sensory readout beats both; the back nine
+does not change that, and nothing here says the real MaleCNS wiring helps the fly play golf.
 
 ## Honest limits
 
