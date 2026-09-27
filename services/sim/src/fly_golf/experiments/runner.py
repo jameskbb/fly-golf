@@ -54,11 +54,31 @@ def controller_seed(hole_seed: int, stroke_index: int) -> int:
     return hole_seed * 1000 + stroke_index
 
 
+BACK_NINE_SEED_OFFSET = 10**12  # holes 10-18 draw their seeds from here up, clear of every front-nine seed
+SEED_ATTEMPT_STRIDE = 10_000_000
+
+
 def hole_seed(round_seed: int, hole_number: int, attempt: int = 0) -> int:
     """Seed for one attempt at one hole of a round (address jitter + controller seeds).
 
-    Replaying a hole from the scorecard is a new attempt with a new seed, not a rerun."""
-    return round_seed * 10 + hole_number + attempt * 10_000_000
+    Replaying a hole from the scorecard is a new attempt with a new seed, not a rerun.
+
+    Holes 1-9 (unchanged since the front nine, so recorded rounds keep reproducing):
+        round_seed * 10 + hole + attempt * 10_000_000
+    Holes 10-18 (their own seed space, from 10**12 up):
+        10**12 + round_seed * 10 + (hole - 9) + attempt * 10_000_000
+
+    Within each nine the last digit is the hole's place in that nine (1-9) and the next digits
+    are the round seed, so seeds are unique while round_seed * 10 + 9 < 10_000_000, i.e. for
+    round seeds 0-999,999; attempts add multiples of 10**7, and every front-nine seed stays below
+    10**12 while attempt < 100,000. So over round seeds 0-999,999 and attempts 0-99,999 no two
+    (round, hole, attempt) share a seed. The largest seed there is about 1.001e12, and the
+    controller seed (hole seed * 1000 + stroke) stays below 2**53, exact in JSON and JavaScript.
+    """
+    base = round_seed * 10 + attempt * SEED_ATTEMPT_STRIDE
+    if hole_number <= 9:
+        return base + hole_number
+    return BACK_NINE_SEED_OFFSET + base + (hole_number - 9)
 
 
 class RunRecorder:
@@ -473,6 +493,7 @@ class RoundSession(_Session):
         self.round_seed = 0
         self.hole_number = 0
         self.scorecard: dict[int, dict] = {}
+        self.round_holes: list[int] = [h.number for h in COURSE]
         self.attempts: dict[int, int] = {}
         self.rounds: list[dict] = []  # summaries of earlier rounds in this run
         self.stats = {"holes": 0, "holes_completed": 0, "holed": 0, "strokes": 0, "shots": 0, "penalties": 0}
@@ -481,28 +502,42 @@ class RoundSession(_Session):
     def _round_summary(self) -> dict:
         return {
             "seed": self.round_seed,
+            "holes": sorted(self.scorecard),
             "complete": self.round_complete,
             "controllers_used": self._round_controllers(),
             "scorecard": [self.scorecard[n] for n in sorted(self.scorecard)],
             **self._totals(),
         }
 
-    def new_round(self, round_seed: int, start_hole: int = 1) -> dict:
+    def new_round(self, round_seed: int, start_hole: int | None = None, holes=None) -> dict:
+        """Start a round on `holes` (default: all 18; e.g. range(10, 19) for the back nine).
+
+        The scorecard holds exactly those holes, so the round is complete when they are played.
+        A later round started by next_hole() keeps the same holes."""
         if not isinstance(round_seed, int) or round_seed < 0:
             raise ValueError("round seed must be a non-negative integer")
+        numbers = sorted({int(n) for n in holes}) if holes is not None else [h.number for h in COURSE]
+        if not numbers or any(n not in HOLE_BY_NUMBER for n in numbers):
+            raise ValueError(f"a round's holes must be on the course (holes 1-{len(COURSE)})")
+        first = numbers[0] if start_hole is None else start_hole
+        if first not in numbers:
+            raise ValueError(f"hole {first} is not one of this round's holes {numbers}")
         if any(c["strokes"] is not None for c in self.scorecard.values()):
             self.rounds.append(self._round_summary())
         self.round_seed = round_seed
+        self.round_holes = numbers
         self.attempts = {}
         self.scorecard = {
-            h.number: {"hole": h.number, "par": h.par, "strokes": None, "holed": None, "controllers": []}
-            for h in COURSE
+            n: {"hole": n, "par": HOLE_BY_NUMBER[n].par, "strokes": None, "holed": None, "controllers": []}
+            for n in numbers
         }
-        return self.start_hole(start_hole)
+        return self.start_hole(first)
 
     def start_hole(self, number: int) -> dict:
         if number not in HOLE_BY_NUMBER:
             raise ValueError(f"no hole {number} on the course (holes 1-{len(COURSE)})")
+        if number not in self.scorecard:
+            raise ValueError(f"hole {number} is not one of this round's holes {sorted(self.scorecard)}")
         self.hole_number = number
         attempt = self.attempts.get(number, -1) + 1
         self.attempts[number] = attempt
@@ -533,11 +568,12 @@ class RoundSession(_Session):
         return out
 
     def next_hole(self) -> dict:
-        """Advance after a finished hole: the next unplayed hole, or a new round after the 18th."""
+        """Advance after a finished hole: the next unplayed hole, or a new round once the round's holes
+        (all 18 unless new_round was given a range) are played."""
         if self.env is not None and not self.env.done:
             raise RuntimeError("finish the current hole first")
         if self.round_complete:
-            return self.new_round(self.round_seed + 1)
+            return self.new_round(self.round_seed + 1, holes=self.round_holes)
         later = [n for n in sorted(self.scorecard) if n > self.hole_number and self.scorecard[n]["strokes"] is None]
         pending = later or [n for n in sorted(self.scorecard) if self.scorecard[n]["strokes"] is None]
         return self.start_hole(pending[0])
@@ -576,6 +612,7 @@ class RoundSession(_Session):
             "stats": dict(self.stats),
             "run_id": self.recorder.run_id if self.recorder else None,
             "round_seed": self.round_seed,
+            "round_holes": list(self.round_holes),
             "scorecard": [self.scorecard[n] for n in sorted(self.scorecard)],
             "totals": self._totals(),
             "round_complete": self.round_complete,

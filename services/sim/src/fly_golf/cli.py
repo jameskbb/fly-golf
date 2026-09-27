@@ -78,7 +78,7 @@ def cmd_round(args) -> int:
     print(f"controller: {controller.info.label}  ({controller.info.description})")
     if controller.info.is_mock:
         print("NOTE: MOCK CONTROLLER - development infrastructure, not the connectome.")
-    session.new_round(args.seed, start_hole=args.first)
+    session.new_round(args.seed, holes=range(args.first, args.last + 1))
     while True:
         h = session.env.hole
         print(f"\nhole {h.number} '{h.name}'  par {h.par}  {h.length_m / 0.9144:.0f} yd")
@@ -86,7 +86,7 @@ def cmd_round(args) -> int:
             print("  " + summarize(session.play_shot()))
         card = session.scorecard[h.number]
         print(f"  -> {card['strokes']} ({card['strokes'] - card['par']:+d})" + ("" if card["holed"] else " picked up"))
-        if session.round_complete or h.number >= args.last:
+        if session.round_complete:
             break
         session.next_hole()
     t = session._totals()
@@ -200,14 +200,15 @@ def cmd_bench(args) -> int:
     out.write_text(json.dumps(report, indent=1) + "\n")
     sm = report["summary"]
     print(
-        f"{args.controller}: {sm['rounds']} rounds of holes {report['holes']}, mean {sm['mean_strokes']} "
+        f"{args.controller}: {sm['rounds']} rounds of holes {report['holes_covered']}, mean {sm['mean_strokes']} "
         f"(par {sm['par']}), best "
         f"{sm['best_round']}, holes holed {sm['holes_holed_pct']}%, picked up {sm['holes_picked_up']}, "
         f"trees {sm['trees_per_round']}/round, water {sm['water_per_round']}/round"
     )
     for nid, n in sm["nines"].items():
         print(
-            f"  {nid:>5s} nine (holes {n['holes']}, par {n['par']}): mean {n['mean_strokes']}, best {n['best']}, "
+            f"  {nid:>5s} nine (holes {n['holes_covered']}, par {n['par']}): "
+            f"mean {n['mean_strokes']}, best {n['best']}, "
             f"holed {n['holes_holed_pct']}%, picked up {n['holes_picked_up']}, "
             f"trees {n['trees_per_round']}/round, water {n['water_per_round']}/round"
         )
@@ -223,7 +224,9 @@ def cmd_bench(args) -> int:
             k: sm[k]
             for k in ("rounds", "mean_strokes", "best_round", "holes_holed_pct", "trees_per_round", "water_per_round")
         } | {
-            "holes": report["holes"],  # which holes mean_strokes covers: "1-18", "1-9" or "10-18"
+            # which holes mean_strokes covers: "1-18", "1-9" or "10-18" (the web reads bench.holes)
+            "holes": report["holes_covered"],
+            "holes_covered": report["holes_covered"],
             "par": sm["par"],
             "nines": {nid: {k: n[k] for k in ("mean_strokes", "best", "par")} for nid, n in sm["nines"].items()},
             "bench": report["bench"],

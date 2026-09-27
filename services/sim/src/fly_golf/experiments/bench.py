@@ -80,7 +80,7 @@ def play_round(seed: int, controller: BrainController | None = None, nine: str =
     controller = controller or _CTRL
     holes = holes_for(nine)
     s = RoundSession(controller)
-    s.new_round(seed, start_hole=holes[0])
+    s.new_round(seed, holes=holes)
     shots = []
     while True:
         hole = s.env.hole
@@ -99,7 +99,7 @@ def play_round(seed: int, controller: BrainController | None = None, nine: str =
                     "final_m": round(o["final_distance_m"], 2),
                 }
             )
-        if hole.number >= holes[-1] or s.round_complete:
+        if s.round_complete:
             break
         s.next_hole()
     card = [s.scorecard[n] for n in holes]
@@ -123,7 +123,7 @@ def _nine_split(rounds: list[dict], holes: tuple[int, ...]) -> dict:
     cards = [c for r in rounds for c in r["card"] if c["hole"] in wanted]
     shots = [s for r in rounds for s in r["shots"] if s["hole"] in wanted]
     return {
-        "holes": holes_label(holes),
+        "holes_covered": holes_label(holes),
         "par": sum(HOLE_BY_NUMBER[n].par for n in holes),
         "mean_strokes": round(float(strokes.mean()), 2),
         "best": int(strokes.min()),
@@ -213,7 +213,7 @@ def bench(
         "readout": readout_path,
         "seeds": seeds,
         "nine": nine,
-        "holes": holes_label(holes),
+        "holes_covered": holes_label(holes),
         "summary": summarize_rounds(out),
         "rounds": [{k: v for k, v in r.items() if k != "controller"} for r in out],
         "wall_s": round(time.perf_counter() - t0, 1),

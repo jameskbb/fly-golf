@@ -25,7 +25,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ..api.schemas import ShotRecordModel
-from ..golf.course import COURSE, COURSE_VERSION
+from ..golf.course import COURSE, COURSE_VERSION, HOLE_BY_NUMBER
 from ..golf.payload import course_payload
 from .runner import course_version_compatible, load_run
 
@@ -70,12 +70,16 @@ def _scrub(value, removed: list[str]):
     return value
 
 
-def scorecard_from_shots(shots: list[dict]) -> list[dict]:
-    """The 18-hole scorecard implied by a round's shots (the final attempt at each hole)."""
+def scorecard_from_shots(shots: list[dict], holes=None) -> list[dict]:
+    """The scorecard implied by a round's shots (the final attempt at each hole), over `holes`
+    (default: all 18). A shot on a hole outside `holes` is an error."""
+    numbers = sorted(holes) if holes is not None else [h.number for h in COURSE]
     card = {
-        h.number: {"hole": h.number, "par": h.par, "strokes": None, "holed": None, "controllers": []} for h in COURSE
+        n: {"hole": n, "par": HOLE_BY_NUMBER[n].par, "strokes": None, "holed": None, "controllers": []} for n in numbers
     }
     for shot in shots:
+        if _hole(shot) not in card:
+            raise ShowcaseExportError(f"{shot.get('shot_id', '?')}: hole {_hole(shot)} is not one of the round's holes")
         entry = card[_hole(shot)]
         cid = shot["controller"]["id"]
         if cid not in entry["controllers"]:
@@ -86,8 +90,8 @@ def scorecard_from_shots(shots: list[dict]) -> list[dict]:
     return [card[n] for n in sorted(card)]
 
 
-def _round_summary(shots: list[dict], seed: int) -> dict:
-    card = scorecard_from_shots(shots)
+def _round_summary(shots: list[dict], seed: int, holes=None) -> dict:
+    card = scorecard_from_shots(shots, holes)
     played = [c for c in card if c["strokes"] is not None]
     strokes = sum(c["strokes"] for c in played)
     par = sum(c["par"] for c in played)
@@ -96,6 +100,7 @@ def _round_summary(shots: list[dict], seed: int) -> dict:
         used += [cid for cid in c["controllers"] if cid not in used]
     return {
         "seed": seed,
+        "holes": [c["hole"] for c in card],
         "complete": len(played) == len(card),
         "scorecard": card,
         "strokes": strokes,
@@ -104,6 +109,18 @@ def _round_summary(shots: list[dict], seed: int) -> dict:
         "holes_played": len(played),
         "controllers_used": used,
     }
+
+
+def _round_holes(recorded: dict | None) -> list[int] | None:
+    """The holes the recorded round was played over: its `holes`, else its scorecard's holes
+    (a front-nine-v2 run has a 9-entry scorecard), else None (all 18)."""
+    if not recorded:
+        return None
+    if recorded.get("holes"):
+        return [int(n) for n in recorded["holes"]]
+    if recorded.get("scorecard"):
+        return [int(c["hole"]) for c in recorded["scorecard"]]
+    return None
 
 
 def _recorded_round(meta: dict, seed: int) -> dict | None:
@@ -255,13 +272,24 @@ def export_showcase(
         f"the source run re-simulates bit for bit with `fly-golf replay {run_id}`"
     )
 
-    rnd = _round_summary(out_shots, round_seed)
     recorded = _recorded_round(meta, round_seed)
-    if recorded is not None:
-        mine = [(c["hole"], c["strokes"], c["holed"]) for c in rnd["scorecard"]]
-        theirs = [(c["hole"], c["strokes"], c["holed"]) for c in recorded.get("scorecard", [])]
-        if mine != theirs:
+    rnd = _round_summary(out_shots, round_seed, _round_holes(recorded))
+    if recorded is not None and recorded.get("scorecard"):
+        # Compare hole by hole over the recorder's own scorecard (9 entries for a front-nine-v2
+        # run); any other rebuilt hole must be unplayed.
+        theirs = {int(c["hole"]): (c["strokes"], c["holed"]) for c in recorded["scorecard"]}
+        mine = {c["hole"]: (c["strokes"], c["holed"]) for c in rnd["scorecard"]}
+        extra = [n for n, v in mine.items() if n not in theirs and v != (None, None)]
+        if any(mine.get(n) != v for n, v in theirs.items()) or extra:
             raise ShowcaseExportError("the scorecard rebuilt from the shots does not match the one the recorder wrote")
+    recorded_versions = sorted({str(s["versions"].get("course")) for s in out_shots})
+    course_version = recorded_versions[0] if len(recorded_versions) == 1 else COURSE_VERSION
+    if len(recorded_versions) > 1:
+        notes.append(f"recorded across course versions {recorded_versions} (all compatible with {COURSE_VERSION})")
+    version_fields = {"course_version": course_version}
+    if course_version != COURSE_VERSION:
+        version_fields["course_version_exported_with"] = COURSE_VERSION
+    holes_played = [c["hole"] for c in rnd["scorecard"] if c["strokes"] is not None]
 
     first = out_shots[0]
     if len(ids) > 1:
@@ -291,7 +319,8 @@ def export_showcase(
         },
         "controller": first["controller"],
         "controllers_used": ids,
-        "course_version": COURSE_VERSION,
+        **version_fields,
+        "holes": holes_played,
         "round": rnd,
         "export": {
             "exporter": EXPORTER_VERSION,
@@ -317,6 +346,8 @@ def export_showcase(
         "to_par": rnd["to_par"],
         "round_complete": rnd["complete"],
         "round_seed": round_seed,
+        "holes": holes_played,
+        **version_fields,
         "source_run_id": doc["source"]["run_id"],
         "recorded_utc": recorded_utc,
         "git_commit": first["git"]["commit"],

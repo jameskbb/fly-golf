@@ -8,15 +8,31 @@ are our choices, documented here and versioned in every shot record (`course`, `
 
 Eighteen hand-authored holes, par 72, 6,831 yards: the parkland **Front Nine** (holes 1-9,
 par 36, 3,352 yards) and a dusk-lit back nine, **The Neuropil Nine** (holes 10-18, par 36,
-3,479 yards). Each hole lives in its own frame: the tee at the origin, the hole playing roughly
+3,479 yards). The totals are computed from the holes' exact lengths, so the rounded yardages in
+the tables may not add up to them to the yard. Each hole lives in its own frame: the tee at the origin, the hole playing roughly
 north. Every hole in the course payload carries `nine` (`front` or `back`) and `theme`
 (`parkland` or `dusk`), and the payload lists both nines under `nines`.
 
 The front nine is unchanged from `front-nine-v2`, bit for bit (a test pins a hash of its
 geometry). A round record of holes 1-9 made under `front-nine-v2` still replays exactly, and
-`fly-golf replay` reports it as compatible. Holes are seeded the same way as before
-(`hole_seed(round_seed, hole, attempt)`), so holes 1-9 of an 18-hole round are the same
-situations they always were.
+`fly-golf replay` reports it as compatible.
+
+**Hole seeds.** Each attempt at a hole gets a seed (address jitter and the per-stroke controller
+seeds, `hole_seed * 1000 + stroke`), from `hole_seed(round_seed, hole, attempt)` in
+`experiments/runner.py`:
+
+- holes 1-9, unchanged: `round_seed * 10 + hole + attempt * 10,000,000`
+- holes 10-18: `10**12 + round_seed * 10 + (hole - 9) + attempt * 10,000,000`
+
+So holes 1-9 of an 18-hole round are the same situations they always were, and the back nine has
+a seed space of its own. No two (round, hole, attempt) share a seed for round seeds 0-999,999
+and attempts 0-99,999 (a test checks round seeds 0-5,000, every hole, attempts 0-3). Every
+controller seed stays below 2^53, so it is exact in JSON and JavaScript.
+
+**Rounds over a range of holes.** A round is all 18 holes unless it is started on a range
+(`fly-golf round --first 10 --last 18`, `fly-golf bench --nine back`): its scorecard then holds
+just those holes and it is complete when they are played. The round summary lists them as
+`holes`. The app's rounds are always 18 holes.
 
 ### The Front Nine
 
@@ -49,11 +65,11 @@ greens vary more (radius 10 to 17 m, stimp 9.5 to 12.5, slopes up to 0.02).
 | 10 | Ommatidia | 4 | 408 | 42 m | 12.5 m, 11 | **seven pot bunkers packed in a hexagon** just past the drive | the hexagonally packed facets of the compound eye | the pot bunkers of the Old Course and Royal Lytham |
 | 11 | Johnston's Organ | 3 | 220 | 42 m | 16 m, 10.5 | **long par 3**; one long curved bunker across the front-left, green tilted away to the back-left, open to a run-in from the right | the antennal hearing organ and the arista that catches sound | the Redan (15th at North Berwick) |
 | 12 | Halteres | 5 | 561 | 42 m | 13.5 m, 11 | **double dogleg**, right then left; **a burn crosses the line of play twice** | the balance organs that beat opposite the wings | the Barry Burn snaking across Carnoustie's 17th and 18th |
-| 13 | Protocerebral Bridge | 4 | 274 | 42 m | 10 m, 12.5 | **drivable par 4**: lay up left, or carry a row of **church-pew bunkers** to a small, fast green with water right | the bridge of glomeruli spanning the two halves of the brain | Riviera's 10th (drivable par 4); Oakmont's church pews |
+| 13 | Protocerebral Bridge | 4 | 274 | 42 m | 10 m, 12.5 | **drivable par 4** on paper: a row of **church-pew bunkers** on the direct line to a small, fast green with water right; the fly is shown the lay-up area on the left | the bridge of glomeruli spanning the brain's midline | Riviera's 10th (drivable par 4); Oakmont's church pews |
 | 14 | Mushroom Body | 4 | 425 | 46 m | 12 m, 11.5 | tee in a cup of sand; a narrow stalk of fairway that **splits into two lobes**, one straight to the green, one off to the right | calyx, peduncle, and the vertical and medial lobes | split fairways such as Riviera's 8th |
 | 15 | Ellipsoid Body | 3 | 139 | 42 m | 12 m, 11 | **island green** inside a ring of water, reached on foot by a causeway | the ring-shaped neuropil that holds the fly's compass | TPC Sawgrass 17th |
 | 16 | Fan-shaped Body | 4 | 418 | **58 m** | 17 m, 9.5 | **the widest hole**: a fan-shaped fairway crossed by curved bands of **waste sand** broken into columns, big waste areas either side | the layered, column-segmented fan of the central complex | Pine Valley's waste areas; Pinehurst No. 2 |
-| 17 | Giant Fiber | 5 | 599 | **27 m** | 11 m, 12 | **the longest, straightest hole: a narrow chute through the trees** | the giant fiber, the fast escape pathway from brain to jump muscle | Carnoustie's 6th ("Hogan's Alley") |
+| 17 | Giant Fiber | 5 | 599 | **30 m** | 11 m, 12 | **the longest, straightest hole: a narrow chute through the trees** | the giant fibers, a bilateral pair of descending interneurons: the fast escape pathway from brain to jump muscles | Carnoustie's 6th ("Hogan's Alley") |
 | 18 | Descending Neurons | 4 | 436 | 42 m | 14 m, 11.5 | **cape hole**: the tee shot carries as much of the clubhouse lake as you dare; water short-left of the green | the descending neurons that carry the brain's commands to the body | Macdonald's Cape (National Golf Links) |
 
 Water on **four** back-nine holes (12, 13, 15, 18). Johnston's Organ has the steepest green on
@@ -67,14 +83,19 @@ A few design notes on how the environment plays these holes:
   is a strip of fairway as a drop zone); a shot over the green, from the tee or from the island,
   drops back on the island.
 - **Drivable par 4 (13).** From the tee the pin is 242 m away, beyond the 225 m at which the fly
-  looks at the pin, so its target is the lay-up area on the left. The green is still within a
-  flush driver of the tee, over the pews.
+  looks at the pin, so its target is the lay-up area on the left. Drivable describes the
+  geometry, not a choice the fly makes. Only a full-speed, straight driver within about 2
+  degrees of the pin line holds the green (-1 to +2 degrees in 0.5 degree steps); at 97 percent
+  speed a single one of those headings does.
 - **Cape (18).** The lake sits in the inside corner of the dogleg; the routing goes around it,
-  but any line further left carries more water and leaves a shorter approach.
+  but any line further left carries more water and leaves a shorter approach. After a short
+  drive the pin comes within 225 m, so the fly's target becomes the pin, across the corner of
+  the lake.
 - **Mock controller check.** The mock controller (development only, not the connectome) holes
-  out every back-nine hole on round seeds 7-16 and 100-111 and averages 37.6 on the back nine
-  (36.5 on the front), no hole more than half a stroke over par on average: every hole is
-  finishable and none is unfair to a player that aims where the environment points.
+  out every hole on round seeds 7-16 and 100-111 (22 rounds, no pick-ups) and averages 38.0 on
+  the back nine and 36.5 on the front (74.5 for 18). Every back-nine hole averages within 0.6
+  strokes of par (the hardest is 18, +0.55, then 10, +0.41): every hole is finishable and none is
+  unfair to a player that aims where the environment points. A test repeats this check.
 
 ### Held out from training
 
@@ -86,7 +107,7 @@ splits for this reason.
 ### Per-hole corridor
 
 The trees (out of bounds) begin at each hole's own corridor half-width, the distance from the
-routing line: 42 m on every front-nine hole and most back-nine holes, 27 m on Giant Fiber (17),
+routing line: 42 m on every front-nine hole and most back-nine holes, 30 m on Giant Fiber (17),
 46 m on Mushroom Body (14) and 58 m on Fan-shaped Body (16). The course payload reports it as
 `corridor_half_width_m` per hole. The disc of 26 m around the green is always in play.
 
