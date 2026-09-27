@@ -48,7 +48,9 @@ export interface Theme {
   hemisphere: { sky: string; ground: string; intensity: number };
   sun: { color: string; intensity: number; offset: XYZ; shadowBias: number }; // offset: from the fly
   ground: {
-    rough: [string, string];
+    rough: [string, string]; // mown stripes (dark, light)
+    /** Instead of stripes: one base colour with soft, low-contrast heather patches and grain. */
+    roughMottle?: { base: string; patch: string; grain: number };
     collarRough: string; // the collar's outer colour, blending the fringe into the rough
     fairway: [string, string];
     green: [string, string];
@@ -131,8 +133,9 @@ const dusk: Theme = {
   hemisphere: { sky: "#ddd5f2", ground: "#4d3f36", intensity: 1.35 },
   sun: { color: "#ffc68c", intensity: 3.3, offset: [-10, 4.8, -2], shadowBias: -0.0006 },
   ground: {
-    rough: ["#46683a", "#565a5b"],
-    collarRough: "#46683a",
+    rough: ["#46683e", "#46683e"], // not drawn: roughMottle replaces the stripes
+    roughMottle: { base: "#46683e", patch: "#5b5463", grain: 8 },
+    collarRough: "#46683e",
     fairway: ["#3f9152", "#4a9e5c"],
     green: ["#2f8649", "#3a9656"],
     fringe: "#2f8046",

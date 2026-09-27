@@ -54,6 +54,49 @@ function noiseTexture(
   return t;
 }
 
+/** A quiet tiling ground texture: one base colour, soft blotches of a second colour at low
+ *  opacity (the heather in the dusk rough) and a fine grain. No bands, no hard edges. */
+function mottleTexture({ base, patch, grain }: { base: string; patch: string; grain: number }) {
+  const size = 512;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d")!;
+  g.fillStyle = base;
+  g.fillRect(0, 0, size, size);
+  let s = 41;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const tint = new THREE.Color(patch);
+  const rgba = (a: number) =>
+    `rgba(${Math.round(tint.r * 255)},${Math.round(tint.g * 255)},${Math.round(tint.b * 255)},${a})`;
+  for (let i = 0; i < 70; i++) {
+    const x = rnd() * size;
+    const y = rnd() * size;
+    const r = 20 + rnd() * 60;
+    // drawn at each wrap offset so the tile repeats without seams
+    for (const ox of [-size, 0, size])
+      for (const oy of [-size, 0, size]) {
+        const grad = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
+        grad.addColorStop(0, rgba(0.13));
+        grad.addColorStop(1, rgba(0));
+        g.fillStyle = grad;
+        g.fillRect(x + ox - r, y + oy - r, 2 * r, 2 * r);
+      }
+  }
+  const img = g.getImageData(0, 0, size, size);
+  for (let p = 0; p < img.data.length; p += 4) {
+    const n = (rnd() - 0.5) * grain;
+    img.data[p] += n;
+    img.data[p + 1] += n;
+    img.data[p + 2] += n * 0.7;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
 /** A tiling normal map made from smooth value noise: gives the water moving highlights. */
 function waterNormals(size = 256): THREE.CanvasTexture {
   const h = new Float32Array(size * size);
@@ -408,10 +451,15 @@ export function CourseHole({ hole }: { hole: Hole }) {
   const theme = themeFor(hole);
   const colors = theme.ground;
   const rough = useMemo(() => {
+    if (colors.roughMottle) {
+      const t = mottleTexture(colors.roughMottle);
+      t.repeat.set(1 / 40, 1 / 40); // one tile of patches per 40 m
+      return t;
+    }
     const t = stripeTexture(colors.rough[0], colors.rough[1], 2);
     t.repeat.set(1 / 12, 1 / 12); // UVs are world metres
     return t;
-  }, [colors.rough]);
+  }, [colors.rough, colors.roughMottle]);
   const fairwayTex = useMemo(() => {
     const t = stripeTexture(colors.fairway[0], colors.fairway[1], 2);
     t.repeat.set(1 / 16, 1 / 16);
