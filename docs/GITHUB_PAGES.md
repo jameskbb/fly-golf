@@ -63,7 +63,7 @@ uv --directory services/sim run fly-golf round --controller malecns-trained --se
 # 2. Export into apps/web/public/showcase/ (validates every shot; never modifies the run).
 uv --directory services/sim run fly-golf export-showcase <run_id> \
   --slug trained-eighteen-s07 \
-  --title "Trained MaleCNS - 18 holes, round 7" \
+  --title "Trained MaleCNS - Eighteen, round 7" \
   --description "One or two honest sentences about what this run is."
 
 # 3. Check, then commit the JSON.

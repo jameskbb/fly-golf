@@ -185,7 +185,8 @@ Fly Golf National is 18 hand-built holes, par 72 and 6,831 yards. The front nine
 half: 3,352 yards and par 36, straight holes and gentle doglegs with one kind of hazard at a time.
 It is also the only ground the trained fly has ever practised on. These north-up renders come from
 the course itself, so every stripe, bunker, water line, green and tree boundary matches the
-geometry used by the physics.
+geometry used by the physics. The nine totals come from the holes' exact lengths, so the rounded
+yardages below sum to 3,351 on the front and 3,480 on the back rather than 3,352 and 3,479.
 
 <details>
 <summary><strong>Open the full front-nine yardage book</strong> · bird's-eye renders and strategy for all nine holes</summary>
@@ -294,8 +295,9 @@ and averages within 0.6 strokes of par on each of them.
 
 *Both stills are the trained fly's recorded round `trained-eighteen-s07` (the web demo's featured
 round, seed 7), replayed by the web app in cinema mode: shots 84 and 108 of 111. On 15 that splash
-costs a penalty stroke and a drop on the island, 32 yd from the pin; the next shot, a lob wedge,
-finds the water too, and the hole takes 8 strokes. 18 takes 6. That round is the worst of the ten, 115 (54 out, 61 in).
+ends in the water 32.5 yd from the pin and costs a penalty stroke; the ball is dropped on the
+island, 19.9 yd from the pin, and the next shot, a lob wedge, finds the water too. The hole takes 8
+strokes; 18 takes 6. That round is the worst of the ten, 115 (54 out, 61 in).
 [Open the island-green shot](https://jameskbb.github.io/fly-golf/?run=trained-eighteen-s07&shot=84).*
 
 <details>
