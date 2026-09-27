@@ -1,5 +1,7 @@
 # Capturing gameplay clips (short-02)
 
+> Note (2026-09-27): the showcase slugs named here (`trained-front-nine-sNN`) were replaced by `trained-eighteen-sNN`; the shot numbers are unchanged.
+
 `capture.mjs` replays a REAL recorded shot in the static showcase and frame-steps it with a
 virtual clock (performance.now / Date.now / requestAnimationFrame replaced before the app loads),
 so every frame is exactly 1/30 s of playback time regardless of SwiftShader speed. No app source

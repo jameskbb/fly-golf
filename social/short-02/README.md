@@ -1,4 +1,4 @@
-# Fly Golf — Short 02: "4 feet. 3 putts." (clean re-shoot + vine boom)
+# Fly Golf, Short 02: "4 feet. 3 putts." (clean re-shoot + vine boom)
 
 A re-record of the first cut of this short (kept locally, not published here): the same 25-second vertical short (1080×1920, 9:16, 30 fps), with the same
 cut, captions and timing, frame for frame. It changes two things:
@@ -24,7 +24,7 @@ cut, captions and timing, frame for frame. It changes two things:
    flight, **hard silence from 18.62 s so the lip-out lands on nothing**, sneaking back under the
    tap-in, everything back when the putt drops), plus a quiet golf-gallery clap at 21.25 s (mixed 15 dB down: a small gallery, not a crowd) and a small
    "ooh" at 16.45 s when the first putt slides by. Like the other effects these are oscillators and
-   filtered noise, not samples — nothing copyrighted, and the render stays reproducible.
+   filtered noise, not samples: nothing copyrighted, and the render stays reproducible.
 5. **Cut and framing revised after an adversarial review** (see "What the review changed" below).
 
 **The finished video:** `fly-golf-short-02.mp4` (also `render/fly-golf-short-02.mp4`). It is
@@ -63,12 +63,16 @@ A reviewer went through the first cut frame by frame against TikTok retention. T
 | Two seconds of silence at the start reads as broken audio | The music bed starts at 0.00 s at full level |
 | The lip-out, the whole joke, crawled at ¼ speed for 0.9 s | Re-timed: less crawl (17.3–18.4 s at 0.545×), the lip still at 18.70 s, then a near-freeze 18.7–19.0 s under the boom, then real speed |
 | The payoff putt dropped at the edge of a wide frame, and the caption announced it three frames early | The tap-in splits at 20.9 s and pushes into the cup as the ball arrives; the caption now lands at 21.35 s |
-| "4 on a par 3." means nothing to non-golfers | "*3 PUTTS.* FROM 4 FEET." — the joke in four words |
-| The end card asked a question with an obvious answer | "49.3 a nine. Can it *break 100?*" — a real open question (the trained fly averages 49.3 strokes per nine, range 42–54, so 18 holes is genuinely borderline) |
+| "4 on a par 3." means nothing to non-golfers | "*3 PUTTS.* FROM 4 FEET.": the joke in four words |
+| The end card asked a question with an obvious answer | "49.3 a nine. Can it *break 100?*": a real open question (the trained fly averages 49.3 strokes per nine, range 42–54, so 18 holes is genuinely borderline) |
 | The hook was a small figure in an empty green field | The opening pushes in to 1.3–1.42× on the fly |
 | The brain card looked like a dashboard screenshot (close button, legend, mean-rate table) | The capture now hides that chrome: the neuron map, the counter and one line of caption remain |
 | "4.7 FEET." popped while the ball was still bouncing | Moved to 13.6 s, when it has stopped |
 | "14 inches." was set in the least legible style | Set in `normal` instead of the mono pill |
+
+*Update, 2026-09-27:* the end card's question has since been played out on 18 real holes. The
+trained fly broke 100 in 13 of 46 rounds: the ten web-demo rounds average 99.6 (5 of 10 under
+100) and 36 bench rounds on fresh seeds average 102.6 (8 of 36). See the main README.
 
 Not taken: a flash-forward to the pond during "164 YARDS. OVER WATER." (it would show the shot's
 outcome before the swing). The yellow ball-tracer lines on the green are simulator output and would

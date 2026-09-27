@@ -54,8 +54,8 @@ Why these choices:
 - **DNa01/DNa02 for aim.** They are established steering descending neurons: ipsilateral
   activity turns the fly (Rayshubskiy *et al.* 2024, *Nature* 631:135). LC10 → AOTU → DNa02 is
   a known male target-tracking route.
-- **The whole DN population for power, tempo and face.** A population-level quantity — "how much
-  descending drive, how early, which side" — needs no post-hoc choice of single "golf neurons".
+- **The whole DN population for power, tempo and face.** A population-level quantity ("how much
+  descending drive, how early, which side") needs no post-hoc choice of single "golf neurons".
   The cost is that it is generic arousal rather than a specific motor program.
 - **The strike threshold.** It requires some descending output. A silent brain whiffs, and the
   whiff counts as a stroke.

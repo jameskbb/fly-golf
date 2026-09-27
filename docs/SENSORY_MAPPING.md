@@ -19,7 +19,7 @@ It **never** outputs a solution: there is no aim angle, no stroke power and no c
 | `slope_fall_left` | ground falls to the left of the line (ball breaks left) | 3 % |
 | `slope_fall_right` | ground falls to the right of the line | 3 % |
 | `green_speed` | (stimp − 6) / 8 | stimp 14 |
-| `ball_at_rest` | 1 if the ball is stationary | — |
+| `ball_at_rest` | 1 if the ball is stationary | n/a (0 or 1) |
 
 Values are clipped to [0, 1]. Malformed input (NaN, wrong keys, out-of-range values or non-numbers)
 is rejected by `SensoryFrame` validation, and tests cover it. The body heading at address is
@@ -90,9 +90,9 @@ still replay.
 | Channel | Definition | Full scale |
 | --- | --- | --- |
 | `target_far` | distance ball → target | 250 m |
-| `lie_green` | 1 on the green or fringe | — |
-| `lie_rough` | 1 in the rough | — |
-| `lie_sand` | 1 in a bunker | — |
+| `lie_green` | 1 on the green or fringe | n/a (0 or 1) |
+| `lie_rough` | 1 in the rough | n/a (0 or 1) |
+| `lie_sand` | 1 in a bunker | n/a (0 or 1) |
 | `water_on_line` | fraction of the straight ball → target line over water | 1 |
 
 (Tee and fairway are the case where all three lie flags are 0.)
@@ -125,7 +125,7 @@ The integration test `test_real_populations_resolve` asserts every population si
 ## v0.3: one quantity per population (`malecns-sensory-v0.3`)
 
 The channels (`proxy-sensory-v0.2`) are unchanged. What changed is **stage 2**, how they are
-injected — and only because we measured how little of them survived.
+injected, and only because we measured how little of them survived.
 
 ### What we measured
 
@@ -145,8 +145,8 @@ green it could barely perceive how far away the hole was. Two causes, both in th
 
 1. **Bearing was multiplied by apparent size.** v0.1 sets `LC10_L = I_max · size · w_left`, so the
    left–right difference that carries bearing scales with `size`. Off the green `target_distance`
-   (full scale 10 m) saturates, `size` sits at its 0.4 floor, and — because the bearing channels
-   are full scale at 45° while the fly addresses its target within about ±6° — the whole spread of
+   (full scale 10 m) saturates, `size` sits at its 0.4 floor, and (because the bearing channels
+   are full scale at 45° while the fly addresses its target within about ±6°) the whole spread of
    real bearings became a drive difference with a standard deviation under 1 mV out of 30.
 2. **Distance had one code with the wrong range.** `target_distance` saturates past 10 m and
    `target_far` (full scale 250 m) is under 0.3 for every shot inside 70 m, so between 10 m and
@@ -169,8 +169,8 @@ anything else.
 where, with `d = 250 · target_far` metres,
 
 - `w_left = clip(0.5 + 0.5 · BEARING_GAIN · (target_left − target_right))`, `BEARING_GAIN = 8`
-- `size = 0.4 + 0.6 · (1 − target_distance)` — the v0.1 formula, now on its own populations
-- `range(d) = clip(log1p(d / 0.5) / log1p(500))` — a log (Weber–Fechner) distance code, which
+- `size = 0.4 + 0.6 · (1 − target_distance)`: the v0.1 formula, now on its own populations
+- `range(d) = clip(log1p(d / 0.5) / log1p(500))`: a log (Weber–Fechner) distance code, which
   resolves a 2 m putt and a 4 m putt and still climbs between 150 m and 250 m
 
 The JO-C / JO-E slope drives and the R7d/R8d water drive are v0.2's, unchanged. `LC10_L` /
@@ -206,7 +206,7 @@ chips and pitches (`short`, 0.22) is still the weakest link.
 - This is still **not vision**. No image is formed; LC10a cells on one side all receive the same
   current whatever their receptive fields.
 - Nothing here encodes a solution. The fly is told where its target is and how the ground feels,
-  never which club, aim or power to use — the same rule v0.1 set.
+  never which club, aim or power to use: the same rule v0.1 set.
 - Changing the injection changes what every readout sees, so a readout records the mapping it was
   fitted under (`meta.malecns_sensory_mapping`) and `TrainedReadoutController` pins the controller
   to it. Readouts fitted before v0.3 are assumed to be v0.2 and keep running on the v0.2 drive.

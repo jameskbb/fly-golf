@@ -2,10 +2,10 @@
 
 Four kinds, all generated deterministically from a seed:
 
-* ``putt``  — a practice-green scenario (1–6 m putts, the V1 putting experiment's generator);
-* ``green`` — a putt on one of the front-nine greens (1–14 m);
-* ``full``  — a tee shot or a shot from somewhere along a hole (fairway, rough, sand);
-* ``short`` — a chip or pitch from 3–70 m around a green (v2: the shots that need wedges).
+* ``putt``: a practice-green scenario (1–6 m putts, the V1 putting experiment's generator);
+* ``green``: a putt on one of the front-nine greens (1–14 m);
+* ``full``: a tee shot or a shot from somewhere along a hole (fairway, rough, sand);
+* ``short``: a chip or pitch from 3–70 m around a green (v2: the shots that need wedges).
 
 Each situation is split into train or test by its index, so held-out evaluation never sees
 a situation the readout was fitted on.

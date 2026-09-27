@@ -146,7 +146,7 @@ amateur-to-scratch launch-monitor values. The distances are **outputs** of the p
 
 | Club | Ball speed | Launch | Spin | Carry | Total |
 | --- | --- | --- | --- | --- | --- |
-| Putter | 4.2 m/s max | 0° | 0 | — | — |
+| Putter | 4.2 m/s max | 0° | 0 | n/a | n/a |
 | Lob wedge | 29.5 m/s | 33° | 10,500 rpm | 72 yd | 74 yd |
 | Sand wedge | 34.0 | 30° | 10,200 | 90 | 93 |
 | Gap wedge | 38.5 | 27° | 9,800 | 109 | 113 |

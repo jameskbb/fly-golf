@@ -16,7 +16,7 @@ yellow (#ffc81e). Safe area: inside x 80–1000, y 260–1500 (TikTok/Reels UI c
 | 17.40 | 18.65 | 14 inches. | normal | upper |
 | 18.70 | 19.80 | *LIPPED OUT.* | big | upper |
 | 21.35 | 22.60 | *3 PUTTS.* FROM 4 FEET. | big | upper |
-| 22.60 | 25.00 | 49.3 a nine. / Can it *break 100?* | end | — |
+| 22.60 | 25.00 | 49.3 a nine. / Can it *break 100?* | end | none |
 | 22.90 | 25.00 | FLY GOLF 🪰⛳ | end title | under it |
 
 These are the final times, generated from `edl.json`. Nothing is on screen from 8.40 to 13.40 while
@@ -26,10 +26,10 @@ Rules: 3–7 words per caption (the hook is the one exception); never subtitle f
 on screen while the ball is in the air.
 
 Post copy (not in the video): *gave a simulated fruit fly brain a golf club. 7-iron over water to
-4 feet… then 3 putts, including a lip-out from 14 inches. real recorded round — it averages 49.3
-strokes a nine. can it break 100?* — at most #golf #science #ai
+4 feet… then 3 putts, including a lip-out from 14 inches. real recorded round: it averages 49.3
+strokes a nine. can it break 100?* Hashtags, at most: #golf #science #ai
 
 Pinned comment, ready for the two questions that will come: *166,700 = the whole male fly CNS
 (brain + nerve cord), not just the brain. Club, aim and power are read out of the simulated activity
-by weights fitted from practice shots — the wiring itself doesn't learn, and a shuffled-wiring
+by weights fitted from practice shots; the wiring itself doesn't learn, and a shuffled-wiring
 control plays about as well. github.com/jameskbb/fly-golf*

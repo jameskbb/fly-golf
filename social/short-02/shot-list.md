@@ -33,14 +33,14 @@ used for the landing, 12.4–15.8 s) and a *render* zoom (`zoom` in the table's 
 
 | Clip | Source | Why it lost |
 | --- | --- | --- |
-| `wingspan-approach` | s11 · 36 — 5-iron from 196 yd to 1.4 ft | The best iron shot in the demo, but a tap-in birdie is a happy ending with no turn. Perfect for a future short ("it made a birdie"). |
+| `wingspan-approach` | s11 · 36: 5-iron from 196 yd to 1.4 ft | The best iron shot in the demo, but a tap-in birdie is a happy ending with no turn. Perfect for a future short ("it made a birdie"). |
 | `wingspan-birdie` | s11 · 37 | See above. |
-| `bomb-putt` | s11 · 46 — 34-ft putt holed | Great ball-drop payoff, but a putt is a weak hook. Short 03 ending. |
+| `bomb-putt` | s11 · 46: 34-ft putt holed | Great ball-drop payoff, but a putt is a weak hook. Short 03 ending. |
 
 ## Moments found but not captured
 
-- **Untrained fly, round 7, hole 1:** from a bunker 11 m from the pin it takes a **6-iron** — out of
-  bounds — then does it again. The untrained readout hits a 6-iron from almost everywhere (372 of its
+- **Untrained fly, round 7, hole 1:** from a bunker 11 m from the pin it takes a **6-iron**, out of
+  bounds, then does it again. The untrained readout hits a 6-iron from almost everywhere (372 of its
   557 shots). Funny, but it is a different brain setting and would need a whole short to explain
   honestly. Strong candidate for a "before lessons" episode.
 - **Driver off the fairway into OB** (trained s10 · 23): funny, but a single bad shot with no payoff.
