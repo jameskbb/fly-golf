@@ -3,6 +3,7 @@
 import hashlib
 import json
 import math
+from pathlib import Path
 
 import pytest
 
@@ -13,7 +14,9 @@ from fly_golf.brain.sensory import ProxySensoryEncoderV2
 from fly_golf.experiments.runner import (
     RoundSession,
     RunRecorder,
+    controller_seed,
     course_version_compatible,
+    hole_seed,
     load_run,
     replay_controller,
     replay_physics,
@@ -162,7 +165,7 @@ def test_no_water_over_a_green_or_tee_and_no_tee_in_sand():
 
 def test_surface_respects_each_holes_corridor():
     chute, wide = HOLE_BY_NUMBER[17], HOLE_BY_NUMBER[16]
-    assert chute.corridor_half_width_m < 30.0 < 55.0 <= wide.corridor_half_width_m
+    assert chute.corridor_half_width_m <= 30.0 < 55.0 <= wide.corridor_half_width_m
     assert chute.surface(0.0, 150.0) is Surface.FAIRWAY
     assert chute.surface(chute.corridor_half_width_m - 1.0, 150.0) is Surface.ROUGH
     assert chute.surface(chute.corridor_half_width_m + 1.0, 150.0) is Surface.OOB
@@ -492,12 +495,30 @@ def test_eighteen_hole_round_then_a_new_round():
 
 
 def test_front_nine_of_an_eighteen_hole_round_is_unchanged():
-    # hole_seed() is unchanged, so holes 1-9 of an 18-hole round are the situations they always were.
+    # hole_seed() is unchanged for holes 1-9, so they are the situations they always were; the
+    # back nine has its own seed space from 10**12.
     s = RoundSession(MockBrainController())
     s.new_round(7)
     assert s.env.seed == 71
     s.start_hole(12)
-    assert s.env.seed == 82
+    assert s.env.seed == 10**12 + 73
+    assert hole_seed(7, 1, 2) == 20_000_071
+
+
+def test_hole_seeds_never_collide():
+    seen: set[int] = set()
+    n = 0
+    for r in range(5001):
+        for hole in range(1, 19):
+            for attempt in range(4):
+                sd = hole_seed(r, hole, attempt)
+                assert sd >= 0 and controller_seed(sd, 20) < 2**53
+                seen.add(sd)
+                n += 1
+    assert len(seen) == n
+    # and at the edges of the documented range
+    edges = {hole_seed(r, h, a) for r in (0, 999_999) for h in range(1, 19) for a in (0, 99_999)}
+    assert len(edges) == 2 * 18 * 2
 
 
 def test_eighteen_hole_round_records_replay_exactly(tmp_path):
@@ -514,24 +535,80 @@ def test_eighteen_hole_round_records_replay_exactly(tmp_path):
         assert replay_controller(r, MockBrainController())["identical"]
 
 
-def test_front_nine_v2_record_replays_on_the_eighteen_hole_course(tmp_path):
-    rec = RunRecorder(tmp_path, metadata={"mode": "course"})
-    s = RoundSession(MockBrainController(), recorder=rec)
-    s.new_round(5, start_hole=3)
-    while not s.env.done:
-        s.play_shot()
-    for r in load_run(tmp_path, rec.run_id)["shots"]:
-        r["course"]["version"] = "front-nine-v2"  # as recorded before the back nine existed
-        rp = replay_physics(r)
-        assert rp["identical"] and rp["course_compatible"] and rp["course_version_recorded"] == "front-nine-v2"
+SHOWCASE_RUNS = Path(__file__).resolve().parents[3] / "apps" / "web" / "public" / "showcase" / "runs"
+
+
+@pytest.mark.skipif(not SHOWCASE_RUNS.exists(), reason="no showcase committed")
+def test_committed_front_nine_v2_shots_replay_on_the_eighteen_hole_course():
+    # Real records made before the back nine existed (front-nine-v2). The exporter rounded their
+    # trajectories to 4 decimals, so compare within 5e-5; outcomes must match exactly.
+    replayed = 0
+    for path in sorted(SHOWCASE_RUNS.glob("*.json"))[::5]:
+        doc = json.loads(path.read_text())
+        for shot in doc["shots"][::3]:
+            assert shot["versions"]["course"] == "front-nine-v2" and shot["course"]["hole_number"] <= 9
+            rp = replay_physics(shot)
+            assert rp["course_compatible"] and rp["course_version_recorded"] == "front-nine-v2"
+            recorded = shot["trajectory"]["points"]
+            assert len(rp["trajectory"]) == len(recorded)
+            diff = max(
+                abs(a - b)
+                for pa, pb in zip(rp["trajectory"], recorded, strict=True)
+                for a, b in zip(pa, pb, strict=True)
+            )
+            assert diff < 5e-5, (shot["shot_id"], diff)
+            assert rp["outcome"] == shot["outcome"]["outcome"]
+            replayed += 1
+    assert replayed > 20
+
+
+def test_training_situations_use_only_the_front_nine():
+    from fly_golf.training.situations import generate_situations
+
+    sits = generate_situations(n_putt=5, n_green=40, n_short=40, n_full=60, seed=3)
+    holes = {s.hole for s in sits if s.hole is not None}
+    assert holes and holes <= set(range(1, 10))
+
+
+def test_drivable_thirteenth_shows_the_lay_up_from_the_tee():
+    h = HOLE_BY_NUMBER[13]
+    assert math.dist(h.tee, h.cup) > 225.0
+    assert h.target_for(h.tee) == h.route[1] and h.surface(*h.route[1]) is Surface.FAIRWAY
+    assert CourseEnvironment(h, 0).observe().target_is_pin is False
+
+
+@pytest.mark.parametrize("number", [12, 13, 18])
+def test_water_drops_are_never_wet_or_out_of_bounds(number):
+    h = HOLE_BY_NUMBER[number]
+    env = CourseEnvironment(h, 0)
+    starts = [*h.route[:-1], (h.cup[0] - 30.0, h.cup[1] - 30.0), (h.cup[0] + 25.0, h.cup[1] - 40.0)]
+    starts = [p for p in starts if h.surface(*p) not in (Surface.WATER, Surface.OOB)]
+    wet = []
+    for w in h.water:
+        x0, y0, x1, y1 = w.bbox
+        wet += [
+            (x0 + (x1 - x0) * i / 60, y0 + (y1 - y0) * j / 60)
+            for i in range(61)
+            for j in range(61)
+            if w.contains(x0 + (x1 - x0) * i / 60, y0 + (y1 - y0) * j / 60)
+        ]
+    assert len(wet) > 100
+    for start in starts:
+        for entry in wet:
+            drop = env._water_drop(start, entry)
+            assert h.surface(*drop) not in (Surface.WATER, Surface.OOB), (start, entry, drop)
 
 
 MOCK_SEEDS = (*range(7, 17), *range(100, 112))
 
 
-def test_mock_finishes_every_hole_with_a_plausible_score():
+def test_mock_finishes_every_hole_with_a_plausible_score(monkeypatch):
     # Every hole must be finishable and fair: the mock (a heuristic that reads the golf state)
-    # holes out everywhere and averages within 1.5 strokes of par on every hole.
+    # holes out everywhere and averages within 1.5 strokes of par on every hole. git_info() runs
+    # three git commands per shot; it is irrelevant here, so it is stubbed for speed.
+    import fly_golf.experiments.runner as runner
+
+    monkeypatch.setattr(runner, "git_info", lambda: {"commit": "test", "dirty": False, "describe": None})
     per_hole: dict[int, list[int]] = {n: [] for n in range(1, 19)}
     for seed in MOCK_SEEDS:
         s = play_round(seed)
@@ -541,3 +618,25 @@ def test_mock_finishes_every_hole_with_a_plausible_score():
     for n, strokes in per_hole.items():
         mean = sum(strokes) / len(strokes)
         assert mean <= HOLE_BY_NUMBER[n].par + 1.5, (n, mean)
+
+
+def test_a_round_over_a_range_of_holes_completes_on_that_range():
+    s = RoundSession(MockBrainController())
+    s.new_round(3, holes=range(1, 10))
+    while True:
+        while not s.env.done:
+            s.play_shot()
+        if s.round_complete:
+            break
+        s.next_hole()
+    summary = s._round_summary()
+    assert summary["complete"] and summary["holes"] == list(range(1, 10)) and len(summary["scorecard"]) == 9
+    assert s.state()["round_holes"] == list(range(1, 10))
+    with pytest.raises(ValueError):
+        s.start_hole(12)  # not one of this round's holes
+    nxt = s.next_hole()  # the next round keeps the range
+    assert nxt["round_seed"] == 4 and len(nxt["scorecard"]) == 9 and s.rounds[-1]["holes"] == list(range(1, 10))
+    s.new_round(5)  # no range given: all 18 again (the API's default round)
+    assert len(s.state()["scorecard"]) == 18 and s._round_summary()["holes"] == list(range(1, 19))
+    with pytest.raises(ValueError):
+        s.new_round(5, start_hole=3, holes=range(10, 19))

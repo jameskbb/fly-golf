@@ -651,9 +651,10 @@ BACK_NINE: tuple[HoleSpec, ...] = (
         13,
         "Protocerebral Bridge",
         4,
-        "A drivable par four. The protocerebral bridge links the brain's two halves with a row of "
-        "glomeruli; here a row of church-pew bunkers bridges the direct line, with water right of a "
-        "small, fast green. Lay up left, or go for it.",
+        "A short par four, drivable on paper: a flush driver over a row of church-pew bunkers reaches a "
+        "small, fast green with water to its right. The pews echo the protocerebral bridge, a row of "
+        "glomeruli spanning the brain's midline. From the tee the fly is shown the lay-up area on the "
+        "left, not the pin.",
         route=((0.0, 0.0), (-18.0, 175.0), (14.0, 242.0)),
         green=_green((16.0, 245.0), 10.0, 12.5, -0.012, 0.006),
         fairways=(
@@ -736,9 +737,9 @@ BACK_NINE: tuple[HoleSpec, ...] = (
         17,
         "Giant Fiber",
         5,
-        "The giant fiber is the fly's fastest escape pathway: one huge axon from the brain straight down "
-        "to the jump muscle's motor neuron. The longest, straightest hole on the course, a narrow chute "
-        "through the trees.",
+        "The giant fibers are the fly's fastest escape pathway: a pair of huge axons running from the "
+        "brain straight down to the jump muscles' motor neurons. The longest, straightest hole on the "
+        "course, a narrow chute through the trees.",
         route=((0.0, 0.0), (0.0, 240.0), (0.0, 450.0), (2.0, 548.0)),
         green=_green((0.0, 551.0), 11.0, 12.0, -0.006, 0.012),
         fairways=(ribbon([(0.0, 35.0), (0.0, 300.0), (0.0, 527.0)], 13.0, seed=171, wobble=0.05),),
@@ -749,7 +750,7 @@ BACK_NINE: tuple[HoleSpec, ...] = (
             blob(18.0, 544.0, 4.5, 5.5, 0.0, seed=175),
         ),
         trees_seed=17,
-        corridor_half_width_m=27.0,
+        corridor_half_width_m=30.0,
     ),
     HoleSpec(
         18,
