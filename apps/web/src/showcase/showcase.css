@@ -234,6 +234,10 @@
   font-size: 13px;
   color: var(--accent);
 }
+.splash-notice,
+.recorded-note.link-notice {
+  color: var(--accent);
+}
 .splash-error {
   color: #ff8a8a;
 }

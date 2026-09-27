@@ -9,6 +9,7 @@ import {
   holeStarts,
   holesOfRun,
   recordedHoles,
+  resolveRunLink,
   isMixed,
   mixRound,
   roundHoles,
@@ -291,5 +292,31 @@ describe("recordedHoles", () => {
     expect(recordedHoles(nine)).toHaveLength(9);
     const old = { ...index, runs: [{ ...entry, holes: undefined, holes_played: 9 }] };
     expect(recordedHoles(old)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  });
+});
+
+describe("resolveRunLink", () => {
+  it("a run in the index plays as is", () => {
+    expect(resolveRunLink(index, "trained-eighteen-s07")).toEqual({ id: "trained-eighteen-s07" });
+    expect(resolveRunLink(index, null)).toEqual({});
+  });
+  it("an old front-nine link opens its re-recorded 18-hole round, with a note", () => {
+    for (const brain of ["trained", "untrained", "mock"]) {
+      const link = resolveRunLink(index, `${brain}-front-nine-s07`);
+      expect(link.id).toBe(`${brain}-eighteen-s07`);
+      expect(link.notice).toMatch(/re-recorded as an 18-hole round/);
+    }
+  });
+  it("any other unknown run is reported, not ignored", () => {
+    for (const id of ["trained-front-nine-s99", "no-such-run"]) {
+      const link = resolveRunLink(index, id);
+      expect(link.id).toBeUndefined();
+      expect(link.notice).toMatch(/is not available in this showcase/);
+    }
+  });
+  it("the alias keeps shot numbers: holes 1-9 open on the same hole and stroke", () => {
+    // the old round's shot 14 was hole 3, stroke 1 (Pond Hop's tee shot); so is the new round's
+    const run = ShowcaseRun.parse(load("runs/trained-eighteen-s07.json"));
+    expect([holeOf(run.shots[13]), run.shots[13].stroke_number]).toEqual([3, 1]);
   });
 });

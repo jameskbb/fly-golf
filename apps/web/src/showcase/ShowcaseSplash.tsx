@@ -103,6 +103,11 @@ export function ShowcaseSplash() {
           </button>
           <a href={REPO_URL}>Method, results and caveats on GitHub</a>
         </footer>
+        {view.notice && (
+          <p className="splash-notice" role="status">
+            {view.notice}
+          </p>
+        )}
         {error && <p className="splash-error">{error}</p>}
         <p className="splash-honest">
           The wiring is real (MaleCNS v1.0, CC BY 4.0). The neuron dynamics are a model, and the senses and

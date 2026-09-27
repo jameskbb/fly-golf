@@ -224,6 +224,11 @@ export function ShowcaseControls() {
             );
           })}
         </div>
+        {view.notice && (
+          <p className="recorded-note link-notice" role="status">
+            {view.notice}
+          </p>
+        )}
         {source ? (
           <p className="recorded-note">
             Hole {hole} is from recorded round seed {source.seed}, simulated at commit{" "}

@@ -16,6 +16,7 @@ import {
   holesOfRun,
   isMixed,
   mixRound,
+  resolveRunLink,
   runsForBrain,
   showcaseState,
 } from "../lib/showcase";
@@ -77,7 +78,9 @@ export function initShowcase() {
       st().set({ course });
       setView({ index });
       const params = new URLSearchParams(window.location.search);
-      const linked = index.runs.find((r) => r.id === params.get("run"))?.id;
+      const link = resolveRunLink(index, params.get("run"));
+      if (link.notice) setView({ notice: link.notice });
+      const linked = link.id;
       if (linked) {
         const shot = Number(params.get("shot"));
         await loadRun(linked, Number.isInteger(shot) && shot > 0 ? shot - 1 : 0);

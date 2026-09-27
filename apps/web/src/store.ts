@@ -33,6 +33,7 @@ export interface ShowcaseView {
   stage: "before" | "playing" | "after"; // relative to the shot at `cursor`
   playId?: number; // the playback started for the shot at `cursor`
   started: boolean; // the splash screen has been dismissed
+  notice?: string; // about the link that opened the page (a re-recorded or unavailable run)
 }
 
 export interface AppState {

@@ -41,6 +41,33 @@ export function runsForBrain(index: ShowcaseIndex, brainId: string): ShowcaseRun
 /** The hole numbers a recorded run has strokes on, in the order they were played. */
 export const holesOfRun = (run: ShowcaseRun): number[] => [...holeStarts(run.shots).keys()];
 
+/** How a `?run=` link resolves against this showcase. */
+export interface RunLink {
+  id?: string; // the run to play, if any
+  notice?: string; // what to tell the viewer about the link (re-recorded, or not available)
+}
+
+/**
+ * Resolve a `?run=<id>` link. A run in the index plays as is. Links published before the back nine
+ * existed point at `<brain>-front-nine-sNN`; those rounds were re-recorded as 18-hole rounds
+ * `<brain>-eighteen-sNN` whose holes 1-9 are the same strokes, so the old link (and its shot
+ * number) opens the new round, with a note. Any other unknown id is reported, never ignored.
+ */
+export function resolveRunLink(index: ShowcaseIndex, requested: string | null): RunLink {
+  if (!requested) return {};
+  if (index.runs.some((r) => r.id === requested)) return { id: requested };
+  const old = /^(.+)-front-nine-s(\d+)$/.exec(requested);
+  const alias = old ? `${old[1]}-eighteen-s${old[2]}` : undefined;
+  if (alias && index.runs.some((r) => r.id === alias))
+    return {
+      id: alias,
+      notice: `The recorded run "${requested}" was re-recorded as an 18-hole round: this is "${alias}", whose holes 1 to 9 are the same strokes.`,
+    };
+  return {
+    notice: `The recorded run "${requested}" is not available in this showcase, so a new mix of recorded holes is shown instead.`,
+  };
+}
+
 /** Every hole the index says was recorded: by one brain's solo rounds (the rounds its mix is drawn
  *  from), or by any round. An entry without a hole list counts its holes played from hole 1. */
 export function recordedHoles(index: ShowcaseIndex, brainId?: string): number[] {
