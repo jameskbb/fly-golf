@@ -4600,7 +4600,7 @@
     111
    ],
    "git_commit": "6eceef0865d0f878b5ed9ec0ff08c6acb89d9b86",
-   "report": "/tmp/claude-1000/-home-james-src-fruit-fly-golf/392d8732-7352-4fe8-8510-e8938bb4dd0b/scratchpad/bench/trained-100.json"
+   "report": "runs/bench/trained-18-s100.json"
   }
  }
 }

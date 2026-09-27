@@ -527,7 +527,7 @@
     {
       "id": "trained-eighteen-s07",
       "title": "Trained MaleCNS - Eighteen, round 7",
-      "description": "The club member's round seed 7, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 7, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s07.json",
       "controller": {
         "id": "malecns-trained",
@@ -579,7 +579,7 @@
     {
       "id": "trained-eighteen-s08",
       "title": "Trained MaleCNS - Eighteen, round 8",
-      "description": "The club member's round seed 8, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 8, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s08.json",
       "controller": {
         "id": "malecns-trained",
@@ -631,7 +631,7 @@
     {
       "id": "trained-eighteen-s09",
       "title": "Trained MaleCNS - Eighteen, round 9",
-      "description": "The club member's round seed 9, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 9, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s09.json",
       "controller": {
         "id": "malecns-trained",
@@ -683,7 +683,7 @@
     {
       "id": "trained-eighteen-s10",
       "title": "Trained MaleCNS - Eighteen, round 10",
-      "description": "The club member's round seed 10, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 10, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s10.json",
       "controller": {
         "id": "malecns-trained",
@@ -735,7 +735,7 @@
     {
       "id": "trained-eighteen-s11",
       "title": "Trained MaleCNS - Eighteen, round 11",
-      "description": "The club member's round seed 11, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 11, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s11.json",
       "controller": {
         "id": "malecns-trained",
@@ -787,7 +787,7 @@
     {
       "id": "trained-eighteen-s12",
       "title": "Trained MaleCNS - Eighteen, round 12",
-      "description": "The club member's round seed 12, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 12, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s12.json",
       "controller": {
         "id": "malecns-trained",
@@ -839,7 +839,7 @@
     {
       "id": "trained-eighteen-s13",
       "title": "Trained MaleCNS - Eighteen, round 13",
-      "description": "The club member's round seed 13, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 13, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s13.json",
       "controller": {
         "id": "malecns-trained",
@@ -891,7 +891,7 @@
     {
       "id": "trained-eighteen-s14",
       "title": "Trained MaleCNS - Eighteen, round 14",
-      "description": "The club member's round seed 14, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 14, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s14.json",
       "controller": {
         "id": "malecns-trained",
@@ -943,7 +943,7 @@
     {
       "id": "trained-eighteen-s15",
       "title": "Trained MaleCNS - Eighteen, round 15",
-      "description": "The club member's round seed 15, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 15, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s15.json",
       "controller": {
         "id": "malecns-trained",
@@ -995,7 +995,7 @@
     {
       "id": "trained-eighteen-s16",
       "title": "Trained MaleCNS - Eighteen, round 16",
-      "description": "The club member's round seed 16, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
+      "description": "The club member's round seed 16, one of ten (seeds 7-16) over all eighteen holes. Every stroke starts from 400 ms of simulated activity across all 166,700 MaleCNS neurons, read out by readout 20260917T165536Z, which was fitted offline on practice shots from the practice green and the front nine only. The connectome itself never learns. It never practised on holes 10 to 18, so its back nine is played on ground it has not seen.",
       "file": "runs/trained-eighteen-s16.json",
       "controller": {
         "id": "malecns-trained",
