@@ -9,7 +9,7 @@ import pytest
 from fly_golf.api.schemas import ShotRecordModel
 from fly_golf.brain.mock import MockBrainController
 from fly_golf.cli import main
-from fly_golf.experiments.runner import PuttingSession, RoundSession, RunRecorder, course_version_compatible
+from fly_golf.experiments.runner import PuttingSession, RoundSession, RunRecorder
 from fly_golf.experiments.showcase import (
     REMOVED_PATH,
     SHOWCASE_FORMAT,
@@ -20,6 +20,10 @@ from fly_golf.experiments.showcase import (
 from fly_golf.golf.payload import course_payload
 
 COMMITTED = Path(__file__).resolve().parents[3] / "apps" / "web" / "public" / "showcase"
+# Real records made before the back nine existed: holes 1, 3 and 8 of the committed front-nine-v2
+# showcase round mock-front-nine-s07 (from git history), every stroke unchanged.
+FRONT_NINE_V2 = Path(__file__).resolve().parent / "fixtures" / "front_nine_v2_mock_s07.json"
+FRONT_NINE_V2_HOLES = [1, 3, 8]
 
 
 def record_round(runs_dir: Path, holes: int = 2, seed: int = 3) -> str:
@@ -173,13 +177,11 @@ def test_export_an_eighteen_hole_round(tmp_path):
 
 
 def front_nine_v2_run(runs_dir: Path) -> str:
-    """A run as main's code (front-nine-v2) wrote it: real shots from a committed showcase round,
-    with a 9-entry recorded scorecard in run.json."""
-    index = json.loads((COMMITTED / "index.json").read_text())
-    entry = next(r for r in index["runs"] if r["is_mock"] and r["round_complete"])
-    doc = json.loads((COMMITTED / entry["file"]).read_text())
-    rnd = {k: v for k, v in doc["round"].items() if k != "holes"}  # front-nine-v2 rounds had no "holes"
-    assert len(rnd["scorecard"]) == 9
+    """A run as main's code (front-nine-v2) wrote it: real shots from the front-nine-v2 fixture, with
+    its recorded scorecard in run.json and no "holes" (front-nine-v2 rounds had none)."""
+    doc = json.loads(FRONT_NINE_V2.read_text())
+    rnd = dict(doc["round"])
+    assert "holes" not in rnd and [c["hole"] for c in rnd["scorecard"]] == FRONT_NINE_V2_HOLES
     run_id = "20260901T000000Z-f9v2"
     d = runs_dir / run_id
     d.mkdir(parents=True)
@@ -190,27 +192,35 @@ def front_nine_v2_run(runs_dir: Path) -> str:
     return run_id
 
 
-@pytest.mark.skipif(not (COMMITTED / "index.json").exists(), reason="no showcase committed")
+def test_front_nine_v2_fixture_is_real_old_data():
+    doc = json.loads(FRONT_NINE_V2.read_text())
+    assert doc["course_version"] == "front-nine-v2" and len(doc["shots"]) >= 10
+    assert sorted({s["course"]["hole_number"] for s in doc["shots"]}) == FRONT_NINE_V2_HOLES
+    for shot in doc["shots"]:
+        ShotRecordModel.model_validate(shot)
+        assert shot["versions"]["course"] == "front-nine-v2" and "holes" not in shot["course"]
+
+
 def test_export_a_real_front_nine_v2_run(tmp_path):
     runs = tmp_path / "runs"
     run_id = front_nine_v2_run(runs)
     meta = json.loads((runs / run_id / "run.json").read_text())
-    assert meta["versions"]["course"] == "front-nine-v2" and len(meta["round"]["scorecard"]) == 9
+    assert meta["versions"]["course"] == "front-nine-v2"
     out = tmp_path / "out"
     report = export_showcase(runs, run_id, out, slug="mock-front-nine-s07", title="Mock - front nine")
     rnd = report["round"]
-    assert rnd["complete"] and rnd["holes"] == list(range(1, 10)) and len(rnd["scorecard"]) == 9
+    assert rnd["complete"] and rnd["holes"] == FRONT_NINE_V2_HOLES and len(rnd["scorecard"]) == 3
     assert [(c["hole"], c["strokes"]) for c in rnd["scorecard"]] == [
         (c["hole"], c["strokes"]) for c in meta["round"]["scorecard"]
     ]
     [entry] = json.loads((out / "index.json").read_text())["runs"]
     doc = json.loads((out / entry["file"]).read_text())
     for d in (entry, doc):
-        assert d["holes"] == list(range(1, 10))
+        assert d["holes"] == FRONT_NINE_V2_HOLES
         assert d["course_version"] == "front-nine-v2" and d["course_version_exported_with"] == "eighteen-v1"
     assert entry["round_complete"] is True
     # A wrong recorded scorecard is still caught, hole by hole.
-    meta["round"]["scorecard"][3]["strokes"] += 1
+    meta["round"]["scorecard"][1]["strokes"] += 1
     meta["rounds"] = [meta["round"]]
     (runs / run_id / "run.json").write_text(json.dumps(meta))
     with pytest.raises(ShowcaseExportError, match="does not match"):
@@ -252,17 +262,7 @@ def test_committed_showcase_is_valid_and_matches_the_code():
     assert index["featured"] in {r["id"] for r in index["runs"]}
     # the course the showcase draws is the course this code plays
     committed = json.loads((COMMITTED / index["course"]).read_text())
-    current = json.loads(json.dumps(course_payload()))
-    if committed["version"] == current["version"]:
-        assert committed == current
-    else:
-        # Exported before the back nine existed: every hole it draws must still be, field for
-        # field, the hole this code plays (front-nine-v2 holes 1-9 are unchanged).
-        assert committed["clubs"] == current["clubs"]
-        for hole in committed["holes"]:
-            assert course_version_compatible(committed["version"], hole["number"])
-            now = current["holes"][hole["number"] - 1]
-            assert {k: now[k] for k in hole} == hole
+    assert committed == json.loads(json.dumps(course_payload()))
     for entry in index["runs"]:
         doc = json.loads((COMMITTED / entry["file"]).read_text())
         assert doc["id"] == entry["id"] and len(doc["shots"]) == entry["shots"]

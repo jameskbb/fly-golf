@@ -535,31 +535,29 @@ def test_eighteen_hole_round_records_replay_exactly(tmp_path):
         assert replay_controller(r, MockBrainController())["identical"]
 
 
-SHOWCASE_RUNS = Path(__file__).resolve().parents[3] / "apps" / "web" / "public" / "showcase" / "runs"
+# Real records made before the back nine existed (front-nine-v2): holes 1, 3 and 8 of the old
+# committed showcase round mock-front-nine-s07, kept as a test fixture.
+FRONT_NINE_V2 = Path(__file__).resolve().parent / "fixtures" / "front_nine_v2_mock_s07.json"
 
 
-@pytest.mark.skipif(not SHOWCASE_RUNS.exists(), reason="no showcase committed")
-def test_committed_front_nine_v2_shots_replay_on_the_eighteen_hole_course():
-    # Real records made before the back nine existed (front-nine-v2). The exporter rounded their
-    # trajectories to 4 decimals, so compare within 5e-5; outcomes must match exactly.
+def test_front_nine_v2_shots_replay_on_the_eighteen_hole_course():
+    # The exporter rounded their trajectories to 4 decimals, so compare within 5e-5; outcomes must
+    # match exactly.
+    doc = json.loads(FRONT_NINE_V2.read_text())
     replayed = 0
-    for path in sorted(SHOWCASE_RUNS.glob("*.json"))[::5]:
-        doc = json.loads(path.read_text())
-        for shot in doc["shots"][::3]:
-            assert shot["versions"]["course"] == "front-nine-v2" and shot["course"]["hole_number"] <= 9
-            rp = replay_physics(shot)
-            assert rp["course_compatible"] and rp["course_version_recorded"] == "front-nine-v2"
-            recorded = shot["trajectory"]["points"]
-            assert len(rp["trajectory"]) == len(recorded)
-            diff = max(
-                abs(a - b)
-                for pa, pb in zip(rp["trajectory"], recorded, strict=True)
-                for a, b in zip(pa, pb, strict=True)
-            )
-            assert diff < 5e-5, (shot["shot_id"], diff)
-            assert rp["outcome"] == shot["outcome"]["outcome"]
-            replayed += 1
-    assert replayed > 20
+    for shot in doc["shots"]:
+        assert shot["versions"]["course"] == "front-nine-v2" and shot["course"]["hole_number"] <= 9
+        rp = replay_physics(shot)
+        assert rp["course_compatible"] and rp["course_version_recorded"] == "front-nine-v2"
+        recorded = shot["trajectory"]["points"]
+        assert len(rp["trajectory"]) == len(recorded)
+        diff = max(
+            abs(a - b) for pa, pb in zip(rp["trajectory"], recorded, strict=True) for a, b in zip(pa, pb, strict=True)
+        )
+        assert diff < 5e-5, (shot["shot_id"], diff)
+        assert rp["outcome"] == shot["outcome"]["outcome"]
+        replayed += 1
+    assert replayed >= 10
 
 
 def test_training_situations_use_only_the_front_nine():
