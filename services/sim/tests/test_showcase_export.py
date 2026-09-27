@@ -168,21 +168,81 @@ def test_export_an_eighteen_hole_round(tmp_path):
     )
     index = json.loads((out / "index.json").read_text())
     assert index["runs"][0]["holes_played"] == 18 and index["runs"][0]["round_complete"] is True
+    assert index["runs"][0]["holes"] == doc["holes"] == list(range(1, 19))
+    assert index["runs"][0]["course_version"] == "eighteen-v1"
 
 
-def test_export_accepts_front_nine_v2_records_of_the_front_nine(run, tmp_path):
+def front_nine_v2_run(runs_dir: Path) -> str:
+    """A run as main's code (front-nine-v2) wrote it: real shots from a committed showcase round,
+    with a 9-entry recorded scorecard in run.json."""
+    index = json.loads((COMMITTED / "index.json").read_text())
+    entry = next(r for r in index["runs"] if r["is_mock"] and r["round_complete"])
+    doc = json.loads((COMMITTED / entry["file"]).read_text())
+    rnd = {k: v for k, v in doc["round"].items() if k != "holes"}  # front-nine-v2 rounds had no "holes"
+    assert len(rnd["scorecard"]) == 9
+    run_id = "20260901T000000Z-f9v2"
+    d = runs_dir / run_id
+    d.mkdir(parents=True)
+    meta = {"record_type": "run", "run_id": run_id, "mode": "course", "round": rnd, "rounds": [rnd]}
+    meta["versions"] = doc["source"]["versions"]
+    (d / "run.json").write_text(json.dumps(meta))
+    (d / "shots.jsonl").write_text("".join(json.dumps(shot) + "\n" for shot in doc["shots"]))
+    return run_id
+
+
+@pytest.mark.skipif(not (COMMITTED / "index.json").exists(), reason="no showcase committed")
+def test_export_a_real_front_nine_v2_run(tmp_path):
+    runs = tmp_path / "runs"
+    run_id = front_nine_v2_run(runs)
+    meta = json.loads((runs / run_id / "run.json").read_text())
+    assert meta["versions"]["course"] == "front-nine-v2" and len(meta["round"]["scorecard"]) == 9
+    out = tmp_path / "out"
+    report = export_showcase(runs, run_id, out, slug="mock-front-nine-s07", title="Mock - front nine")
+    rnd = report["round"]
+    assert rnd["complete"] and rnd["holes"] == list(range(1, 10)) and len(rnd["scorecard"]) == 9
+    assert [(c["hole"], c["strokes"]) for c in rnd["scorecard"]] == [
+        (c["hole"], c["strokes"]) for c in meta["round"]["scorecard"]
+    ]
+    [entry] = json.loads((out / "index.json").read_text())["runs"]
+    doc = json.loads((out / entry["file"]).read_text())
+    for d in (entry, doc):
+        assert d["holes"] == list(range(1, 10))
+        assert d["course_version"] == "front-nine-v2" and d["course_version_exported_with"] == "eighteen-v1"
+    assert entry["round_complete"] is True
+    # A wrong recorded scorecard is still caught, hole by hole.
+    meta["round"]["scorecard"][3]["strokes"] += 1
+    meta["rounds"] = [meta["round"]]
+    (runs / run_id / "run.json").write_text(json.dumps(meta))
+    with pytest.raises(ShowcaseExportError, match="does not match"):
+        export_showcase(runs, run_id, tmp_path / "out2", slug="x", title="Mock")
+
+
+def test_export_refuses_an_incompatible_course_version(run, tmp_path):
     runs, run_id = run
     path = runs / run_id / "shots.jsonl"
     shots = [json.loads(line) for line in path.read_text().splitlines()]
-    for s in shots:
-        s["versions"]["course"] = s["course"]["version"] = "front-nine-v2"
-    path.write_text("".join(json.dumps(s) + "\n" for s in shots))
-    report = export_showcase(runs, run_id, tmp_path / "out", slug="old", title="Mock")
-    assert report["round"]["holes_played"] == 2
     shots[0]["versions"]["course"] = "front-nine-v1"
     path.write_text("".join(json.dumps(s) + "\n" for s in shots))
     with pytest.raises(ShowcaseExportError, match="wrong holes"):
-        export_showcase(runs, run_id, tmp_path / "out2", slug="old", title="Mock")
+        export_showcase(runs, run_id, tmp_path / "out", slug="old", title="Mock")
+
+
+def test_export_a_back_nine_round_is_complete(tmp_path):
+    runs = tmp_path / "runs"
+    rec = RunRecorder(runs, metadata={"mode": "course"})
+    session = RoundSession(MockBrainController(), recorder=rec)
+    session.new_round(9, holes=range(10, 19))
+    while True:
+        while not session.env.done:
+            session.play_shot()
+        if session.round_complete:
+            break
+        session.next_hole()
+    report = export_showcase(runs, rec.run_id, tmp_path / "out", slug="mock-back", title="Mock - back nine")
+    assert report["round"]["complete"] and report["round"]["holes"] == list(range(10, 19))
+    [entry] = json.loads((tmp_path / "out" / "index.json").read_text())["runs"]
+    assert entry["round_complete"] is True and entry["holes"] == list(range(10, 19))
+    assert entry["course_version"] == "eighteen-v1" and "course_version_exported_with" not in entry
 
 
 @pytest.mark.skipif(not (COMMITTED / "index.json").exists(), reason="no showcase committed")
@@ -211,7 +271,6 @@ def test_committed_showcase_is_valid_and_matches_the_code():
             if not shot["controller"]["is_mock"]:
                 assert shot["neural_summary"]["neuron_count"] > 0
         assert entry["is_mock"] == any(s["controller"]["is_mock"] for s in doc["shots"])
-        card = {c["hole"]: c for c in scorecard_from_shots(doc["shots"])}
         recorded = {c["hole"]: c["strokes"] for c in doc["round"]["scorecard"]}
-        assert {n: card[n]["strokes"] for n in recorded} == recorded
-        assert all(c["strokes"] is None for n, c in card.items() if n not in recorded)
+        card = scorecard_from_shots(doc["shots"], sorted(recorded))
+        assert {c["hole"]: c["strokes"] for c in card} == recorded
