@@ -159,6 +159,16 @@ export const Launch = z.looseObject({
   contact: z.boolean(),
 });
 
+/** Which nine a hole belongs to. Holes recorded before the back nine existed have no `nine`:
+ *  they are front-nine holes. */
+export const NineId = z.enum(["front", "back"]);
+export type NineId = z.infer<typeof NineId>;
+
+/** How a hole is lit and painted (apps/web/src/scene/theme.ts). The front nine is "parkland" and
+ *  the back nine "dusk"; an unknown theme is read as a string and drawn as parkland. */
+export const HOLE_THEMES = ["parkland", "dusk"] as const;
+export type HoleTheme = (typeof HOLE_THEMES)[number];
+
 export const HoleSummary = z.looseObject({
   number: z.number().int(),
   name: z.string(),
@@ -168,6 +178,8 @@ export const HoleSummary = z.looseObject({
   tee: XY,
   cup: XY,
   has_water: z.boolean(),
+  nine: NineId.default("front"), // absent before the course had 18 holes
+  theme: z.string().default("parkland"),
 });
 
 export const CourseHole = HoleSummary.extend({
@@ -185,12 +197,24 @@ export const CourseHole = HoleSummary.extend({
 });
 export type CourseHole = z.infer<typeof CourseHole>;
 
+/** One nine of the course: its holes in playing order and their par. A course without `nines`
+ *  (recorded before the back nine existed) is a single front nine. */
+export const CourseNine = z.looseObject({
+  id: z.string(),
+  name: z.string(),
+  holes: z.array(z.number().int()),
+  par: z.number().int(),
+});
+export type CourseNine = z.infer<typeof CourseNine>;
+
 export const CourseSummary = z.looseObject({
   name: z.string(),
   version: z.string(),
   par: z.number().int(),
   holes: z.array(HoleSummary),
+  nines: z.array(CourseNine).optional(),
 });
+export type CourseSummary = z.infer<typeof CourseSummary>;
 
 export const CoursePayload = z.looseObject({
   name: z.string(),
@@ -198,6 +222,7 @@ export const CoursePayload = z.looseObject({
   par: z.number().int(),
   holes: z.array(CourseHole),
   clubs: z.array(Club),
+  nines: z.array(CourseNine).optional(),
 });
 export type CoursePayload = z.infer<typeof CoursePayload>;
 
@@ -320,7 +345,9 @@ export const ShotRecord = z.looseObject({
   course: z
     .looseObject({ version: z.string(), hole_number: z.number().int(), round_seed: z.number().int() })
     .optional(),
-  score: z.looseObject({ hole_strokes: z.number().int(), strokes: z.number().int(), to_par: z.number().int() }).optional(),
+  score: z
+    .looseObject({ hole_strokes: z.number().int(), strokes: z.number().int(), to_par: z.number().int() })
+    .optional(),
 });
 export type ShotRecord = z.infer<typeof ShotRecord>;
 
@@ -344,7 +371,12 @@ export const SessionState = z.looseObject({
   round_seed: z.number().int().optional(),
   scorecard: z.array(ScorecardEntry).optional(),
   totals: z
-    .looseObject({ strokes: z.number().int(), par_played: z.number().int(), to_par: z.number().int(), holes_played: z.number().int() })
+    .looseObject({
+      strokes: z.number().int(),
+      par_played: z.number().int(),
+      to_par: z.number().int(),
+      holes_played: z.number().int(),
+    })
     .optional(),
   round_complete: z.boolean().optional(),
   // ids of every controller that has played a stroke this round / on this green

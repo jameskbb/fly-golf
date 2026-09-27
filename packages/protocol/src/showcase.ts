@@ -37,6 +37,10 @@ export const ShowcaseRunSummary = z.looseObject({
   source_run_id: z.string(),
   recorded_utc: z.string().nullish(),
   git_commit: z.string(),
+  // the hole numbers the run has strokes on and its course version (absent from older exports:
+  // the web app then reads the run itself to find out which holes it can draw from it)
+  holes: z.array(z.number().int()).optional(),
+  course_version: z.string().optional(),
 });
 export type ShowcaseRunSummary = z.infer<typeof ShowcaseRunSummary>;
 
