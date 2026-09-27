@@ -2,13 +2,15 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CoursePayload, SessionState, ShowcaseIndex, ShowcaseRun } from "@fly-golf/protocol";
+import { CoursePayload, SessionState, ShowcaseIndex, ShowcaseRun, type ShotRecord } from "@fly-golf/protocol";
 import {
   drawHoles,
   holeOf,
   holeStarts,
+  holesOfRun,
   isMixed,
   mixRound,
+  roundHoles,
   runsForBrain,
   scorecardAfter,
   showcaseState,
@@ -138,5 +140,148 @@ describe("mixed rounds", () => {
     const [id] = runs.keys();
     expect(() => mixRound(runs, new Map([[99, id]]))).toThrow();
     expect(() => mixRound(runs, new Map([[1, "not-loaded"]]))).toThrow();
+  });
+});
+
+/**
+ * The course growing to 18 holes. Until the showcase is re-recorded the committed data is the front
+ * nine only, so these tests build an 18-hole course (the front nine again as holes 10-18, marked
+ * back nine / dusk) and 18-hole rounds (one recorded front nine, then another recorded front nine
+ * played again as the back nine), and mix them with the old nine-hole rounds.
+ */
+describe("18 holes", () => {
+  const BACK = 9;
+  const runs = index.runs.map((e) => ShowcaseRun.parse(load(e.file)));
+  const course18 = CoursePayload.parse({
+    ...course,
+    name: "Fly Golf National",
+    version: "eighteen-v1",
+    par: course.par * 2,
+    holes: [
+      ...course.holes,
+      ...course.holes.map((h) => ({ ...h, number: h.number + BACK, nine: "back", theme: "dusk" })),
+    ],
+    nines: [
+      { id: "front", name: "Front Nine", holes: course.holes.map((h) => h.number), par: course.par },
+      {
+        id: "back",
+        name: "The Neuropil Nine",
+        holes: course.holes.map((h) => h.number + BACK),
+        par: course.par,
+      },
+    ],
+  });
+  const asBack = (shot: ShotRecord): ShotRecord => ({
+    ...shot,
+    hole_index: shot.hole_index + BACK,
+    scenario: { ...shot.scenario, hole_number: holeOf(shot) + BACK },
+    hole: shot.hole && { ...shot.hole, number: shot.hole.number + BACK },
+    course: shot.course && {
+      ...shot.course,
+      version: "eighteen-v1",
+      hole_number: shot.course.hole_number + BACK,
+    },
+  });
+  /** An 18-hole round: `front`'s nine, then `back`'s nine played as holes 10-18. */
+  const eighteen = (id: string, front: ShowcaseRun, back: ShowcaseRun): ShowcaseRun => ({
+    ...front,
+    id,
+    course_version: "eighteen-v1",
+    shots: [...front.shots, ...back.shots.map(asBack)],
+    round: {
+      ...front.round,
+      scorecard: [
+        ...front.round.scorecard,
+        ...back.round.scorecard.map((c) => ({ ...c, hole: c.hole + BACK })),
+      ],
+    },
+  });
+  const trained = runs.filter(
+    (r) => r.controllers_used.length === 1 && r.controllers_used[0] === "malecns-trained",
+  );
+  const [a, b, c] = trained;
+  const full1 = eighteen("trained-eighteen-1", a, b);
+  const full2 = eighteen("trained-eighteen-2", b, c);
+  const pool = new Map([full1, full2, a, b, c].map((r) => [r.id, r]));
+  const holes18 = course18.holes.map((h) => h.number);
+
+  it("parses: every back-nine hole is dusk and the nines are named", () => {
+    expect(course18.holes).toHaveLength(18);
+    expect(course18.holes.filter((h) => h.theme === "dusk").map((h) => h.number)).toEqual(
+      holes18.slice(BACK),
+    );
+    expect(course18.nines?.[1].name).toBe("The Neuropil Nine");
+  });
+
+  it("knows which holes a run has", () => {
+    expect(holesOfRun(a)).toEqual(holes18.slice(0, BACK));
+    expect(holesOfRun(full1)).toEqual(holes18);
+  });
+
+  it("draws a back-nine hole only from a round that played it", () => {
+    const has = (id: string, hole: number) => holesOfRun(pool.get(id)!).includes(hole);
+    for (const r of [0, 0.3, 0.6, 0.999]) {
+      const picks = drawHoles(holes18, [...pool.keys()], () => r, has);
+      expect([...picks.keys()]).toEqual(holes18);
+      for (const [hole, id] of picks) expect(has(id, hole)).toBe(true);
+    }
+    // with only front-nine rounds, the back nine is not drawn at all
+    const frontOnly = drawHoles(holes18, [a.id, b.id], () => 0.5, has);
+    expect([...frontOnly.keys()]).toEqual(holes18.slice(0, BACK));
+  });
+
+  it("an 18-hole mix of old and new rounds: 18 real holes, the card adds up, the round completes", () => {
+    const has = (id: string, hole: number) => holesOfRun(pool.get(id)!).includes(hole);
+    let r = 0;
+    const picks = drawHoles(holes18, [...pool.keys()], () => (r = (r + 0.37) % 1), has);
+    const mixed = mixRound(pool, picks);
+    expect(new Set(mixed.holeSources.map((s) => s.run)).size).toBeGreaterThan(1);
+    expect(mixed.round.scorecard.map((e) => e.hole)).toEqual(holes18);
+    expect([...holeStarts(mixed.shots).keys()]).toEqual(holes18);
+    const final = SessionState.parse(showcaseState(mixed, course18, mixed.shots.length - 1, "after"));
+    expect(final.scorecard).toHaveLength(18);
+    expect(final.round_complete).toBe(true);
+    expect(final.course?.nines).toHaveLength(2);
+    const want = holes18.reduce(
+      (sum, n) => sum + (pool.get(picks.get(n)!)!.round.scorecard.find((e) => e.hole === n)?.strokes ?? 0),
+      0,
+    );
+    expect(final.totals?.strokes).toBe(want);
+    expect(mixed.round.strokes).toBe(want);
+    const turn = holeStarts(mixed.shots).get(10)!;
+    const atTurn = showcaseState(mixed, course18, turn, "before");
+    expect(atTurn.scorecard?.filter((e) => e.strokes !== null).map((e) => e.hole)).toEqual(
+      holes18.slice(0, BACK),
+    );
+    expect(atTurn.round_complete).toBe(false);
+  });
+
+  it("an old front-nine round shown with the 18-hole course is still a nine-hole round", () => {
+    const last = showcaseState(a, course18, a.shots.length - 1, "after");
+    expect(last.scorecard?.map((e) => e.hole)).toEqual(holes18.slice(0, BACK));
+    expect(last.round_complete).toBe(true);
+    // a mix drawn only from front-nine rounds, likewise
+    const mixed = mixRound(
+      pool,
+      drawHoles(
+        holes18,
+        [a.id, b.id],
+        () => 0.2,
+        (id, h) => holesOfRun(pool.get(id)!).includes(h),
+      ),
+    );
+    expect(showcaseState(mixed, course18, 0, "before").scorecard).toHaveLength(BACK);
+  });
+
+  it("a single recorded 18-hole run replays exactly (deep links)", () => {
+    const card = scorecardAfter(full1.shots, course18, full1.shots.length, roundHoles(full1, course18));
+    expect(card.map((e) => [e.hole, e.strokes, e.holed])).toEqual(
+      full1.round.scorecard.map((e) => [e.hole, e.strokes, e.holed]),
+    );
+    const k = full1.shots.findIndex((s) => holeOf(s) === 12);
+    const before = SessionState.parse(showcaseState(full1, course18, k, "before"));
+    expect(before.hole_number).toBe(12);
+    expect(before.hole?.theme).toBe("dusk");
+    expect(before.ball).toEqual(full1.shots[k].initial_state.ball);
   });
 });

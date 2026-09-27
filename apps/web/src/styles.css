@@ -620,7 +620,7 @@ code,
   font-family: var(--mono);
 }
 
-/* ---------- scorecard (front nine) */
+/* ---------- scorecard: one nine (OUT), or the 18-hole card (OUT, then IN and TOT) */
 .scorecard {
   position: absolute;
   left: 16px;
@@ -658,10 +658,30 @@ code,
   color: var(--muted);
   font-weight: 600;
 }
-.scorecard th:last-child,
-.scorecard td:last-child {
+.scorecard .sub {
   border-left: 1px solid var(--line);
   font-weight: 700;
+}
+/* The two nines sit side by side when the card has room and wrap under each other when not. */
+.sc-nines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.sc-nine-name {
+  font: 700 11px var(--display);
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin: 2px 0 1px 5px;
+}
+.sc-nine.nine-back .sc-nine-name {
+  color: #f0b27a; /* the back nine is played at dusk */
+}
+.scorecard.eighteen th,
+.scorecard.eighteen td {
+  min-width: 24px;
+  padding: 2px 4px;
 }
 .hole-btn {
   font: 700 12px var(--mono);

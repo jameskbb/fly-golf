@@ -38,13 +38,27 @@ export function runsForBrain(index: ShowcaseIndex, brainId: string): ShowcaseRun
   return index.runs.filter((r) => r.controllers_used.length === 1 && r.controllers_used[0] === brainId);
 }
 
-/** For every hole, one of the run ids, at random. */
+/** The hole numbers a recorded run has strokes on, in the order they were played. */
+export const holesOfRun = (run: ShowcaseRun): number[] => [...holeStarts(run.shots).keys()];
+
+/**
+ * For every hole, one of the run ids that recorded it, at random. `has` says whether a run has a
+ * hole (by default every run has every hole); a hole no run has is left out of the draw. While
+ * recordings move from the front nine to 18 holes a brain can have both kinds of round, and a
+ * back-nine hole must only come from a round that played it.
+ */
 export function drawHoles(
   holes: number[],
   ids: string[],
   random: () => number = Math.random,
+  has: (id: string, hole: number) => boolean = () => true,
 ): Map<number, string> {
-  return new Map(holes.map((n) => [n, ids[Math.floor(random() * ids.length) % ids.length]]));
+  const out = new Map<number, string>();
+  for (const n of holes) {
+    const from = ids.filter((id) => has(id, n));
+    if (from.length) out.set(n, from[Math.floor(random() * from.length) % from.length]);
+  }
+  return out;
 }
 
 /**
@@ -65,7 +79,48 @@ export function mixRound(runs: Map<string, ShowcaseRun>, picks: Map<number, stri
     holeSources.push({ hole, run: id, seed: run.round.seed, commit: run.source.git.commit });
   }
   if (!holeSources.length) throw new Error("a mixed round needs at least one hole");
-  return { ...runs.get(holeSources[0].run)!, shots, holeSources };
+  // The round's own card: each drawn hole as its recording scored it.
+  const scorecard = holeSources.map(({ hole, run }) => {
+    const src = runs.get(run)!;
+    const entry = src.round.scorecard.find((c) => c.hole === hole);
+    const strokes = src.shots.filter((s) => holeOf(s) === hole);
+    const last = strokes[strokes.length - 1];
+    return (
+      entry ?? {
+        hole,
+        par: last.hole?.par ?? 0,
+        strokes: last.outcome.episode_state !== "ready" ? (last.score?.hole_strokes ?? null) : null,
+        holed: last.outcome.episode_state !== "ready" ? last.outcome.holed : null,
+        controllers: [...new Set(strokes.map((s) => s.controller.id))],
+      }
+    );
+  });
+  const first = runs.get(holeSources[0].run)!;
+  const totals = totalsOf(scorecard);
+  return {
+    ...first,
+    shots,
+    holeSources,
+    round: {
+      ...first.round,
+      scorecard,
+      ...totals,
+      complete: scorecard.every((c) => c.strokes !== null),
+      controllers_used: controllersUsed(scorecard),
+    },
+  };
+}
+
+/**
+ * The holes on a recorded round's card, in course order: the holes its recorder wrote on the card
+ * (nine for a round recorded on the front-nine course, eighteen for a full round), so a front-nine
+ * recording shown with the 18-hole course is still a nine-hole round. Holes the course does not
+ * have are dropped; with no usable card, every hole of the course.
+ */
+export function roundHoles(run: ShowcaseRun, course: CoursePayload): number[] {
+  const onCard = new Set(run.round.scorecard.map((c) => c.hole));
+  const holes = course.holes.map((h) => h.number).filter((n) => onCard.has(n));
+  return holes.length ? holes : course.holes.map((h) => h.number);
 }
 
 /** Index of the first recorded shot on each hole, in the order the holes were played. */
@@ -77,15 +132,24 @@ export function holeStarts(shots: ShotRecord[]): Map<number, number> {
   return out;
 }
 
-/** The scorecard once the first `count` shots have been played. */
-export function scorecardAfter(shots: ShotRecord[], course: CoursePayload, count: number): ScorecardEntry[] {
-  const card = course.holes.map((h) => ({
-    hole: h.number,
-    par: h.par,
-    strokes: null as number | null,
-    holed: null as boolean | null,
-    controllers: [] as string[],
-  }));
+/** The scorecard once the first `count` shots have been played: every hole of the course, or only
+ *  `holes` when given. */
+export function scorecardAfter(
+  shots: ShotRecord[],
+  course: CoursePayload,
+  count: number,
+  holes?: number[],
+): ScorecardEntry[] {
+  const only = holes && new Set(holes);
+  const card = course.holes
+    .filter((h) => !only || only.has(h.number))
+    .map((h) => ({
+      hole: h.number,
+      par: h.par,
+      strokes: null as number | null,
+      holed: null as boolean | null,
+      controllers: [] as string[],
+    }));
   const byHole = new Map(card.map((c) => [c.hole, c]));
   for (const shot of shots.slice(0, count)) {
     const entry = byHole.get(holeOf(shot));
@@ -131,7 +195,7 @@ export function showcaseState(
   const next = shots[k + 1];
   const continues =
     stage === "after" && !!next && holeOf(next) === number && next.hole_index === shot.hole_index;
-  const card = scorecardAfter(shots, course, stage === "after" ? k + 1 : k);
+  const card = scorecardAfter(shots, course, stage === "after" ? k + 1 : k, roundHoles(run, course));
 
   let ball = shot.initial_state.ball;
   let lie = shot.initial_state.lie as string | undefined;
@@ -164,7 +228,13 @@ export function showcaseState(
     hole_index: shot.hole_index,
     hole_number: number,
     hole: course.holes.find((h) => h.number === number) ?? null,
-    course: { name: course.name, version: course.version, par: course.par, holes: course.holes },
+    course: {
+      name: course.name,
+      version: course.version,
+      par: course.par,
+      holes: course.holes,
+      ...(course.nines ? { nines: course.nines } : {}),
+    },
     scenario: shot.scenario,
     ball,
     lie,

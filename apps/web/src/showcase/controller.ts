@@ -10,7 +10,15 @@
  * to one recorded run (?run=<id>&shot=<n>) still plays that run exactly as it was recorded.
  */
 import type { ShowcaseRun } from "@fly-golf/protocol";
-import { drawHoles, holeStarts, isMixed, mixRound, runsForBrain, showcaseState } from "../lib/showcase";
+import {
+  drawHoles,
+  holeStarts,
+  holesOfRun,
+  isMixed,
+  mixRound,
+  runsForBrain,
+  showcaseState,
+} from "../lib/showcase";
 import { showcaseSource } from "../lib/showcaseSource";
 import { useStore, type AppState, type ShowcaseView } from "../store";
 
@@ -97,23 +105,39 @@ export async function loadRun(id: string, k = 0) {
   }
 }
 
-/** Watch a brain: a new mix of its recorded holes, from the first tee. Only the rounds the draw
- *  picked are fetched. */
+/** Watch a brain: a new mix of its recorded holes, from the first tee. A hole is drawn only from
+ *  the rounds that recorded it (a front-nine round has no back nine). When the index lists each
+ *  round's holes (or a round is complete over the whole course) only the rounds the draw picked are
+ *  fetched; any other round is read first to find out which holes it has. */
 export async function selectBrain(brainId: string) {
   const v = view();
   const course = st().course;
   if (!v?.index || !course) return;
-  const ids = runsForBrain(v.index, brainId).map((r) => r.id);
-  if (!ids.length) return;
-  const picks = drawHoles(
-    course.holes.map((h) => h.number),
-    ids,
-  );
+  const entries = runsForBrain(v.index, brainId);
+  if (!entries.length) return;
   try {
-    const loaded = await Promise.all(
-      [...new Set(picks.values())].map((id) => showcaseSource.getShowcaseRun(id)),
+    const all = course.holes.map((h) => h.number);
+    // a complete round with as many holes as the course played all of them
+    const full = (r: (typeof entries)[number]) => r.round_complete && r.holes_played >= all.length;
+    const known = new Map(entries.map((r) => [r.id, r.holes ?? (full(r) ? all : undefined)]));
+    const unknown = entries.filter((r) => !known.get(r.id));
+    const loaded = new Map<string, ShowcaseRun>();
+    if (unknown.length) {
+      for (const run of await Promise.all(unknown.map((r) => showcaseSource.getShowcaseRun(r.id)))) {
+        loaded.set(run.id, run);
+        known.set(run.id, holesOfRun(run));
+      }
+    }
+    const picks = drawHoles(
+      all,
+      entries.map((r) => r.id),
+      Math.random,
+      (id, hole) => !!known.get(id)?.includes(hole),
     );
-    setView({ run: mixRound(new Map(loaded.map((r) => [r.id, r])), picks) }, { error: undefined });
+    const missing = [...new Set(picks.values())].filter((id) => !loaded.has(id));
+    for (const run of await Promise.all(missing.map((id) => showcaseSource.getShowcaseRun(id))))
+      loaded.set(run.id, run);
+    setView({ run: mixRound(loaded, picks) }, { error: undefined });
     goTo(0);
   } catch (e) {
     st().set({ error: `Could not load the recorded rounds: ${errorText(e)}` });
