@@ -10,6 +10,13 @@ own club from a full bag, sets up every shot, records its neural telemetry, and 
 readout of descending-neuron activity to make its golf decisions. It practised only on the front
 nine; the back nine is held out, so every shot it plays there is on holes it has never seen.
 
+**So, can it break 100? Sometimes.** Over 18 real holes the trained fly broke 100 in 13 of its 46
+real rounds: the ten rounds in the web demo average 99.6 (5 of 10 under 100), and 36 benchmark
+rounds on fresh seeds average 102.6 (8 of 36 under 100). The back nine, which it never practised
+on, costs it about one to two strokes more than the front. None of this shows that the real wiring
+helps: on the front nine a randomly rewired connectome and a readout of the raw senses both play
+better, and neither control has been run on the back nine yet ([details](#the-web-demo)).
+
 **[▶ Watch the Web Demo](https://jameskbb.github.io/fly-golf/)** ·
 [▶ Watch the 25-second short](https://jameskbb.github.io/fly-golf/watch.html) ·
 [How It Works](#how-it-works) · [Run It Locally](#run-it-locally) ·
@@ -18,10 +25,10 @@ nine; the back nine is held out, so every shot it plays there is on holes it has
 [![Animated gameplay from Pond Hop: the trained fly addresses the ball, its readout picks the 7-iron, and the shot carries the pond and rolls up 4.7 feet from the flag, filmed with every panel hidden so the course fills the frame](docs/media/trained-pond-hop-gameplay.gif)](docs/media/trained-pond-hop-gameplay.mp4)
 
 *One real shot on Pond Hop, the 164-yard third: the tee shot of the web demo's featured round
-(seed 7), played by the current trained readout (`20260917T165536Z`). 400 ms of MaleCNS activity
-become a 7-iron that carries the pond and stops 4.7 ft (1.4 m) from the flag. It is the recorded
+(`trained-eighteen-s07`, seed 7), played by the current trained readout (`20260917T165536Z`).
+400 ms of MaleCNS activity become a 7-iron that carries the pond and stops 4.7 ft (1.4 m) from the flag. It is the recorded
 shot replayed by the web demo in cinema mode (press F there), so no panel covers the course;
-[watch it there](https://jameskbb.github.io/fly-golf/?run=trained-front-nine-s07&shot=14) or
+[watch it there](https://jameskbb.github.io/fly-golf/?run=trained-eighteen-s07&shot=14) or
 [open the 1280×720 MP4](docs/media/trained-pond-hop-gameplay.mp4).*
 
 > **What is real, and what is not**
@@ -46,12 +53,12 @@ shot replayed by the web demo in cinema mode (press F there), so no panel covers
   <img src="apps/web/public/media/fly-golf-short-02-poster.jpg" alt="The fly at address with its 7-iron, captioned 7-IRON" width="240" align="left" hspace="18" vspace="4">
 </a>
 
-**[▶ Watch it here](https://jameskbb.github.io/fly-golf/watch.html)** (25 s, sound on) — one hole,
+**[▶ Watch it here](https://jameskbb.github.io/fly-golf/watch.html)** (25 s, sound on): one hole,
 cut for a phone: the fly's readout picks a 7-iron, carries the pond to 4.7 feet, and then takes
 three putts, including a lip-out from 14 inches.
 
 Every frame is the web demo replaying the same recorded hole you can
-[open yourself](https://jameskbb.github.io/fly-golf/?run=trained-front-nine-s07&shot=14); the
+[open yourself](https://jameskbb.github.io/fly-golf/?run=trained-eighteen-s07&shot=14); the
 video adds captions, synthesized sound and speed changes, and nothing else. How it was cut, shot
 by shot, is in [social/short-02](social/short-02/README.md), together with the capture and render
 tools that rebuild it from the recorded run.
@@ -63,7 +70,7 @@ tools that rebuild it from the recorded run.
 [**jameskbb.github.io/fly-golf**](https://jameskbb.github.io/fly-golf/) is the same 3D app
 replaying **recorded MaleCNS rounds**. The neural simulation was computed beforehand; the replay
 runs entirely in your browser. There is no backend, and nothing is simulated or invented on the
-page. Pick a brain and watch nine holes one shot at a time: each hole is drawn at random from
+page. Pick a brain and watch 18 holes one shot at a time: each hole is drawn at random from
 that brain's recorded rounds, so every visit shows different play, and the scorecard says which
 round each hole came from. Pause, scrub through a swing, jump to any hole or stroke, orbit the
 camera, and read each shot's recorded spikes, active neurons, population rates, motor channels
@@ -78,27 +85,50 @@ neurons fired is not recorded, so none is shown firing alone, and Mock shots, wh
 brain, show nothing. To watch the brain play new shots as they are computed,
 [run it locally](#run-it-locally): the connectome download needs more than 1 GB of disk.
 
-Each brain recorded ten complete rounds, seeds 7–16, fixed before any round was played. Every
-one of them is in the demo; none was picked from several attempts:
+Each brain recorded ten complete 18-hole rounds, seeds 7–16 (the same seeds as the earlier
+front-nine demo), fixed before any round was played. Every one of them is in the demo; none was
+picked from several attempts:
 
-| Brain | Ten rounds (seeds 7–16) | Holes holed out | What happens |
-| --- | --- | --- | --- |
-| **Trained MaleCNS** (featured) | **49.3** strokes per nine on average (42–54) | 89 of 90 | Drivers off the tee and wedges around the greens, read out of descending-neuron activity by a readout fitted from practice |
-| **Untrained MaleCNS** | **81** in every round | 0 of 90 | The fixed readout rules hit a mid iron from everywhere and pick up every hole |
-| **Mock** | **36.5** (35–39) | 90 of 90 | The no-neuron reference. It reads the distance and lie directly, so it plays well |
+| Brain | Out (front nine) | In (back nine, never practised) | Total, ten rounds | Holes holed out | Rounds under 100 |
+| --- | --- | --- | --- | --- | --- |
+| **Trained MaleCNS** (featured) | 49.3 | 50.3 | **99.6** (93–115) | 176 of 180 | 5 of 10 |
+| **Untrained MaleCNS** | 81.0 | 81.0 | **162** in every round | 0 of 180 | 0 of 10 |
+| **Mock** (no neurons) | 36.5 | 37.1 | **73.6** (68–75) | 180 of 180 | 10 of 10 |
 
-[![The web demo at the end of a mixed trained round: the scorecard reads Round complete: 74 (+38), on pace for 148 over eighteen, not breaking 100 yet, with a ROUND row giving the recorded round each hole was drawn from (six of the trained brain's ten rounds), and the recorded neural telemetry in the brain panel](docs/screenshots/web-demo-round-complete.png)](https://jameskbb.github.io/fly-golf/)
+The trained fly takes drivers off the tee and wedges around the greens, read out of
+descending-neuron activity by a readout fitted from practice. The untrained fly's fixed rules hit
+a mid iron from everywhere and pick up every hole. The mock is not a fly and has no neurons: it
+reads the distance and lie directly, so it plays well, and it is the reference.
 
-*One random mix, captured as it came: every visit draws a new one. This shot of the demo was
-taken with the previous readout, so its scorecard reads 74; the rounds in the demo today are the
-ones in the table above.*
+[![The web demo at the end of a mixed trained round: the 18-hole scorecard shows the Front Nine out in 49 and The Neuropil Nine in 53, a total of 102, with a ROUND row naming the recorded round each hole was drawn from, and the verdict Round complete: 102 (+30). The trained fly did not break 100. The back nine is ground it never practised on. The brain panel shows the recorded neural telemetry of the last putt](docs/screenshots/web-demo-round-complete.png)](https://jameskbb.github.io/fly-golf/)
 
-On an 18-hole pace the trained fly averages 98.6 and the untrained fly 162. **The fly breaks
-100** — just, and only since the sensory injection was rebuilt so that it can actually perceive
-which way its target lies (see [SENSORY_MAPPING.md](docs/SENSORY_MAPPING.md#v03-one-quantity-per-population-malecns-sensory-v03));
-its best nine of the ten, 42, is an 84 pace. All thirty rounds were recorded from a clean tree whose
-contents are those of commit `04a148d` (the runs record its pre-publication sha `43f6d6b`; see
-[BUILD_LOG.md](docs/BUILD_LOG.md)), and every round re-simulates bit for bit (`fly-golf replay`).
+*One random mix of the trained fly's recorded holes, captured as it came (every visit draws a new
+one): its 18 holes come from 9 of the ten recorded rounds, as the ROUND row shows. This mix
+totals 102, out in 49 and home in 53, so the verdict under the card says it did not break 100.
+Other mixes can land on either side of 100.*
+
+**Does the fly break 100?** Sometimes, and on average not quite. The ten demo rounds average
+99.6: 5 of them are under 100 (93, 94, 94, 97, 98), one is exactly 100, which does not break 100,
+and the worst is 115. On 36 more rounds from fresh seeds (`fly-golf bench`, seeds 100–111,
+200–211 and 300–311) the trained fly averages 102.6 and breaks 100 in 8; its best is 88 and its
+worst 119. Together: 13 rounds under 100 out of 46. The "98.6" this README used to quote was a
+front-nine round doubled, not an 18-hole round. The fly only got this close after the sensory
+injection was rebuilt so that it can actually perceive which way its target lies (see
+[SENSORY_MAPPING.md](docs/SENSORY_MAPPING.md#v03-one-quantity-per-population-malecns-sensory-v03)).
+
+**The back nine, which it never practised on,** costs it about one to two strokes: in the demo
+rounds it goes out in 49.3 and comes home in 50.3, and in the three bench blocks the back nine
+averages 51.8, 50.6 and 53.8 against 50.3, 51.4 and 49.8 on the front. So what the readout learnt
+on the front nine transfers to unseen holes almost fully. That is a statement about the sensory
+injection plus the readout, **not evidence that the real MaleCNS wiring helps**: on the front nine
+a degree-preserving shuffled connectome trains a better readout than the real one, and a readout
+of the raw senses with no brain at all beats both. Neither control has been run on the back nine
+yet ([TRAINING.md](docs/TRAINING.md#the-back-nine-is-held-out-2026-09-27)).
+
+All thirty demo rounds were recorded from a clean tree at commit `6eceef0` (readout
+`20260917T165536Z`, course `eighteen-v1`), and every round re-simulates bit for bit
+(`fly-golf replay`). Holes 1-9 of each round are stroke for stroke the earlier front-nine round
+with the same seed.
 How the demo works and how to publish another run: [GITHUB_PAGES.md](docs/GITHUB_PAGES.md).
 
 ![Meet the three brains section header](docs/screenshots/readme-header-brains.png)
@@ -110,7 +140,7 @@ animated rig, but their bodies tell the scientific story: the wind-up toy has no
 fly uses the untrained connectome, and the dressed golfer uses that same connectome with a practised
 readout. The costumes are visual metaphors, not biological claims.
 
-### Mock — the wind-up
+### Mock: the wind-up
 
 ![Full 3D model of the Mock controller persona: a clockwork tin fruit fly holding a putter, with a winding key and lamp-like eyes](docs/screenshots/brain-mock-windup.png)
 
@@ -118,9 +148,9 @@ readout. The costumes are visual metaphors, not biological claims.
 caddie's distance table. It reads the distance, slope and lie directly, chooses a club and hits the
 shot. No neurons or connectome are simulated. The clockwork body makes that impossible to mistake:
 it does exactly what its rules wind it up to do. Mock exists to test the course, physics, animation
-and recording—and to provide a strong no-brain reference.
+and recording, and to provide a strong no-brain reference.
 
-### MaleCNS — the wild fly
+### MaleCNS: the wild fly
 
 ![Full 3D model of the MaleCNS controller persona: the plain fruit fly holding a putter for the untrained real-connectome controller](docs/screenshots/brain-malecns-wild-fly.png)
 
@@ -130,7 +160,7 @@ visual and gravity-sensing populations; fixed, a-priori rules read descending-ne
 club, aim, power, tempo and contact. The wild fly has never had a lesson, and it plays like it: the
 current readout tends to reach for the same mid iron and does not finish holes.
 
-### Trained — the trained golfer
+### Trained: the trained golfer
 
 ![Full 3D model of the trained golfer persona holding a putter in a tartan tam, argyle vest, plus-fours and golf glove](docs/screenshots/brain-trained-club-member.png)
 
@@ -138,8 +168,8 @@ current readout tends to reach for the same mid iron and does not finish holes.
 sensory input as the wild fly. Nothing inside the connectome learns. Offline practice fits linear
 weights that turn roughly 480 descending-neuron-type firing rates into a putt-or-swing decision,
 club, aim and power; the tam, argyle, plus-fours and glove make that external practice visible. It
-now finishes many holes, but the honest control result is that a readout of the raw senses—and a
-degree-preserving shuffled connectome—still plays better. The full method and results are in
+now finishes almost every hole and sometimes breaks 100 over 18, but the honest control result is that a readout of the raw senses, and a
+degree-preserving shuffled connectome, still play better. The full method and results are in
 [TRAINING.md](docs/TRAINING.md).
 
 You can switch brains at any time, even mid-hole. The next shot uses the new controller, every shot
@@ -241,27 +271,32 @@ hole after a neuropil is decoration (that neuropil does not play it). Every fact
 
 **The trained fly has never practised a single shot here.** Its readout was fitted on front-nine
 situations only, so every back-nine score is a test of how what it learnt transfers to holes it has
-never seen. `fly-golf bench` reports front- and back-nine splits for that reason. As a check that
-every hole is fair to a player that aims where the environment points, the mock controller (a
+never seen. `fly-golf bench` reports front- and back-nine splits for that reason. So far it
+plays them only a little worse than the front: in the ten demo rounds it comes home in 50.3 on
+average against 49.3 out, and in 36 bench rounds the back nine averages 52.1 against 50.5 (see
+[the results](#the-web-demo); this says the readout transfers, not that the real wiring helps). As
+a check that every hole is fair to a player that aims where the environment points, the mock controller (a
 hand-written heuristic with no neurons, not the fly) holes out every back-nine hole over 22 rounds
 and averages within 0.6 strokes of par on each of them.
 
 <table>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/back-nine-mock-island-green.webp" alt="Dusk on hole 15, Ellipsoid Body: a tee shot's white trace falls toward the island green inside its ring of water, with autumn trees behind"><br>
-<em>15 · Ellipsoid Body: an 8-iron dropping toward the island green.</em>
+<img src="docs/screenshots/back-nine-trained-s07-h15-tee-shot.webp" alt="Dusk on hole 15, Ellipsoid Body: the trained fly's tee shot, a white trace high over the island green in its ring of water, heading past it"><br>
+<em>15 · Ellipsoid Body, stroke 1: a 6-iron from 139 yd carries 170 yd, over the island and into the water behind it.</em>
 </td>
 <td width="50%">
-<img src="docs/screenshots/back-nine-mock-cape-tee-shot.webp" alt="Dusk on hole 18, Descending Neurons: the view down the fairway as the tee shot flies, the clubhouse lake cutting in from the left"><br>
-<em>18 · Descending Neurons: the tee shot flies past the clubhouse lake.</em>
+<img src="docs/screenshots/back-nine-trained-s07-h18-approach.webp" alt="Dusk on hole 18, Descending Neurons: the trained fly in its tam and argyle vest strikes a 6-iron from the fairway, the aim line running ahead of the ball"><br>
+<em>18 · Descending Neurons, stroke 3: a 6-iron from 166 yd finishes on the green, 50 ft from the pin.</em>
 </td>
 </tr>
 </table>
 
-*Both stills are from a recorded **mock** round (round seed 7), replayed by the web app in cinema
-mode: the wind-up tin fly, a hand-written heuristic with no neurons, not the connectome. Its 8-iron
-on 15 finishes on the fringe; its 3-wood on 18 finishes in the rough.*
+*Both stills are the trained fly's recorded round `trained-eighteen-s07` (the web demo's featured
+round, seed 7), replayed by the web app in cinema mode: shots 84 and 108 of 111. On 15 that splash
+costs a penalty stroke and a drop on the island, 32 yd from the pin; the next shot, a lob wedge,
+finds the water too, and the hole takes 8 strokes. 18 takes 6. That round is the worst of the ten, 115 (54 out, 61 in).
+[Open the island-green shot](https://jameskbb.github.io/fly-golf/?run=trained-eighteen-s07&shot=84).*
 
 <details>
 <summary><strong>Open the full back-nine yardage book</strong> · bird's-eye renders and strategy for holes 10 to 18</summary>
@@ -356,7 +391,7 @@ the drive carries, the shorter the way in. Water waits short-left of the green t
 | **18-hole rounds**: `fly-golf round` plays all 18 by default (or `--first`/`--last`), the app's scorecard shows OUT, IN and TOT | ✅ |
 | **Full bag**: driver, 3W, 5W, 4H, 5–9 irons, PW/GW/SW/LW, putter. The fly chooses via the `club_reach` motor channel | ✅ |
 | Full-shot physics: drag + Magnus flight, spin, surface bounce and roll, penalties, lies | ✅ tested, replayable |
-| **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls. Refitted onto the v0.3 sensory injection: 50.5 strokes per nine over 36 fresh rounds (was 66.5), 97 % of holes holed ([TRAINING.md](docs/TRAINING.md#sensory-injection-v03-2026-09-17)) | ✅ experimental |
+| **Trained readout v2** of MaleCNS descending-neuron activity (putter gate, club head, aim/power heads, calibrated by practice), with no-brain and shuffled controls. Refitted onto the v0.3 sensory injection: 50.5 strokes per front nine over 36 fresh rounds (was 66.5). On 18 holes: 102.6 over 36 bench rounds (8 under 100) and 99.6 over the ten demo rounds (5 under 100); the back nine, never practised on, costs about one to two strokes ([TRAINING.md](docs/TRAINING.md#18-hole-results-2026-09-27)) | ✅ experimental |
 | **Switch brains mid-round** (Mock / MaleCNS / Trained); scorecard marks who played each hole, mixed rounds flagged | ✅ |
 | **Web demo**: Showcase Mode replays recorded MaleCNS rounds on GitHub Pages, no backend ([GITHUB_PAGES.md](docs/GITHUB_PAGES.md)) | ✅ |
 | `fly-golf bench`: complete 18-hole rounds per brain with front- and back-nine splits (holes finished, strokes, trees, club by distance); `--nine front` reproduces the earlier front-nine bench | ✅ |
@@ -368,7 +403,7 @@ the drive carries, the shorter the way in. Water waits short-left of the green t
 | Live WebSocket telemetry, brain panel, technical panel, run history, deterministic replay | ✅ |
 | **A body per brain**: Mock plays as a clockwork tin fly (no neurons inside), MaleCNS as the plain fly, Trained as the same fly in golf clothes | ✅ |
 | Experiment records (JSONL) with git commit, seeds, versions, neural summary and trajectory | ✅ |
-| **Does the connectome play well?** | ❌ Not yet. The untrained readout hits a mid iron from everywhere and never finishes a hole. The v2 **trained readout** picks wedges around the green, putts every green shot and finishes a large share of holes, but a readout of the raw senses plays far better, and **a degree-preserving shuffled connectome trains better than the real one**. See [TRAINING.md](docs/TRAINING.md#results) |
+| **Does the connectome play well?** | ❌ Not yet. The untrained readout hits a mid iron from everywhere and never finishes a hole. The v2 **trained readout** picks wedges around the green, putts every green shot, finishes 95 to 98 % of its holes and breaks 100 over 18 holes in a minority of rounds (13 of 46), but on the front nine a readout of the raw senses plays far better, and **a degree-preserving shuffled connectome trains better than the real one**. Neither control has been run on the back nine. See [TRAINING.md](docs/TRAINING.md#results) |
 
 ## Run it locally
 
@@ -443,7 +478,7 @@ infrastructure** (grey).
 flowchart LR
   G[GolfEnvironment<br/>deterministic physics] -->|Observation| S[SensoryEncoder<br/>proxy-v0.2]
   S -->|SensoryFrame<br/>14 bounded channels| B{BrainController}
-  B --> M[MockBrainController<br/>MOCK — no neurons]
+  B --> M[MockBrainController<br/>MOCK: no neurons]
   B --> C[MaleCNSController]
   C --> E[LIF engine<br/>simulated dynamics]
   W1[(MaleCNS v1.0 wiring<br/>166,700 neurons · 25.6M connections)] --> E
@@ -611,7 +646,8 @@ club selection, full swings, hazards, the trained readout with its controls, and
 back nine is a transfer test, not a practice ground: the trained fly plays it without ever having
 practised there. Next:
 
-1. **Controls:** lesion experiments, and more rounds per brain on shared seeds.
+1. **Controls:** the shuffled-wiring and no-brain controls on the back nine and over complete
+   rounds, lesion experiments, and more rounds per brain on shared seeds.
 2. **Showcase comparisons:** first putt, before and after training, the shuffled-connectome
    control, and the best round, side by side on the web demo.
 3. **Vision:** render the course through modelled fly eyes and drive the photoreceptors (see
