@@ -26,6 +26,7 @@ interface NineProps {
   water: Set<number>;
   yardsOf: (hole: number) => number | undefined;
   seedOf?: (hole: number) => number | undefined;
+  rowLabel: "FLY" | "SCORE"; // the strokes row: FLY only when no mock stroke is on the card
 }
 
 const yd = (n: number | null | undefined) => (n == null ? "" : Math.round(n));
@@ -41,6 +42,7 @@ function NineTable({
   water,
   yardsOf,
   seedOf,
+  rowLabel,
 }: NineProps) {
   const playback = useStore((s) => s.playback);
   const card = block.entries;
@@ -86,7 +88,15 @@ function NineTable({
             {total && <td className="sub">{total.par}</td>}
           </tr>
           <tr className="fly-row">
-            <td>FLY</td>
+            <td
+              title={
+                rowLabel === "FLY"
+                  ? undefined
+                  : "The mock controller has no neurons: its strokes are not the fly's"
+              }
+            >
+              {rowLabel}
+            </td>
             {card.map((c) => (
               <td key={c.hole}>
                 <span className={`score ${scoreClass(c.strokes, c.par, c.holed)}`}>
@@ -154,6 +164,8 @@ export function Scorecard() {
   const total = cardTotal(blocks);
   const used = session.controllers_used ?? [];
   const mixed = used.length > 1;
+  // the mock is never labelled the fly, not even on the scorecard's strokes row
+  const rowLabel = (used.length ? used : [session.controller.id]).includes("mock") ? "SCORE" : "FLY";
   // a showcase mix: which recorded round each hole was drawn from
   const sources = isMixed(recorded) ? recorded.holeSources : undefined;
   const seedOf = sources ? (hole: number) => sources.find((s) => s.hole === hole)?.seed : undefined;
@@ -201,6 +213,7 @@ export function Scorecard() {
             water={water}
             yardsOf={yardsOf}
             seedOf={seedOf}
+            rowLabel={rowLabel}
           />
         ))}
       </div>

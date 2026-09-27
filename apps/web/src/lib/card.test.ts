@@ -134,15 +134,41 @@ describe("roundVerdict", () => {
     });
   });
 
-  describe("at the turn of an 18-hole round: the OUT score", () => {
-    it("names who is out, and stays through the back nine", () => {
+  describe("at the turn of an 18-hole round: the OUT score, until a back-nine hole is scored", () => {
+    it("names who is out", () => {
       expect(verdict(card(18, 9, bogeys), WILD)).toBe("At the turn: the untrained fly is out in 45 (+9).");
-      expect(verdict(card(18, 12, bogeys), WILD)).toBe("At the turn: the untrained fly is out in 45 (+9).");
       expect(verdict(card(18, 9, bogeys), MOCK)).toBe(
         "At the turn: the mock controller is out in 45 (+9). It has no neurons: this is the reference, not the fly.",
       );
       expect(verdict(card(18, 9, bogeys), TRAINED)).toBe(
         "At the turn: the trained fly is out in 45 (+9). The back nine ahead is ground it never practised on.",
+      );
+    });
+  });
+
+  describe("through the back nine: the running total and the OUT score", () => {
+    it("names who is playing", () => {
+      expect(verdict(card(18, 12, bogeys), WILD)).toBe(
+        "Through 12: the untrained fly is 60 (+12); out in 45.",
+      );
+      expect(verdict(card(18, 17, bogeys), MOCK)).toBe(
+        "Through 17: the mock controller is 85 (+17); out in 45. It has no neurons: this is the reference, not the fly.",
+      );
+      expect(verdict(card(18, 14, bogeys), TRAINED)).toBe(
+        "Through 14: the trained fly is 70 (+14); out in 45. The back nine is ground it never practised on.",
+      );
+    });
+    it("keeps the mixed caveat", () => {
+      expect(verdict(card(18, 10, bogeys), { mixedBrains: "Mock + Trained" })).toBe(
+        "Through 10: 50 (+10); out in 45. A mixed round so far (Mock + Trained): not a score for any single brain.",
+      );
+    });
+    it("a showcase mix is the mix, not a round", () => {
+      expect(verdict(card(18, 14, bogeys), { ...TRAINED, recordedRounds: 6 })).toBe(
+        "Through 14: the mix is 70 (+14); out in 45. The back nine is ground the trained fly never practised on.",
+      );
+      expect(verdict(card(18, 9, bogeys), { ...MOCK, recordedRounds: 6 })).toBe(
+        "At the turn: the mix is out in 45 (+9). The mock controller has no neurons: this is the reference, not the fly.",
       );
     });
   });
@@ -165,13 +191,29 @@ describe("roundVerdict", () => {
     );
   });
 
-  it("a showcase mix says where its holes came from", () => {
-    expect(verdict(card(18, 18, bogeys), { ...TRAINED, recordedRounds: 7 })).toBe(
-      "Round complete: 90 (+18). The trained fly broke 100. The back nine is ground it never practised on. Eighteen real recorded holes, drawn from 7 recorded rounds of this brain.",
-    );
-    expect(verdict(card(9, 9, bogeys), { ...MOCK, recordedRounds: 1 })).toMatch(
-      /this is the reference, not the fly\. Nine real recorded holes, drawn from 1 recorded round of this brain\.$/,
-    );
+  describe("a showcase mix is a mix of recorded holes, not a round that was played", () => {
+    it("says what the mix totals, where it came from, and the brain's caveat", () => {
+      expect(verdict(card(18, 18, bogeys), { ...TRAINED, recordedRounds: 6 })).toBe(
+        "Round complete: 90 (+18). This mix of recorded holes totals under 100. Eighteen real recorded holes, drawn from 6 recorded rounds of this brain. The back nine is ground the trained fly never practised on.",
+      );
+      expect(verdict(card(18, 18, doubles), { ...WILD, recordedRounds: 8 })).toBe(
+        "Round complete: 108 (+36). This mix of recorded holes totals 100 or more. Eighteen real recorded holes, drawn from 8 recorded rounds of this brain.",
+      );
+      expect(verdict(card(18, 18, bogeys), { ...MOCK, recordedRounds: 1 })).toBe(
+        "Round complete: 90 (+18). This mix of recorded holes totals under 100. Eighteen real recorded holes, drawn from 1 recorded round of this brain. The mock controller has no neurons: this is the reference, not the fly.",
+      );
+      expect(verdict(card(9, 9, bogeys), { ...WILD, recordedRounds: 3 })).toBe(
+        "Round complete: 45 (+9); on pace for 90 over eighteen. This mix of recorded holes is on pace to total under 100. Nine real recorded holes, drawn from 3 recorded rounds of this brain.",
+      );
+    });
+    it("never says a brain broke 100", () => {
+      for (const b of [MOCK, WILD, TRAINED])
+        for (const c of [card(18, 18, bogeys), card(18, 18, doubles)])
+          expect(verdict(c, { ...b, recordedRounds: 4 })).not.toMatch(/break|broke/);
+    });
+    it("a single recorded run (no mix) keeps the direct verdict", () => {
+      expect(verdict(card(18, 18, bogeys), TRAINED)).toMatch(/The trained fly broke 100\./);
+    });
   });
 
   it("never writes an em dash", () => {
