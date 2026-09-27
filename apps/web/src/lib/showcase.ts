@@ -112,13 +112,18 @@ export function mixRound(runs: Map<string, ShowcaseRun>, picks: Map<number, stri
 }
 
 /**
- * The holes on a recorded round's card, in course order: the holes its recorder wrote on the card
+ * The holes of a recorded round, in course order: its `holes` range when the recorder lists one,
+ * else the holes its recorder wrote on the card
  * (nine for a round recorded on the front-nine course, eighteen for a full round), so a front-nine
  * recording shown with the 18-hole course is still a nine-hole round. Holes the course does not
  * have are dropped; with no usable card, every hole of the course.
  */
 export function roundHoles(run: ShowcaseRun, course: CoursePayload): number[] {
-  const onCard = new Set(run.round.scorecard.map((c) => c.hole));
+  // the round's own range when the recorder lists it (a round over holes 10-18 only), else its card
+  const listed = run.round.holes;
+  const onCard = new Set(
+    Array.isArray(listed) && listed.length ? (listed as number[]) : run.round.scorecard.map((c) => c.hole),
+  );
   const holes = course.holes.map((h) => h.number).filter((n) => onCard.has(n));
   return holes.length ? holes : course.holes.map((h) => h.number);
 }

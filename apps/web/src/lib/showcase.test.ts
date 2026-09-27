@@ -273,6 +273,20 @@ describe("18 holes", () => {
     expect(showcaseState(mixed, course18, 0, "before").scorecard).toHaveLength(BACK);
   });
 
+  it("a round over holes 10-18 only is a nine-hole round that completes on its range", () => {
+    const back = full1.shots.filter((s) => holeOf(s) > BACK);
+    const range = holes18.slice(BACK);
+    const run: ShowcaseRun = {
+      ...full1,
+      shots: back,
+      round: { ...full1.round, holes: range, scorecard: full1.round.scorecard },
+    };
+    expect(roundHoles(run, course18)).toEqual(range);
+    const last = showcaseState(run, course18, back.length - 1, "after");
+    expect(last.scorecard?.map((e) => e.hole)).toEqual(range);
+    expect(last.round_complete).toBe(true);
+  });
+
   it("a single recorded 18-hole run replays exactly (deep links)", () => {
     const card = scorecardAfter(full1.shots, course18, full1.shots.length, roundHoles(full1, course18));
     expect(card.map((e) => [e.hole, e.strokes, e.holed])).toEqual(

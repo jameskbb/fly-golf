@@ -23,9 +23,13 @@ const numbers = (v: unknown): number[] =>
  */
 export function courseTag(run: RunLike): string | null {
   if (run.mode !== "course") return null;
-  const round = (run.round ?? {}) as { scorecard?: { hole?: unknown }[]; course_version?: unknown };
+  const round = (run.round ?? {}) as {
+    scorecard?: { hole?: unknown }[];
+    holes?: unknown;
+    course_version?: unknown;
+  };
   const card = numbers(Array.isArray(round.scorecard) ? round.scorecard.map((c) => c?.hole) : []);
-  const holes = [...numbers(run.holes), ...card];
+  const holes = [...numbers(run.holes), ...numbers(round.holes), ...card];
   const version = String(run.course_version ?? round.course_version ?? "");
   const played = typeof run.holes_played === "number" ? run.holes_played : undefined;
   if (holes.some((n) => n > 9) || card.length >= 18 || version.startsWith("eighteen") || (played ?? 0) > 9)

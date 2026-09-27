@@ -119,7 +119,10 @@ export async function selectBrain(brainId: string) {
     const all = course.holes.map((h) => h.number);
     // a complete round with as many holes as the course played all of them
     const full = (r: (typeof entries)[number]) => r.round_complete && r.holes_played >= all.length;
-    const known = new Map(entries.map((r) => [r.id, r.holes ?? (full(r) ? all : undefined)]));
+    // an index entry's hole list is trusted for a complete round (every listed hole was played)
+    const known = new Map(
+      entries.map((r) => [r.id, r.round_complete && r.holes ? r.holes : full(r) ? all : undefined]),
+    );
     const unknown = entries.filter((r) => !known.get(r.id));
     const loaded = new Map<string, ShowcaseRun>();
     if (unknown.length) {

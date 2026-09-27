@@ -53,3 +53,14 @@ describe("bench labels", () => {
     );
   });
 });
+
+describe("courseTag with hole ranges", () => {
+  it("reads the round's own hole list", () => {
+    expect(courseTag({ mode: "course", round: { holes: [10, 11, 12, 13, 14, 15, 16, 17, 18] } })).toBe(
+      "18 HOLES",
+    );
+    expect(
+      courseTag({ mode: "course", round: { holes: [1, 2, 3, 4, 5, 6, 7, 8, 9], scorecard: [{ hole: 1 }] } }),
+    ).toBe("FRONT 9");
+  });
+});
