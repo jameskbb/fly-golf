@@ -6,12 +6,11 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { loadPlaywright } from "./playwright.mjs";
 
 const TOOLS = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TEMPLATE = join(TOOLS, "caption.html");
 const EMOJI_DIR = join(TOOLS, "emoji");
-const PLAYWRIGHT = process.env.PLAYWRIGHT_MODULE ||
-  "/home/james/.nvm/versions/node/v24.21.0/lib/node_modules/playwright/index.mjs";
 
 function templateHash() {
   const h = createHash("sha1");
@@ -53,7 +52,7 @@ export async function renderCaptions(captions, outDir, { debug = false } = {}) {
   const todo = jobs.filter(j => !existsSync(j.meta) || debug);
   if (todo.length) {
     const emojiMap = await ensureEmoji(todo.flatMap(j => [j.spec.text, j.spec.title ?? (j.spec.style === "end" ? "FLY GOLF 🪰⛳" : "")]));
-    const { chromium } = await import(PLAYWRIGHT);
+    const { chromium } = loadPlaywright();
     const browser = await chromium.launch({ args: ["--disable-gpu", "--font-render-hinting=none"] });
     try {
       const page = await browser.newPage({ viewport: { width: 1480, height: 2320 }, deviceScaleFactor: 1 });

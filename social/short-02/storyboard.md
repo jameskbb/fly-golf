@@ -7,7 +7,7 @@
 Everything in this short is one real recorded hole: **Pond Hop**, the 164-yard par 3 over water,
 from the web demo's featured round (trained readout `20260917T165536Z`, round seed 7, shots 14–17).
 Nothing was re-rolled or staged; it is the same hole anyone can replay at
-`https://jameskbb.github.io/fly-golf/?run=trained-front-nine-s07&shot=14`.
+`https://jameskbb.github.io/fly-golf/?run=trained-eighteen-s07&shot=14` (captured as `trained-front-nine-s07`, since re-recorded as `trained-eighteen-s07` with the same shots).
 
 What the fly actually did:
 

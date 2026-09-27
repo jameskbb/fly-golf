@@ -13,12 +13,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { FF, ff, ffAsync, probe, loudness } from "./lib/ff.mjs";
 import { renderCaptions } from "./lib/captions.mjs";
+import { loadPlaywright } from "./lib/playwright.mjs";
 
 const TOOLS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(TOOLS, "..");                  // social/short-02
 const AUDIO = join(ROOT, "audio");
-const PLAYWRIGHT = process.env.PLAYWRIGHT_MODULE ||
-  "/home/james/.nvm/versions/node/v24.21.0/lib/node_modules/playwright/index.mjs";
 
 // ---------- args ----------
 const argv = process.argv.slice(2);
@@ -341,7 +340,7 @@ if (!NO_REVIEW) {
     figcaption{margin-top:5px;height:3.9em;overflow:hidden}</style><h1>${esc(basename(OUT))} · ${fmt(info.duration, 2)}s · ${info.width}x${info.height}@${info.fps} · ${fmt(loud.I, 1)} LUFS · ${fmt(loud.TP, 1)} dBTP</h1>${cells}`;
   const htmlPath = join(WORK, "contact.html");
   writeFileSync(htmlPath, html);
-  const { chromium } = await import(PLAYWRIGHT);
+  const { chromium } = loadPlaywright();
   const browser = await chromium.launch({ args: ["--disable-gpu"] });
   const page = await browser.newPage({ viewport: { width: 6 * 376 + 16, height: 800 } });
   await page.goto(pathToFileURL(htmlPath).href);

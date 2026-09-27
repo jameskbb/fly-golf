@@ -30,18 +30,20 @@ cut, captions and timing, frame for frame. It changes two things:
 **The finished video:** `fly-golf-short-02.mp4` (also `render/fly-golf-short-02.mp4`). It is
 mixed to −16 LUFS with a −1.6 dBTP peak, and all render checks passed.
 
-Everything else is unchanged: the source shots (`trained-front-nine-s07` shots 14–17,
+Everything else is unchanged: the source shots (`trained-front-nine-s07` shots 14–17, since re-recorded as `trained-eighteen-s07`,
 Pond Hop), the storyboard, the captions, the voiceover and the post copy. See `storyboard.md`,
 `shot-list.md`, `onscreen-text.md` and `voiceover.txt`. To see how the pipeline works, read
 `tools/CAPTURE.md` and `tools/RENDER.md`.
 
 ## Rebuild
 
+Playwright (with its Chromium) and ffmpeg must be installed where this runs; see `tools/CAPTURE.md`.
+
 ```bash
 FLY_GOLF_BASE=/ pnpm --filter @fly-golf/web build:showcase
 (cd apps/web && npx vite preview --port 4173 --strictPort &)
 cd social/short-02/tools
-N="env -u DISPLAY -u WAYLAND_DISPLAY -u XDG_RUNTIME_DIR node capture.mjs --out ../clips --run trained-front-nine-s07 --hold 0.7"
+N="env -u DISPLAY -u WAYLAND_DISPLAY -u XDG_RUNTIME_DIR node capture.mjs --out ../clips --run trained-eighteen-s07 --hold 0.7"
 $N --shot 14 --name pondhop-tee --frame '[[3.45,0.77,0.58,1.4],[4.2,0.52,0.5,1.0],[7.5,0.55,0.5,1.0],[9,0.57,0.5,1.15],[10.5,0.56,0.5,1.15],[12.4,0.555,0.5,1.6]]'
 $N --shot 15 --name pondhop-putt1 --frame '[[0,0.525,0.5,1.25]]'
 $N --shot 16 --name pondhop-lipout --frame '[[3.45,0.565,0.47,1.75],[3.75,0.55,0.47,1.6],[4.8,0.495,0.46,1.05]]'

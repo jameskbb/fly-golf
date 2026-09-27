@@ -1,6 +1,6 @@
 # Capturing gameplay clips (short-02)
 
-> Note (2026-09-27): the showcase slugs named here (`trained-front-nine-sNN`) were replaced by `trained-eighteen-sNN`; the shot numbers are unchanged.
+> Note (2026-09-27): the published clips were captured from `trained-front-nine-sNN`, which was replaced by `trained-eighteen-sNN` with the same shot numbers; the commands below use the new slugs.
 
 `capture.mjs` replays a REAL recorded shot in the static showcase and frame-steps it with a
 virtual clock (performance.now / Date.now / requestAnimationFrame replaced before the app loads),
@@ -11,6 +11,11 @@ is modified; layout changes are capture-only CSS, and framing is a capture-only 
 
 - Showcase served at http://localhost:4173/ (from `apps/web`: `npx vite preview --port 4173 --strictPort`).
 - Run node with the WSLg display variables unset (otherwise Chromium's GPU process hangs on WebGL).
+- Playwright must be installed where the script runs, with its Chromium: `npm i playwright` next to
+  the tools, or `npm i -g playwright` and `NODE_PATH=$(npm root -g)`, then `npx playwright install
+  chromium`. `PLAYWRIGHT_MODULE=/path/to/playwright` points at any other install.
+- ffmpeg: `--ffmpeg <path>`, else the `FFMPEG` environment variable, else `ffmpeg` on `PATH` (not
+  needed for `--every` preview runs, which do not encode).
 
 ## What the script does
 
@@ -46,22 +51,22 @@ N="timeout 1800 env -u DISPLAY -u WAYLAND_DISPLAY -u XDG_RUNTIME_DIR node captur
 $N --shot 14 --name wide14 --width 3072 --height 1728 --no-hud --every 15 --out <scratch>/wide
 
 # 1. tee shot, Pond Hop (s07 shot 14)
-$N --run trained-front-nine-s07 --shot 14 --name pondhop-tee --hold 0.7 \
+$N --run trained-eighteen-s07 --shot 14 --name pondhop-tee --hold 0.7 \
   --frame '[[3.45,0.77,0.58,1.4],[4.2,0.52,0.5,1.0],[7.5,0.55,0.5,1.0],[9,0.57,0.5,1.15],[10.5,0.56,0.5,1.15],[12.4,0.555,0.5,1.6]]'
 # 2. first putt
-$N --run trained-front-nine-s07 --shot 15 --name pondhop-putt1 --hold 0.7 --frame '[[0,0.525,0.5,1.25]]'
+$N --run trained-eighteen-s07 --shot 15 --name pondhop-putt1 --hold 0.7 --frame '[[0,0.525,0.5,1.25]]'
 # 3. lip-out
-$N --run trained-front-nine-s07 --shot 16 --name pondhop-lipout --hold 0.7 \
+$N --run trained-eighteen-s07 --shot 16 --name pondhop-lipout --hold 0.7 \
   --frame '[[3.45,0.565,0.47,1.75],[3.75,0.55,0.47,1.6],[4.8,0.495,0.46,1.05]]'
 # 4. tap-in
-$N --run trained-front-nine-s07 --shot 17 --name pondhop-tapin --hold 0.7 --frame '[[0,0.545,0.5,1.4]]'
+$N --run trained-eighteen-s07 --shot 17 --name pondhop-tapin --hold 0.7 --frame '[[0,0.545,0.5,1.4]]'
 # 5. brain fire (6 s), plus the keep-brain-panel comparison
-$N --run trained-front-nine-s07 --shot 14 --brainfire --seconds 6 --name brainfire \
+$N --run trained-eighteen-s07 --shot 14 --brainfire --seconds 6 --name brainfire \
   --frame '[[3.45,0.77,0.58,1.4],[4.2,0.52,0.5,1.0]]'
-$N --run trained-front-nine-s07 --shot 14 --brainfire --seconds 6 --name brainfire-panel --keep-brain-panel \
+$N --run trained-eighteen-s07 --shot 14 --brainfire --seconds 6 --name brainfire-panel --keep-brain-panel \
   --frame '[[3.45,0.75,0.62,1.4],[4.2,0.52,0.5,1.0]]'
 # 6-8. backups
-R11="$N --run trained-front-nine-s11 --hold 0.7"
+R11="$N --run trained-eighteen-s11 --hold 0.7"
 $R11 --shot 36 --name wingspan-approach \
   --frame '[[3.45,0.77,0.58,1.4],[4.2,0.52,0.5,1.0],[8,0.55,0.5,1.0],[10,0.56,0.55,1.0],[12,0.52,0.5,1.15],[14.5,0.49,0.5,1.6]]'
 $R11 --shot 37 --name wingspan-birdie --frame '[[0,0.56,0.47,1.4]]'

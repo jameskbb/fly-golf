@@ -6,7 +6,7 @@ every clip can be re-captured and every shot re-simulated (`fly-golf replay`).
 
 ## Used in the cut
 
-| # | Clip | Source (run · shot) | Used at | Source in-point | Speed | What it shows |
+| # | Clip | Source (run · shot; `trained-front-nine-s07` since re-recorded as `trained-eighteen-s07`) | Used at | Source in-point | Speed | What it shows |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `pondhop-tee.mp4` | trained-front-nine-s07 · 14 | 0.00–2.30 | 1.250 | 1.0× | hook: address -> swing, cut on impact (src 3.533) |
 | 2 | `brainfire.mp4` | s07 · 14, brain-fire view | 2.30–4.60 | 0.000 | 1.1× | brain card replays the 400 ms decision (counter 0-400 ms by src 2.5) |

@@ -11,7 +11,7 @@
 //
 // Usage (run with the WSLg display variables unset, or Chromium's GPU process hangs):
 //   env -u DISPLAY -u WAYLAND_DISPLAY -u XDG_RUNTIME_DIR node capture.mjs \
-//     --run trained-front-nine-s07 --shot 14 --name pondhop-tee [--seconds 30] [--hold 0.7] \
+//     --run trained-eighteen-s07 --shot 14 --name pondhop-tee [--seconds 30] [--hold 0.7] \
 //     [--width 1080 --height 1920] [--dpr 1] [--fps 30] [--also-fps 30] [--brainfire] \
 //     [--frame '[[t,cx,cy,zoom],...]'] [--frames <dir>] [--pre 0] [--out ../clips] \
 //     [--url http://localhost:4173/] [--no-cinema [--keep-brain-panel] [--no-hud]]
@@ -25,7 +25,7 @@
 // --seconds  maximum seconds captured after Space (default 30); capture stops earlier when the
 //            playback ends (phase label goes blank) plus --hold seconds.
 // --pre      seconds of the still pre-Space view to include before playback starts.
-import { chromium } from "/home/james/.nvm/versions/node/v24.21.0/lib/node_modules/playwright/index.mjs";
+import { loadPlaywright } from "./lib/playwright.mjs";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -39,7 +39,7 @@ const opt = (k, d) => {
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : d;
 };
 
-const run = opt("run", "trained-front-nine-s07");
+const run = opt("run", "trained-eighteen-s07");
 const shot = Number(opt("shot", "14"));
 const name = opt("name", `${run}-${shot}`);
 const fps = Number(opt("fps", "30"));
@@ -60,7 +60,7 @@ const outDir = path.resolve(opt("out", path.join(here, "..", "clips")));
 const ffmpeg =
   opt("ffmpeg", "") ||
   process.env.FFMPEG ||
-  "/home/james/.cache/uv/archive-v0/IyyDAcEJEdniCYLm/lib/python3.12/site-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2";
+  "ffmpeg"; // --ffmpeg, else $FFMPEG, else ffmpeg on PATH
 const every = Number(opt("every", "1")); // preview mode: keep every Nth frame, no encode
 // --frame '[[t,cx,cy,zoom],...]': capture-only virtual camera crop. The stage renders the window
 // centred at (cx,cy) - normalised coordinates of the app's own view as it would look in a 16:9
@@ -170,6 +170,7 @@ const firingWideCss = `.firing.open{top:14px!important;right:14px!important;left
                        .firing-close,.firing-legend,.firing-readings,.firing-caption,.attribution{display:none!important}`;
 const css = cinema ? `*{caret-color:transparent!important}${brainfire ? firingWideCss : ""}` : legacyCss;
 
+const { chromium } = loadPlaywright();
 const browser = await chromium.launch({
   headless: true,
   args: ["--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
