@@ -683,6 +683,49 @@ code,
   min-width: 24px;
   padding: 2px 4px;
 }
+/* keep the two nines clear of the "Watch the brain fire" button in the stage's top-right corner:
+   they sit side by side on a wide stage and stack on a laptop-width one */
+.scorecard.eighteen {
+  max-width: calc(100% - 32px - 210px);
+}
+
+/* On narrow screens the course, the controls and the scorecard would all share one short stage,
+   and the controls would cover the card: below the 3D view they stack as blocks of the page
+   instead (the card's two nines stack too). Cinema mode keeps the full-window course. */
+@media (max-width: 1000px) {
+  .app:not(.cinema) {
+    grid-template-rows: 58px auto auto auto;
+  }
+  .app:not(.cinema):has(> .firing) {
+    grid-template-rows: 58px auto auto auto auto;
+  }
+  .app:not(.cinema) .stage {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    background: var(--bg);
+  }
+  .app:not(.cinema) .stage > div:first-child {
+    flex: none;
+    height: 60vh !important; /* the 3D view (react-three-fiber sets height: 100% inline) */
+  }
+  .app:not(.cinema) .stage > .controls,
+  .app:not(.cinema) .stage > .scorecard {
+    position: static;
+    max-width: none;
+    margin: 10px 12px 0;
+  }
+  .app:not(.cinema) .stage > .scorecard {
+    order: 1;
+  }
+  .app:not(.cinema) .stage > .controls {
+    order: 2;
+    margin-bottom: 10px;
+  }
+  .shot-nav .seg {
+    flex-wrap: wrap;
+  }
+}
 .hole-btn {
   font: 700 12px var(--mono);
   color: var(--text);
@@ -1047,5 +1090,51 @@ code,
     width: auto;
     padding: 0;
     background: none;
+  }
+}
+
+/* Phone width: the header badges and the 18-hole card fit without a horizontal scroll. */
+@media (max-width: 480px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shotbar {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .hdr {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .hdr-right {
+    gap: 6px;
+    min-width: 0;
+  }
+  .badge {
+    min-width: 0;
+    padding: 4px 8px;
+  }
+  .badge-title {
+    font-size: 14px;
+  }
+  .badge-sub {
+    font-size: 10px;
+  }
+  .mode-badge.recorded {
+    font-size: 10px;
+    padding: 3px 5px;
+    white-space: normal;
+  }
+  .scorecard.eighteen {
+    font-size: 11px;
+    padding: 8px 5px;
+  }
+  .scorecard.eighteen th,
+  .scorecard.eighteen td {
+    min-width: 0;
+    padding: 2px 2px;
+  }
+  .scorecard.eighteen .hole-btn {
+    font-size: 11px;
+    padding: 1px 3px;
   }
 }

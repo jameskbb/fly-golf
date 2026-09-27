@@ -8,6 +8,7 @@ import { groundFor, heightAt } from "../lib/terrain";
 import { Course } from "./Course";
 import { CourseHole } from "./CourseHole";
 import { Actors } from "./Actors";
+import { themeFor, type Theme } from "./theme";
 
 const PUTTING_LIES = new Set(["green", "fringe"]);
 
@@ -77,8 +78,9 @@ function CameraRig({ scenario, hole, viewKey }: { scenario: Scenario; hole: Hole
   return null;
 }
 
-/** Keep the sun's shadow frustum centred on the fly wherever it is on the hole. */
-function SunRig({ course }: { course: boolean }) {
+/** Keep the sun's shadow frustum centred on the fly wherever it is on the hole. The sun's colour,
+ *  strength and direction come from the hole's theme (low and golden at dusk). */
+function SunRig({ course, sun }: { course: boolean; sun: Theme["sun"] }) {
   const light = useRef<THREE.DirectionalLight>(null);
   const target = useMemo(() => new THREE.Object3D(), []);
   useEffect(() => {
@@ -90,24 +92,80 @@ function SunRig({ course }: { course: boolean }) {
     const [x, y] = b ?? [0, 0];
     target.position.set(x, 0, -y);
     target.updateMatrixWorld();
-    light.current?.position.set(x + 6, 10, -y + 4);
+    light.current?.position.set(x + sun.offset[0], sun.offset[1], -y + sun.offset[2]);
   });
   return (
     <>
       <primitive object={target} />
       <directionalLight
         ref={light}
-        position={[6, 10, 4]}
-        intensity={course ? 2.6 : 2.4}
+        position={sun.offset}
+        color={sun.color}
+        intensity={course ? sun.intensity : 2.4}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-8}
         shadow-camera-right={8}
         shadow-camera-top={8}
         shadow-camera-bottom={-8}
-        shadow-bias={-0.0004}
+        shadow-bias={sun.shadowBias}
       />
     </>
+  );
+}
+
+type GradientSkySpec = Extract<Theme["sky"], { kind: "gradient" }>;
+
+/** A painted sky dome: zenith to horizon in three colours, with the low sun's glow on the horizon.
+ *  It follows the camera, so it is always the backdrop, and ignores fog and depth. */
+function GradientSky({ sky }: { sky: GradientSkySpec }) {
+  const mesh = useRef<THREE.Mesh>(null);
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        uniforms: {
+          zenith: { value: new THREE.Color(sky.zenith) },
+          mid: { value: new THREE.Color(sky.mid) },
+          horizon: { value: new THREE.Color(sky.horizon) },
+          glow: { value: new THREE.Color(sky.glow) },
+          sun: { value: new THREE.Vector3(...sky.sunDirection).normalize() },
+          glowSize: { value: sky.glowSize },
+        },
+        vertexShader: `
+          varying vec3 vDir;
+          void main() {
+            vDir = normalize(position);
+            vec4 p = modelViewMatrix * vec4(position, 1.0);
+            gl_Position = projectionMatrix * p;
+            gl_Position.z = gl_Position.w; // on the far plane
+          }`,
+        fragmentShader: `
+          uniform vec3 zenith; uniform vec3 mid; uniform vec3 horizon; uniform vec3 glow;
+          uniform vec3 sun; uniform float glowSize;
+          varying vec3 vDir;
+          void main() {
+            vec3 d = normalize(vDir);
+            float h = max(d.y, 0.0);
+            vec3 c = mix(horizon, mid, smoothstep(0.0, 0.22, h));
+            c = mix(c, zenith, smoothstep(0.18, 0.75, h));
+            float a = acos(clamp(dot(d, sun), -1.0, 1.0));
+            c = mix(c, glow, exp(-a / glowSize) * 0.85);
+            c = mix(c, horizon, smoothstep(0.0, -0.08, d.y)); // below the horizon (behind the trees)
+            gl_FragColor = vec4(c, 1.0);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+          }`,
+      }),
+    [sky],
+  );
+  useFrame(({ camera }) => mesh.current?.position.copy(camera.position));
+  return (
+    <mesh ref={mesh} material={material} renderOrder={-100} frustumCulled={false}>
+      <sphereGeometry args={[3000, 48, 24]} />
+    </mesh>
   );
 }
 
@@ -117,6 +175,8 @@ export function Scene() {
   const hole = useStore((s) => holeFor(s, s.playback?.replay ? s.playback.record : undefined));
   const scenario = playback?.replay ? playback.record.scenario : session?.scenario;
   const course = !!hole;
+  // one theme for the whole frame: sky, fog, lights and ground all switch on the same render
+  const theme = themeFor(hole);
   // Re-frame on a new hole, after the fly walks to its next ball, and on replays -
   // but not when a live stroke starts (keeps the spectator's camera during the swing).
   const shownStrokes =
@@ -135,11 +195,22 @@ export function Scene() {
       gl={{ logarithmicDepthBuffer: true }}
       camera={{ fov: 40, near: 0.01, far: 4000, position: [-3, 1.5, 2] }}
     >
-      <color attach="background" args={["#a9c9e6"]} />
-      <fog attach="fog" args={course ? ["#c3d8ea", 160, 1100] : ["#bcd5ea", 35, 160]} />
-      <Sky sunPosition={[60, 40, 30]} turbidity={5} rayleigh={1.1} mieCoefficient={0.004} distance={3500} />
-      <hemisphereLight args={["#dcecff", "#35552c", 0.75]} />
-      <SunRig course={course} />
+      <color attach="background" args={[theme.background]} />
+      <fog attach="fog" args={course ? [theme.fog, 160, 1100] : ["#bcd5ea", 35, 160]} />
+      {theme.sky.kind === "physical" ? (
+        <Sky
+          sunPosition={theme.sky.sunPosition}
+          turbidity={theme.sky.turbidity}
+          rayleigh={theme.sky.rayleigh}
+          mieCoefficient={theme.sky.mieCoefficient}
+          mieDirectionalG={theme.sky.mieDirectionalG}
+          distance={3500}
+        />
+      ) : (
+        <GradientSky sky={theme.sky} />
+      )}
+      <hemisphereLight args={[theme.hemisphere.sky, theme.hemisphere.ground, theme.hemisphere.intensity]} />
+      <SunRig course={course} sun={theme.sun} />
       {scenario && (
         <>
           {hole ? <CourseHole hole={hole} /> : <Course scenario={scenario} />}
