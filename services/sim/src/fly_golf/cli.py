@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 READOUT_HELP = "experiments/readouts/malecns-readout-v1.json (used by the malecns-trained controller)"
 
@@ -232,11 +233,27 @@ def cmd_bench(args) -> int:
             "bench": report["bench"],
             "seeds": report["seeds"],
             "git_commit": report["git"]["commit"],
-            "report": str(out),
+            "report": portable_report_path(out, s.repo_root, s.runs_dir),
         }
         path.write_text(json.dumps(d, indent=1) + "\n")
         print(f"attached the bench summary to {path}")
     return 0
+
+
+def portable_report_path(out: Path, repo_root: Path, runs_dir: Path) -> str:
+    """How a bench report is named in a readout's metadata: never a machine-local absolute path.
+
+    Inside the runs directory it is ``runs/<path below it>`` (wherever FLY_GOLF_RUNS_DIR points),
+    inside the repository its repository-relative path, and anywhere else just the file name.
+    """
+    out = Path(out).expanduser().resolve()
+    runs_dir = Path(runs_dir).expanduser().resolve()
+    repo_root = Path(repo_root).expanduser().resolve()
+    if out.is_relative_to(runs_dir):
+        return (Path("runs") / out.relative_to(runs_dir)).as_posix()
+    if out.is_relative_to(repo_root):
+        return out.relative_to(repo_root).as_posix()
+    return out.name
 
 
 def cmd_runs(args) -> int:

@@ -106,14 +106,14 @@ def test_export_removes_local_paths(run, tmp_path):
     path = runs / run_id / "shots.jsonl"
     shots = [json.loads(line) for line in path.read_text().splitlines()]
     shots[0]["trace_file"] = "some/trace.json"
-    shots[0]["controller"]["config"] = {"readout": {"report": "/home/someone/runs/bench/x.json", "id": "r1"}}
+    shots[0]["controller"]["config"] = {"readout": {"report": "/Users/someone/runs/bench/x.json", "id": "r1"}}
     path.write_text("".join(json.dumps(s) + "\n" for s in shots))
     report = export_showcase(runs, run_id, tmp_path / "out", slug="x", title="Mock")
     doc = json.loads(Path(report["run_file"]).read_text())
     assert "trace_file" not in doc["shots"][0]
     assert doc["shots"][0]["controller"]["config"]["readout"] == {"report": REMOVED_PATH, "id": "r1"}
     assert any("local file path" in n for n in report["notes"])
-    assert "/home/someone" not in Path(report["run_file"]).read_text()
+    assert "/Users/someone" not in Path(report["run_file"]).read_text()
 
 
 def test_export_rejects_bad_input(run, tmp_path):

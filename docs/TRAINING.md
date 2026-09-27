@@ -535,6 +535,8 @@ The installed readout `20260917T165536Z`, unchanged, on the 18-hole course (`eig
 
 `bb1770e` is `6eceef0` plus attaching the first bench to the readout's metadata (no code change);
 the seeds 100–111 bench is the one attached to `experiments/readouts/malecns-readout-v1.json`. The
+three reports are kept locally as `runs/bench/trained-18-s100.json`, `-s200.json` and `-s300.json`
+(`runs/` is not committed). The
 front-nine splits (50.33, 51.42, 49.83) reproduce the earlier front-nine bench (50.3, 51.4, 49.8).
 
 Over the 36 bench rounds the trained fly averages **102.6** and breaks 100 in **8 of 36** (best 88,
