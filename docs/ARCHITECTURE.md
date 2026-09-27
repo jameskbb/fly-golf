@@ -69,7 +69,7 @@ apps/web                  React + three.js (R3F) app, built twice: live and show
   src/lib/showcaseSource.ts StaticShowcaseSource: static JSON, validated with the protocol schemas
   src/lib/showcase.ts       session state around each recorded shot, rebuilt from the records
   src/showcase/             showcase controller, controls and landing card
-  src/scene/                course, fly, ball, camera: shared by both modes
+  src/scene/                course, fly, ball, camera, per-hole theme (theme.ts): shared by both modes
   src/ui/                   header, brain panel, shot bar, scorecard, drawers: shared
   public/showcase/          the exported runs that GitHub Pages serves
 packages/protocol         zod schemas: wire protocol, ShotRecord, showcase format; shared fixtures
@@ -88,7 +88,10 @@ experiments/readouts/     the installed trained readout and archived ones (small
 
 1. `App` starts the live connection: `GET /api/status`, then `WS /ws/simulation` with a versioned
    hello (protocol v2). A version mismatch stops the app with an explanation.
-2. The course (`GET /api/course`) is fetched once: every hole's geometry and the bag.
+2. The course (`GET /api/course`) is fetched once: all 18 holes' geometry, each hole's `nine`
+   (`front` or `back`) and `theme` (`parkland` or `dusk`), the two nines, and the bag. The scene
+   lights and paints each hole from its theme (`scene/theme.ts`), so the back nine is drawn at
+   dusk, and the scorecard groups the holes into the two nines (OUT, IN, TOT; `lib/card.ts`).
 3. Commands go over REST (`lib/api.ts`): start a session, switch brains mid-round, reset, next hole,
    hit. The backend pushes `state`, `shot_phase`, `shot_result` and `controller_status` over the
    WebSocket.
@@ -122,9 +125,10 @@ experiments/readouts/     the installed trained readout and archived ones (small
    slowed down, while the fly addresses the ball. The values are the recorded ones.
 5. Shots play one at a time and never advance on their own. Visitors can play, pause, replay, step
    to the previous or next shot, scrub within a shot, jump to any hole or stroke, orbit and zoom,
-   and pick a brain. Switching brains loads that brain's recorded round from the first tee. A
-   splash screen (reopened from **About this demo**) explains that the page shows pre-generated
-   plays and how to run the real simulation locally. The URL keeps `?run=…&shot=…`, so a refresh
+   and pick a brain. Switching brains draws a new mix of that brain's recorded holes, from the first
+   tee ([GITHUB_PAGES.md](GITHUB_PAGES.md#what-visitors-see)). A splash screen (reopened from
+   **About this demo**) explains that the page shows pre-generated plays and how to run the real
+   simulation locally. The URL keeps `?run=…&shot=…`, so a refresh
    or a shared link returns to the same shot.
 6. Not available in the showcase: hitting new shots, switching brains, the practice green and the
    Runs drawer, because they need the backend.

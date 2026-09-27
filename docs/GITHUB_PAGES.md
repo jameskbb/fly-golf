@@ -56,13 +56,14 @@ must be compiled: `make data`), then export it:
 
 ```sh
 # 1. Record. Commit first: every record stores the git commit and whether the tree was dirty.
+#    A round is all 18 holes unless you pass --first / --last.
 uv --directory services/sim run fly-golf round --controller malecns-trained --seed 7
 #    -> recorded run: runs/<run_id>
 
 # 2. Export into apps/web/public/showcase/ (validates every shot; never modifies the run).
 uv --directory services/sim run fly-golf export-showcase <run_id> \
-  --slug trained-front-nine \
-  --title "Trained MaleCNS - Front Nine" \
+  --slug trained-eighteen-s07 \
+  --title "Trained MaleCNS - 18 holes, round 7" \
   --description "One or two honest sentences about what this run is."
 
 # 3. Check, then commit the JSON.
@@ -73,18 +74,22 @@ The exporter prints the file size and any notes, for example on shots from aband
 that were left out, a dirty working tree, or removed local paths. It refuses to export:
 
 - a run that fails `ShotRecord` validation, or practice-green runs (the showcase shows the course);
-- a round recorded on a different course version from the current code;
+- a round recorded on a course version whose holes differ from the current code's (`eighteen-v1`).
+  Records of holes 1-9 made under `front-nine-v2` are still accepted, because those holes are
+  unchanged bit for bit; the export then records `front-nine-v2` as the run's course version;
 - a MaleCNS shot without recorded neural activity;
 - a run containing MOCK shots under a title that claims MaleCNS or the connectome.
 
 Use `--round <seed>` when a run holds several rounds. `--out` writes somewhere else. Re-exporting
 with the same `--slug` replaces that run and keeps the others.
 
-A full front-nine run is about 1.2 MB of JSON, about 0.3 MB gzipped, as Pages serves it.
+A run's size grows with its number of shots. A real 18-hole trained round of 111 recorded shots
+exports to about 2.5 MB of JSON, about 0.6 MB gzipped as Pages serves it (a front-nine round of 54
+shots was about 1.2 MB, 0.3 MB gzipped). A mock round is smaller, because it has no neural data.
 
 **Several rounds per brain.** The demo mixes a brain's rounds hole by hole (see *What visitors
 see*), so export every round you record for a brain, one slug per round seed
-(`trained-front-nine-s07`, `-s08`, …), and never only the good ones. A new readout means
+(`trained-eighteen-s07`, `-s08`, …), and never only the good ones. A new readout means
 re-recording the trained rounds with the same seeds and replacing the old exports. The demo
 should never keep replaying a retired readout.
 
@@ -126,17 +131,33 @@ unchanged.
 ## What visitors see
 
 A splash screen explains that the page shows pre-generated plays and that running the simulation
-in real time means cloning the repository (the connectome needs more than 1 GB of disk). Visitors
-pick a brain; each brain with a recorded solo round is selectable.
+in real time means cloning the repository (the connectome needs more than 1 GB of disk). With the
+18-hole course it also says that the trained fly practised only on the front nine,
+so the back nine is ground it has never seen. Visitors pick a brain; each brain with a recorded
+solo round is selectable.
 
 **Each hole is drawn at random from the brain's recorded rounds.** For every hole the page picks
 one of the brain's complete recorded rounds and plays that round's strokes on that hole,
 unchanged. Every hole starts from its tee and the brain resets before every stroke, so a hole
 stands on its own (`mixRound` in `apps/web/src/lib/showcase.ts`, tested in `showcase.test.ts`).
-The scorecard's ROUND row and the note under the controls say which round (seed) and commit each
-hole came from, and the total is the sum of the nine real holes shown. Choosing a brain, finishing
-the nine or reloading the page draws a new mix; only the rounds the draw needs are downloaded. A
-link to one recorded run (`?run=<id>&shot=<n>`) still plays that run exactly as recorded.
+A hole is only drawn from a round that played it, so a round recorded on the front nine alone
+never supplies a back-nine hole. The mix covers the holes the brain's recordings cover: all 18
+once its rounds are 18-hole rounds, the front nine for rounds recorded before the back nine
+existed. The scorecard's ROUND row and the note under the controls say which round (seed) and
+commit each hole came from, and the total is the sum of the real holes shown. Choosing a brain,
+finishing the round or reloading the page draws a new mix; only the rounds the draw needs are
+downloaded. A link to one recorded run (`?run=<id>&shot=<n>`) still plays that run exactly as
+recorded.
+
+**The 18-hole card and its verdict.** An 18-hole card has two blocks: the Front Nine with its OUT
+column and The Neuropil Nine with IN, then TOT. The verdict line under the card names who played:
+the trained fly, the untrained fly, or the mock controller, which is never called the fly and
+always carries the note that it has no neurons. A complete 18 gives the real total and whether it
+broke 100; for the trained fly it adds that the back nine is ground it never practised on. At the
+turn it gives the OUT score. A nine-hole card (an older recording) gives its total and the pace
+over eighteen, labelled as a pace. A round more than one brain played is never passed off as one
+brain's score. The back nine is drawn at dusk (a low golden sun, a gradient sky and its own
+palette, `apps/web/src/scene/theme.ts`); the front nine keeps its daylight parkland look.
 
 Shots play one at a time: a shot plays when asked and then waits. The splash reopens from
 **About this demo**.
