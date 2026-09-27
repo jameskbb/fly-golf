@@ -1,7 +1,7 @@
 import { SENSORY_CHANNELS } from "@fly-golf/protocol";
 import { IS_SHOWCASE } from "../lib/source";
 import { selectLastRecord, useStore } from "../store";
-import { Meter, fmt } from "./widgets";
+import { EMPTY, Meter, fmt } from "./widgets";
 
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
@@ -43,22 +43,22 @@ export function TechPanel() {
         <>
           {/* Provenance of the recorded shot itself: there is no backend in the showcase. */}
           <Row k="source" v="recorded showcase (static files)" />
-          <Row k="run" v={record?.run_id ?? session?.run_id ?? "—"} />
-          <Row k="controller" v={record?.controller.id ?? session?.controller.id ?? "—"} />
+          <Row k="run" v={record?.run_id ?? session?.run_id ?? EMPTY} />
+          <Row k="controller" v={record?.controller.id ?? session?.controller.id ?? EMPTY} />
           <Row
             k="git"
-            v={record ? `${record.git.commit.slice(0, 10)}${record.git.dirty ? " (dirty)" : ""}` : "—"}
+            v={record ? `${record.git.commit.slice(0, 10)}${record.git.dirty ? " (dirty)" : ""}` : EMPTY}
           />
-          <Row k="protocol" v={record?.versions.protocol ?? "—"} />
+          <Row k="protocol" v={record?.versions.protocol ?? EMPTY} />
           <Row k="MaleCNS data" v="not loaded: every value was recorded" />
         </>
       ) : (
         <>
-          <Row k="run" v={session?.run_id ?? "—"} />
-          <Row k="controller" v={session?.controller.id ?? "—"} />
-          <Row k="git" v={(status?.git as { commit?: string } | undefined)?.commit?.slice(0, 10) ?? "—"} />
-          <Row k="protocol" v={status?.protocol_version ?? "—"} />
-          <Row k="MaleCNS data" v={status?.malecns.status ?? "—"} />
+          <Row k="run" v={session?.run_id ?? EMPTY} />
+          <Row k="controller" v={session?.controller.id ?? EMPTY} />
+          <Row k="git" v={(status?.git as { commit?: string } | undefined)?.commit?.slice(0, 10) ?? EMPTY} />
+          <Row k="protocol" v={status?.protocol_version ?? EMPTY} />
+          <Row k="MaleCNS data" v={status?.malecns.status ?? EMPTY} />
         </>
       )}
       {record ? (

@@ -4,7 +4,7 @@ import { metresToFeet } from "../lib/coords";
 import { distanceLabel } from "../lib/terrain";
 import { controllerLabel } from "./brains";
 import { ClubIcon } from "./ClubIcon";
-import { fmt } from "./widgets";
+import { EMPTY, fmt } from "./widgets";
 
 type Out = ShotRecord["outcome"];
 
@@ -72,8 +72,8 @@ export function ShotBar() {
     return (
       <div className="shotbar">
         <div className="cell hole" title={holeTitle}>
-          <span className="k">HOLE {holeInfo?.number ?? "—"}</span>
-          <span className="v">PAR {holeInfo?.par ?? "—"}</span>
+          <span className="k">HOLE {holeInfo?.number ?? EMPTY}</span>
+          <span className="v">PAR {holeInfo?.par ?? EMPTY}</span>
           <span className="s">{holeInfo?.name ?? ""}</span>
         </div>
         <div className="cell">
@@ -92,7 +92,7 @@ export function ShotBar() {
             ) : playback ? (
               "choosing…"
             ) : (
-              "—"
+              EMPTY
             )}
           </span>
           <span className="s">
@@ -103,13 +103,13 @@ export function ShotBar() {
         </div>
         <div className="cell">
           <span className="k">AIM</span>
-          <span className="v">{record ? `${fmt(Math.abs(aim), 1)}° ${aim >= 0 ? "L" : "R"}` : "—"}</span>
+          <span className="v">{record ? `${fmt(Math.abs(aim), 1)}° ${aim >= 0 ? "L" : "R"}` : EMPTY}</span>
           <span className="s">off body line</span>
         </div>
         <div className="cell">
           <span className="k">SWING</span>
           <span className="v">
-            {record ? `${Math.round((record.stroke.swing_fraction ?? record.stroke.power) * 100)}%` : "—"}
+            {record ? `${Math.round((record.stroke.swing_fraction ?? record.stroke.power) * 100)}%` : EMPTY}
           </span>
           <span className="s">{record ? `${fmt(record.stroke.speed_mps, 1)} m/s ball` : ""}</span>
         </div>
@@ -117,7 +117,7 @@ export function ShotBar() {
           className={`cell result ${reveal && record?.outcome.holed ? "holed" : ""} ${reveal && record && ["water", "out_of_bounds"].includes(record.outcome.outcome) ? "penalty" : ""}`}
         >
           <span className="k">RESULT {record && playback?.replay ? "· REPLAY" : ""}</span>
-          <span className="v">{record ? (reveal ? resultText(record.outcome) : "…") : "—"}</span>
+          <span className="v">{record ? (reveal ? resultText(record.outcome) : "…") : EMPTY}</span>
           <span className="s">
             {record ? `${controllerLabel(record.controller)} · ${record.shot_id}` : ""}
           </span>
@@ -135,7 +135,7 @@ export function ShotBar() {
         </div>
         <div className="cell">
           <span className="k">SCORE</span>
-          <span className="v">{totals ? toPar(totals.to_par) : "—"}</span>
+          <span className="v">{totals ? toPar(totals.to_par) : EMPTY}</span>
           <span className="s">{totals ? `${totals.strokes} thru ${totals.holes_played}` : ""}</span>
         </div>
       </div>
@@ -149,8 +149,8 @@ export function ShotBar() {
     <div className="shotbar">
       <div className="cell hole">
         <span className="k">GREEN</span>
-        <span className="v">{holeNo ?? "—"}</span>
-        <span className="s">seed {sc?.seed ?? "—"}</span>
+        <span className="v">{holeNo ?? EMPTY}</span>
+        <span className="s">seed {sc?.seed ?? EMPTY}</span>
       </div>
       <div className="cell">
         <span className="k">TO CUP</span>
@@ -166,17 +166,17 @@ export function ShotBar() {
       </div>
       <div className="cell">
         <span className="k">AIM</span>
-        <span className="v">{record ? `${fmt(Math.abs(aim), 1)}° ${aim >= 0 ? "L" : "R"}` : "—"}</span>
+        <span className="v">{record ? `${fmt(Math.abs(aim), 1)}° ${aim >= 0 ? "L" : "R"}` : EMPTY}</span>
         <span className="s">off body line</span>
       </div>
       <div className="cell">
         <span className="k">POWER</span>
-        <span className="v">{record ? `${Math.round(record.stroke.power * 100)}%` : "—"}</span>
+        <span className="v">{record ? `${Math.round(record.stroke.power * 100)}%` : EMPTY}</span>
         <span className="s">{record ? `${fmt(record.stroke.speed_mps, 2)} m/s` : ""}</span>
       </div>
       <div className={`cell result ${reveal && record?.outcome.holed ? "holed" : ""}`}>
         <span className="k">RESULT {record && playback?.replay ? "· REPLAY" : ""}</span>
-        <span className="v">{record ? (reveal ? resultText(record.outcome) : "…") : "—"}</span>
+        <span className="v">{record ? (reveal ? resultText(record.outcome) : "…") : EMPTY}</span>
         <span className="s">{record ? `${controllerLabel(record.controller)} · ${record.shot_id}` : ""}</span>
       </div>
       <div className="cell">

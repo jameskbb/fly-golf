@@ -18,7 +18,7 @@ function ControllerBadge() {
   if (!c) return <div className="badge off">{IS_SHOWCASE ? "LOADING RUN…" : "NO SESSION"}</div>;
   if (c.is_mock) {
     return (
-      <div className="badge mock" title="Deterministic test heuristic — not the connectome">
+      <div className="badge mock" title="Deterministic test heuristic, not the connectome">
         <span className="badge-title">MOCK CONTROLLER</span>
         <span className="badge-sub">test heuristic · not the connectome</span>
       </div>

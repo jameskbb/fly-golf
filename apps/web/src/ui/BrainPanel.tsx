@@ -5,7 +5,7 @@ import { useFrameClock } from "../lib/useFrameClock";
 import { playbackTime, selectLastRecord, useStore } from "../store";
 import { controllerLabel } from "./brains";
 import { ClubIcon } from "./ClubIcon";
-import { Meter, Sparkline, Stat, fmt, fmtInt } from "./widgets";
+import { EMPTY, Meter, Sparkline, Stat, fmt, fmtInt } from "./widgets";
 
 /** Network spikes per 10 ms bin. In the showcase the recorded bins are revealed, slowed down,
  *  while the fly chooses its club and addresses the ball (in step with the Brain firing view);
@@ -130,8 +130,8 @@ export function BrainPanel() {
     : [];
 
   let statusText = IS_SHOWCASE
-    ? "Recorded run — this brain was simulated beforehand"
-    : "Idle — waiting for a shot";
+    ? "Recorded run: this brain was simulated beforehand"
+    : "Idle: waiting for a shot";
   if (busy) statusText = PHASE_TEXT[shotPhase ?? "thinking"] ?? "Working…";
   else if (playback?.replay) statusText = `Replaying ${playback.record.shot_id} (${playback.record.run_id})`;
   else if (playPhase !== "idle" && playPhase !== "done")
@@ -142,7 +142,7 @@ export function BrainPanel() {
   return (
     <aside className="brain">
       <div className="panel-title">
-        BRAIN <span className="panel-title-sub">{controller ? controllerLabel(controller) : "—"}</span>
+        BRAIN <span className="panel-title-sub">{controller ? controllerLabel(controller) : EMPTY}</span>
       </div>
 
       {isMock ? (
@@ -266,7 +266,7 @@ export function BrainPanel() {
 
       <footer className="honesty">
         Real anatomical wiring (MaleCNS v1.0, CC BY 4.0). Neuron dynamics, sensory and motor mappings are
-        engineered models — not a digital copy of a fly.
+        engineered models, not a digital copy of a fly.
         {IS_SHOWCASE &&
           " Every value here was recorded when the shot was simulated; this page only replays it."}
       </footer>

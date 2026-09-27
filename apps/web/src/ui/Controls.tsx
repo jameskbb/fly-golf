@@ -159,7 +159,7 @@ export function Controls() {
       </div>
       {malecns && !malecns.available && (
         <div className="hint">
-          MaleCNS unavailable — run <code>{malecns.fix_command ?? "make data"}</code> to download and compile
+          MaleCNS unavailable: run <code>{malecns.fix_command ?? "make data"}</code> to download and compile
           the connectome.
         </div>
       )}

@@ -1,7 +1,10 @@
+/** What an empty value shows (no shot yet, not recorded): a middle dot, never a dash. */
+export const EMPTY = "·";
+
 export const fmtInt = (n: number | null | undefined) =>
-  n == null ? "—" : Math.round(n).toLocaleString("en-US");
+  n == null ? EMPTY : Math.round(n).toLocaleString("en-US");
 export const fmt = (n: number | null | undefined, d = 1) =>
-  n == null || !Number.isFinite(n) ? "—" : n.toFixed(d);
+  n == null || !Number.isFinite(n) ? EMPTY : n.toFixed(d);
 
 export function Meter({ label, value, tone = "accent" }: { label: string; value: number; tone?: string }) {
   const pct = Math.max(0, Math.min(1, value)) * 100;
