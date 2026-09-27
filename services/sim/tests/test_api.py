@@ -60,7 +60,7 @@ def test_session_putt_runs_and_replay(client):
 
 def test_course_mode_round_flow(client):
     state = client.post("/api/session", json={"controller": "mock", "seed": 4, "mode": "course"}).json()
-    assert state["mode"] == "course" and state["hole_number"] == 1 and len(state["scorecard"]) == 9
+    assert state["mode"] == "course" and state["hole_number"] == 1 and len(state["scorecard"]) == 18
     assert state["hole"]["par"] == 4 and state["hole"]["trees"]
     assert client.post("/api/next").status_code == 409  # hole 1 still in play
     rec = client.post("/api/shot").json()
@@ -71,7 +71,17 @@ def test_course_mode_round_flow(client):
     six = client.post("/api/reset", json={"hole": 6}).json()
     assert six["hole_number"] == 6 and six["round_seed"] == 4
     course = client.get("/api/course").json()
-    assert len(course["holes"]) == 9 and len(course["clubs"]) == 14 and course["par"] == 36
+    assert len(course["holes"]) == 18 and len(course["clubs"]) == 14 and course["par"] == 72
+    assert course["name"] == "Fly Golf National" and course["version"] == "eighteen-v1"
+    assert course["nines"] == [
+        {"id": "front", "name": "Front Nine", "holes": list(range(1, 10)), "par": 36},
+        {"id": "back", "name": "The Neuropil Nine", "holes": list(range(10, 19)), "par": 36},
+    ]
+    assert [h["nine"] for h in course["holes"]] == ["front"] * 9 + ["back"] * 9
+    assert {h["theme"] for h in course["holes"][9:]} == {"dusk"}
+    back = client.post("/api/reset", json={"hole": 15}).json()
+    assert back["hole_number"] == 15 and back["hole"]["nine"] == "back" and len(back["course"]["holes"]) == 18
+    assert client.post("/api/reset", json={"hole": 19}).status_code == 422
 
 
 def test_trained_controller_unavailable_without_data(client):

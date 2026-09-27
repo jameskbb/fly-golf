@@ -1,30 +1,100 @@
-# The course: front nine, clubs and full-shot physics
+# The course: Fly Golf National, clubs and full-shot physics
 
 Everything on this page is **engineered**: hole design, club numbers, flight model and rules
 are our choices, documented here and versioned in every shot record (`course`, `clubs`,
 `course_physics`, `course_reward`). None of it comes from the connectome.
 
-## The front nine (`golf/course.py`, `front-nine-v2`)
+## Fly Golf National (`golf/course.py`, `eighteen-v1`)
 
-Nine hand-authored holes, par 36, 3,352 yards. Each hole lives in its own frame: the tee at the
-origin, the hole playing roughly north. Water on **four** holes.
+Eighteen hand-authored holes, par 72, 6,831 yards: the parkland **Front Nine** (holes 1-9,
+par 36, 3,352 yards) and a dusk-lit back nine, **The Neuropil Nine** (holes 10-18, par 36,
+3,479 yards). Each hole lives in its own frame: the tee at the origin, the hole playing roughly
+north. Every hole in the course payload carries `nine` (`front` or `back`) and `theme`
+(`parkland` or `dusk`), and the payload lists both nines under `nines`.
+
+The front nine is unchanged from `front-nine-v2`, bit for bit (a test pins a hash of its
+geometry). A round record of holes 1-9 made under `front-nine-v2` still replays exactly, and
+`fly-golf replay` reports it as compatible. Holes are seeded the same way as before
+(`hole_seed(round_seed, hole, attempt)`), so holes 1-9 of an 18-hole round are the same
+situations they always were.
+
+### The Front Nine
+
+Water on **four** holes.
 
 | # | Name | Par | Yards | Features |
 | --- | --- | --- | --- | --- |
 | 1 | First Flight | 4 | 364 | fairway bunkers pinch the landing area; green bunkers left and right |
 | 2 | The Dogleg | 4 | 412 | hard dogleg left around a corner bunker |
 | 3 | Pond Hop | 3 | 164 | **all carry over a pond**; the green tilts back toward the water |
-| 4 | Long Haul | 5 | 523 | **a creek crosses the fairway** just past driving distance: lay up or carry |
-| 5 | Lakeside | 4 | 379 | **a lake runs the whole left side**; the green leans toward it |
+| 4 | Long Haul | 5 | 522 | **a creek crosses the fairway** just past driving distance: lay up or carry |
+| 5 | Lakeside | 4 | 380 | **a lake runs the whole left side**; the green leans toward it |
 | 6 | Little Sting | 3 | 137 | green ringed by four bunkers |
 | 7 | Wingspan | 4 | 423 | long dogleg right with an inside-corner bunker |
 | 8 | Marsh Run | 5 | 553 | **a marsh pond mid-fairway and water short-right of the green** |
 | 9 | Home Stretch | 4 | 396 | a cross bunker splits the fairway; big, fast green |
 
+### The Neuropil Nine
+
+Each back-nine hole is named after a structure of the fly's nervous system or body, and its
+**shape echoes that structure**; each also borrows the strategy of a classic "template" hole
+from golf architecture, so the nine plays nothing like the front. The front nine is straight
+holes and gentle doglegs with one kind of hazard at a time; the back nine adds an island green,
+a drivable par 4, a double dogleg, a cape hole, a long par 3, a narrow chute, a wide-open hole
+with waste sand and bunker patterns (a hexagonal cluster, church pews, curved bands), and its
+greens vary more (radius 10 to 17 m, stimp 9.5 to 12.5, slopes up to 0.02).
+
+| # | Name | Par | Yards | Corridor | Green (radius, stimp) | Features | Anatomy | Inspired by |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 10 | Ommatidia | 4 | 408 | 42 m | 12.5 m, 11 | **seven pot bunkers packed in a hexagon** just past the drive | the hexagonally packed facets of the compound eye | the pot bunkers of the Old Course and Royal Lytham |
+| 11 | Johnston's Organ | 3 | 220 | 42 m | 16 m, 10.5 | **long par 3**; one long curved bunker across the front-left, green tilted away to the back-left, open to a run-in from the right | the antennal hearing organ and the arista that catches sound | the Redan (15th at North Berwick) |
+| 12 | Halteres | 5 | 561 | 42 m | 13.5 m, 11 | **double dogleg**, right then left; **a burn crosses the line of play twice** | the balance organs that beat opposite the wings | the Barry Burn snaking across Carnoustie's 17th and 18th |
+| 13 | Protocerebral Bridge | 4 | 274 | 42 m | 10 m, 12.5 | **drivable par 4**: lay up left, or carry a row of **church-pew bunkers** to a small, fast green with water right | the bridge of glomeruli spanning the two halves of the brain | Riviera's 10th (drivable par 4); Oakmont's church pews |
+| 14 | Mushroom Body | 4 | 425 | 46 m | 12 m, 11.5 | tee in a cup of sand; a narrow stalk of fairway that **splits into two lobes**, one straight to the green, one off to the right | calyx, peduncle, and the vertical and medial lobes | split fairways such as Riviera's 8th |
+| 15 | Ellipsoid Body | 3 | 139 | 42 m | 12 m, 11 | **island green** inside a ring of water, reached on foot by a causeway | the ring-shaped neuropil that holds the fly's compass | TPC Sawgrass 17th |
+| 16 | Fan-shaped Body | 4 | 418 | **58 m** | 17 m, 9.5 | **the widest hole**: a fan-shaped fairway crossed by curved bands of **waste sand** broken into columns, big waste areas either side | the layered, column-segmented fan of the central complex | Pine Valley's waste areas; Pinehurst No. 2 |
+| 17 | Giant Fiber | 5 | 599 | **27 m** | 11 m, 12 | **the longest, straightest hole: a narrow chute through the trees** | the giant fiber, the fast escape pathway from brain to jump muscle | Carnoustie's 6th ("Hogan's Alley") |
+| 18 | Descending Neurons | 4 | 436 | 42 m | 14 m, 11.5 | **cape hole**: the tee shot carries as much of the clubhouse lake as you dare; water short-left of the green | the descending neurons that carry the brain's commands to the body | Macdonald's Cape (National Golf Links) |
+
+Water on **four** back-nine holes (12, 13, 15, 18). Johnston's Organ has the steepest green on
+the course (slope 0.02, falling away to the back-left, as a Redan does).
+
+A few design notes on how the environment plays these holes:
+
+- **Island green (15).** The ring of water is one curved water polygon with a gap (the
+  causeway) at the back right; the island inside it is fairway and rough around the green. With
+  the ordinary water rule a tee shot that comes up short drops on the tee side of the ring (there
+  is a strip of fairway as a drop zone); a shot over the green, from the tee or from the island,
+  drops back on the island.
+- **Drivable par 4 (13).** From the tee the pin is 242 m away, beyond the 225 m at which the fly
+  looks at the pin, so its target is the lay-up area on the left. The green is still within a
+  flush driver of the tee, over the pews.
+- **Cape (18).** The lake sits in the inside corner of the dogleg; the routing goes around it,
+  but any line further left carries more water and leaves a shorter approach.
+- **Mock controller check.** The mock controller (development only, not the connectome) holes
+  out every back-nine hole on round seeds 7-16 and 100-111 and averages 37.6 on the back nine
+  (36.5 on the front), no hole more than half a stroke over par on average: every hole is
+  finishable and none is unfair to a player that aims where the environment points.
+
+### Held out from training
+
+Training (`training/situations.py`) practises only on the front nine. **The trained fly has
+never practised a single shot on the back nine**, so its back-nine scores measure how well what
+it learnt transfers to holes it has never seen. `fly-golf bench` reports front- and back-nine
+splits for this reason.
+
+### Per-hole corridor
+
+The trees (out of bounds) begin at each hole's own corridor half-width, the distance from the
+routing line: 42 m on every front-nine hole and most back-nine holes, 27 m on Giant Fiber (17),
+46 m on Mushroom Body (14) and 58 m on Fan-shaped Body (16). The course payload reports it as
+`corridor_half_width_m` per hole. The disc of 26 m around the green is always in play.
+
 ### Surfaces and rules
 
-A point on a hole is, in priority order: **water** (polygons), **out of bounds** (anything more
-than 42 m from the routing line and not within 26 m of the green: the trees), **green** (a
+A point on a hole is, in priority order: **water** (polygons), **out of bounds** (anything
+farther from the routing line than the hole's corridor half-width, 42 m unless the hole sets its
+own, and not within 26 m of the green: the trees), **green** (a
 tilted circle), **fringe** (1.5 m collar), **sand** (bunker polygons), **tee**, **fairway**
 (polygons), otherwise **rough**.
 

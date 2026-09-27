@@ -25,9 +25,9 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ..api.schemas import ShotRecordModel
-from ..golf.course import COURSE_VERSION, FRONT_NINE
+from ..golf.course import COURSE, COURSE_VERSION
 from ..golf.payload import course_payload
-from .runner import load_run
+from .runner import course_version_compatible, load_run
 
 SHOWCASE_FORMAT = "fly-golf-showcase"
 SHOWCASE_VERSION = 1
@@ -71,10 +71,9 @@ def _scrub(value, removed: list[str]):
 
 
 def scorecard_from_shots(shots: list[dict]) -> list[dict]:
-    """The front-nine scorecard implied by a round's shots (the final attempt at each hole)."""
+    """The 18-hole scorecard implied by a round's shots (the final attempt at each hole)."""
     card = {
-        h.number: {"hole": h.number, "par": h.par, "strokes": None, "holed": None, "controllers": []}
-        for h in FRONT_NINE
+        h.number: {"hole": h.number, "par": h.par, "strokes": None, "holed": None, "controllers": []} for h in COURSE
     }
     for shot in shots:
         entry = card[_hole(shot)]
@@ -181,7 +180,7 @@ def export_showcase(
     if problems:
         raise ShowcaseExportError("invalid shot records:\n  " + "\n  ".join(problems))
     if any(s.get("mode") != "course" for s in shots):
-        raise ShowcaseExportError("only front-nine course runs can be showcased; this run has practice-green shots")
+        raise ShowcaseExportError("only course runs can be showcased; this run has practice-green shots")
 
     seeds = list(dict.fromkeys(_round_seed(s) for s in shots))
     if round_seed is None:
@@ -204,7 +203,13 @@ def export_showcase(
         )
     shots = kept
 
-    stale = sorted({str(s["versions"].get("course")) for s in shots} - {COURSE_VERSION})
+    stale = sorted(
+        {
+            str(s["versions"].get("course"))
+            for s in shots
+            if not course_version_compatible(s["versions"].get("course"), _hole(s))
+        }
+    )
     if stale:
         raise ShowcaseExportError(
             f"recorded on course {stale}, but this code builds {COURSE_VERSION}: the replay would draw the wrong holes"
@@ -267,7 +272,7 @@ def export_showcase(
     label = controller_summary["label"]
     if description is None:
         description = (
-            f"A recorded front-nine round played by the {label} controller (round seed {round_seed}). "
+            f"A recorded round of Fly Golf National played by the {label} controller (round seed {round_seed}). "
             "Every shot was simulated beforehand; this page replays the records."
         )
     recorded_utc = meta.get("created_utc") or first.get("timestamp_utc")

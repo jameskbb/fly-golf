@@ -279,7 +279,8 @@ def test_bench_round_is_complete_and_reproducible():
     from fly_golf.brain.mock import MockBrainController
 
     a = play_round(3, MockBrainController())
-    assert len(a["card"]) == 9 and all(c["strokes"] is not None for c in a["card"])
+    assert len(a["card"]) == 18 and all(c["strokes"] is not None for c in a["card"])
     assert a == play_round(3, MockBrainController())
     sm = summarize_rounds([a])
     assert sm["rounds"] == 1 and sm["mean_strokes"] == a["strokes"] and sm["by_distance"]
+    assert set(sm["nines"]) == {"front", "back"} and sm["par"] == 72

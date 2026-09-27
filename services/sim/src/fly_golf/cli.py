@@ -60,6 +60,9 @@ def cmd_round(args) -> int:
     from .config import load_settings
     from .experiments.runner import COURSE_EXPERIMENT_ID, RoundSession, RunRecorder, summarize
 
+    if args.first > args.last:
+        print("--first must not be after --last", file=sys.stderr)
+        return 2
     s = load_settings()
     controller = ControllerRegistry(s).get(args.controller)
     recorder = RunRecorder(
@@ -186,6 +189,7 @@ def cmd_bench(args) -> int:
         jobs=args.jobs or default_jobs(),
         graph=graph,
         readout_path=readout,
+        nine=args.nine,
     )
     out = (
         Path(args.out)
@@ -196,10 +200,17 @@ def cmd_bench(args) -> int:
     out.write_text(json.dumps(report, indent=1) + "\n")
     sm = report["summary"]
     print(
-        f"{args.controller}: {sm['rounds']} rounds, mean {sm['mean_strokes']} (par {sm['par']}), best "
+        f"{args.controller}: {sm['rounds']} rounds of holes {report['holes']}, mean {sm['mean_strokes']} "
+        f"(par {sm['par']}), best "
         f"{sm['best_round']}, holes holed {sm['holes_holed_pct']}%, picked up {sm['holes_picked_up']}, "
         f"trees {sm['trees_per_round']}/round, water {sm['water_per_round']}/round"
     )
+    for nid, n in sm["nines"].items():
+        print(
+            f"  {nid:>5s} nine (holes {n['holes']}, par {n['par']}): mean {n['mean_strokes']}, best {n['best']}, "
+            f"holed {n['holes_holed_pct']}%, picked up {n['holes_picked_up']}, "
+            f"trees {n['trees_per_round']}/round, water {n['water_per_round']}/round"
+        )
     for band, b in sm["by_distance"].items():
         clubs = ", ".join(f"{c} {p:.0f}%" for c, p in b["top_clubs"])
         print(f"  {band:>10s}: {b['shots']:4d} shots  {clubs}  (trees {b['trees_pct']}%)")
@@ -212,6 +223,9 @@ def cmd_bench(args) -> int:
             k: sm[k]
             for k in ("rounds", "mean_strokes", "best_round", "holes_holed_pct", "trees_per_round", "water_per_round")
         } | {
+            "holes": report["holes"],  # which holes mean_strokes covers: "1-18", "1-9" or "10-18"
+            "par": sm["par"],
+            "nines": {nid: {k: n[k] for k in ("mean_strokes", "best", "par")} for nid, n in sm["nines"].items()},
             "bench": report["bench"],
             "seeds": report["seeds"],
             "git_commit": report["git"]["commit"],
@@ -259,6 +273,12 @@ def cmd_replay(args) -> int:
         )
         if not r["same_physics_version"]:
             line += f" (recorded with {r['physics_version_recorded']}, now {r['physics_version_current']})"
+        recorded_course, current_course = r.get("course_version_recorded"), r.get("course_version_current")
+        if recorded_course != current_course:
+            if r.get("course_compatible"):
+                line += f" (course {recorded_course}: hole geometry unchanged in {current_course}, compatible)"
+            else:
+                line += f" (WARNING: recorded on course {recorded_course}, now {current_course}; the hole may differ)"
         if args.controller:
             # Re-run the controller on the recorded sensory frame, with the engine and readout the
             # record names, and compare motor channels.
@@ -319,11 +339,13 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("--port", type=int)
     sp.add_argument("--reload", action="store_true")
     controllers = ["mock", "malecns", "malecns-trained"]
-    rd = sub.add_parser("round", help="play the front nine headless and record it")
+    rd = sub.add_parser("round", help="play the 18-hole course (or a stretch of it) headless and record it")
     rd.add_argument("--controller", choices=controllers, default="mock")
     rd.add_argument("--seed", type=int, default=7)
-    rd.add_argument("--first", type=int, default=1, help="first hole (1-9)")
-    rd.add_argument("--last", type=int, default=9, help="last hole (1-9)")
+    rd.add_argument("--first", type=int, default=1, choices=range(1, 19), metavar="N", help="first hole (1-18)")
+    rd.add_argument(
+        "--last", type=int, default=18, choices=range(1, 19), metavar="N", help="last hole (1-18; 9 = the front nine)"
+    )
     rd.add_argument("--traces", action="store_true", help="save detailed neural traces")
     tr = sub.add_parser("train", help="fit a trained readout of MaleCNS activity from practice (docs/TRAINING.md)")
     tr.add_argument("--seed", type=int, default=0)
@@ -351,7 +373,7 @@ def main(argv: list[str] | None = None) -> int:
     rf.add_argument(
         "--features", choices=FEATURE_SPACE_CHOICES, help="readout input (default: the source run's feature space)"
     )
-    bn = sub.add_parser("bench", help="play complete front-nine rounds headless and summarise them")
+    bn = sub.add_parser("bench", help="play complete 18-hole rounds headless and summarise them (front / back splits)")
     bn.add_argument("--controller", choices=controllers, default="malecns-trained")
     bn.add_argument("--rounds", type=int, default=8)
     bn.add_argument("--seed", type=int, default=100, help="first round seed (rounds use seed, seed+1, ...)")
@@ -360,6 +382,12 @@ def main(argv: list[str] | None = None) -> int:
     bn.add_argument("--graph", help="compiled graph directory (default: the MaleCNS data dir)")
     bn.add_argument("--out", help="report path (default: runs/bench/<controller>-<utc>.json)")
     bn.add_argument("--attach", action="store_true", help="write the summary into the readout's metadata")
+    bn.add_argument(
+        "--nine",
+        choices=["both", "front", "back"],
+        default="both",
+        help="play all 18 holes (default), or one nine; front reproduces the earlier front-nine bench",
+    )
     pp = sub.add_parser("putt", help="play headless putts and record them")
     pp.add_argument("--controller", choices=controllers, default="mock")
     pp.add_argument("--seed", type=int, default=7)
@@ -372,11 +400,11 @@ def main(argv: list[str] | None = None) -> int:
     rp.add_argument("--shot")
     rp.add_argument("--controller", action="store_true", help="also re-run the controller and compare motor output")
     ex = sub.add_parser(
-        "export-showcase", help="export a recorded front-nine run for the static web showcase (GitHub Pages)"
+        "export-showcase", help="export a recorded course run for the static web showcase (GitHub Pages)"
     )
     ex.add_argument("run_id")
-    ex.add_argument("--slug", required=True, help="showcase id and file name, e.g. trained-front-nine")
-    ex.add_argument("--title", required=True, help='e.g. "Trained MaleCNS - Front Nine"')
+    ex.add_argument("--slug", required=True, help="showcase id and file name, e.g. trained-eighteen-s07")
+    ex.add_argument("--title", required=True, help='e.g. "Trained MaleCNS - 18 holes"')
     ex.add_argument("--description", help="one or two sentences shown with the run (default: generated)")
     ex.add_argument("--round", type=int, help="round seed to export when the run holds more than one round")
     ex.add_argument("--out", help="showcase directory (default: apps/web/public/showcase)")

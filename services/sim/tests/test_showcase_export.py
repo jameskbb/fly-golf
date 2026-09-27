@@ -9,7 +9,7 @@ import pytest
 from fly_golf.api.schemas import ShotRecordModel
 from fly_golf.brain.mock import MockBrainController
 from fly_golf.cli import main
-from fly_golf.experiments.runner import PuttingSession, RoundSession, RunRecorder
+from fly_golf.experiments.runner import PuttingSession, RoundSession, RunRecorder, course_version_compatible
 from fly_golf.experiments.showcase import (
     REMOVED_PATH,
     SHOWCASE_FORMAT,
@@ -151,13 +151,58 @@ def test_cli_export_showcase(run, tmp_path, monkeypatch, capsys):
     assert main(["export-showcase", run_id, "--slug", "cli", "--title", "MaleCNS round", "--out", str(out)]) == 2
 
 
+def test_export_an_eighteen_hole_round(tmp_path):
+    runs = tmp_path / "runs"
+    run_id = record_round(runs, holes=18, seed=7)
+    out = tmp_path / "out"
+    report = export_showcase(runs, run_id, out, slug="mock-eighteen-s07", title="Mock - 18 holes")
+    rnd = report["round"]
+    assert rnd["complete"] and rnd["holes_played"] == 18 and len(rnd["scorecard"]) == 18
+    assert [c["hole"] for c in rnd["scorecard"]] == list(range(1, 19))
+    doc = json.loads((out / "runs" / "mock-eighteen-s07.json").read_text())
+    assert doc["course_version"] == "eighteen-v1"
+    assert "front-nine" not in doc["description"] and "front nine" not in doc["description"]
+    course = json.loads((out / "course.json").read_text())
+    assert (
+        course["par"] == 72 and len(course["holes"]) == 18 and [n["id"] for n in course["nines"]] == ["front", "back"]
+    )
+    index = json.loads((out / "index.json").read_text())
+    assert index["runs"][0]["holes_played"] == 18 and index["runs"][0]["round_complete"] is True
+
+
+def test_export_accepts_front_nine_v2_records_of_the_front_nine(run, tmp_path):
+    runs, run_id = run
+    path = runs / run_id / "shots.jsonl"
+    shots = [json.loads(line) for line in path.read_text().splitlines()]
+    for s in shots:
+        s["versions"]["course"] = s["course"]["version"] = "front-nine-v2"
+    path.write_text("".join(json.dumps(s) + "\n" for s in shots))
+    report = export_showcase(runs, run_id, tmp_path / "out", slug="old", title="Mock")
+    assert report["round"]["holes_played"] == 2
+    shots[0]["versions"]["course"] = "front-nine-v1"
+    path.write_text("".join(json.dumps(s) + "\n" for s in shots))
+    with pytest.raises(ShowcaseExportError, match="wrong holes"):
+        export_showcase(runs, run_id, tmp_path / "out2", slug="old", title="Mock")
+
+
 @pytest.mark.skipif(not (COMMITTED / "index.json").exists(), reason="no showcase committed")
 def test_committed_showcase_is_valid_and_matches_the_code():
     index = json.loads((COMMITTED / "index.json").read_text())
     assert index["format"] == SHOWCASE_FORMAT and index["runs"]
     assert index["featured"] in {r["id"] for r in index["runs"]}
     # the course the showcase draws is the course this code plays
-    assert json.loads((COMMITTED / index["course"]).read_text()) == json.loads(json.dumps(course_payload()))
+    committed = json.loads((COMMITTED / index["course"]).read_text())
+    current = json.loads(json.dumps(course_payload()))
+    if committed["version"] == current["version"]:
+        assert committed == current
+    else:
+        # Exported before the back nine existed: every hole it draws must still be, field for
+        # field, the hole this code plays (front-nine-v2 holes 1-9 are unchanged).
+        assert committed["clubs"] == current["clubs"]
+        for hole in committed["holes"]:
+            assert course_version_compatible(committed["version"], hole["number"])
+            now = current["holes"][hole["number"] - 1]
+            assert {k: now[k] for k in hole} == hole
     for entry in index["runs"]:
         doc = json.loads((COMMITTED / entry["file"]).read_text())
         assert doc["id"] == entry["id"] and len(doc["shots"]) == entry["shots"]
@@ -166,7 +211,7 @@ def test_committed_showcase_is_valid_and_matches_the_code():
             if not shot["controller"]["is_mock"]:
                 assert shot["neural_summary"]["neuron_count"] > 0
         assert entry["is_mock"] == any(s["controller"]["is_mock"] for s in doc["shots"])
-        card = scorecard_from_shots(doc["shots"])
-        assert [(c["hole"], c["strokes"]) for c in card] == [
-            (c["hole"], c["strokes"]) for c in doc["round"]["scorecard"]
-        ]
+        card = {c["hole"]: c for c in scorecard_from_shots(doc["shots"])}
+        recorded = {c["hole"]: c["strokes"] for c in doc["round"]["scorecard"]}
+        assert {n: card[n]["strokes"] for n in recorded} == recorded
+        assert all(c["strokes"] is None for n, c in card.items() if n not in recorded)
