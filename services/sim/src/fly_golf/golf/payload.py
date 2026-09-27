@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .clubs import BAG, nominal_distances
-from .course import COURSE_NAME, COURSE_PAR, COURSE_VERSION, FRONT_NINE
+from .course import COURSE, COURSE_NAME, COURSE_PAR, COURSE_VERSION, NINES
 
 
 def course_payload() -> dict:
@@ -11,6 +11,7 @@ def course_payload() -> dict:
         "name": COURSE_NAME,
         "version": COURSE_VERSION,
         "par": COURSE_PAR,
-        "holes": [h.to_dict() for h in FRONT_NINE],
+        "nines": [dict(n) for n in NINES],
+        "holes": [h.to_dict() for h in COURSE],
         "clubs": [c.to_dict() | {"nominal": nominal_distances().get(c.id)} for c in BAG],
     }

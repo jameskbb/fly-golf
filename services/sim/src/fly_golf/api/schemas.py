@@ -106,7 +106,7 @@ class ControllerRequest(BaseModel):
 
 class ResetRequest(BaseModel):
     seed: int | None = Field(default=None, ge=0, le=2**31 - 1)
-    hole: int | None = Field(default=None, ge=1, le=9)  # course mode: play this hole
+    hole: int | None = Field(default=None, ge=1, le=18)  # course mode: play this hole
 
 
 def envelope(type_: str, data: dict, seq: int = 0) -> dict:

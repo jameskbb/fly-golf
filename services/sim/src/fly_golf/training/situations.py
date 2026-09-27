@@ -17,6 +17,8 @@ import math
 import random
 from dataclasses import asdict, dataclass
 
+# Practice uses the front nine only. The back nine (holes 10-18) is deliberately held out: the
+# trained fly has never practised a shot on it, so its rounds there test generalisation.
 from ..golf.course import FRONT_NINE, HOLE_BY_NUMBER, HoleSpec
 from ..golf.course_env import ADDRESS_JITTER_FULL_DEG, CourseEnvironment
 from ..golf.env import PuttingEnvironment

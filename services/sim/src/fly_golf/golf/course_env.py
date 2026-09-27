@@ -1,4 +1,4 @@
-"""Course environment: one hole of the front nine is one episode.
+"""Course environment: one hole of the course is one episode.
 
 The fly plays from the tee until it holes out or reaches par + MAX_OVER_PAR strokes (then it
 "picks up", scoring that maximum). Each `step` is one stroke. Rules (docs/COURSE.md):

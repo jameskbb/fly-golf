@@ -3,11 +3,11 @@
 REST:
     GET  /health                 liveness + versions
     GET  /api/status             controllers, MaleCNS data status, session state
-    GET  /api/course             the front nine (every hole's geometry) + the club bag
+    GET  /api/course             the 18-hole course (every hole's geometry) + the club bag
     POST /api/session            choose controller + mode (starts a new recorded run)
     POST /api/controller         swap the controller mid-round (same run, hole and ball)
     POST /api/reset              practice: new hole (optional seed); course: new round / chosen hole
-    POST /api/next               course: go to the next hole (or a new round after the ninth)
+    POST /api/next               course: go to the next hole (or a new round after the 18th)
     POST /api/shot               play one stroke with the active controller (/api/putt is an alias)
     GET  /api/runs               list recorded runs
     GET  /api/runs/{run_id}      one run with all shot records

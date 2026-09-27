@@ -1,4 +1,4 @@
-"""Sessions (practice green and the front nine), run recording and replay.
+"""Sessions (practice green and the 18-hole course), run recording and replay.
 
 Loop per stroke:
     Observation -> ProxySensoryEncoderV2 -> BrainController.observe/step/motor_output
@@ -24,7 +24,14 @@ from ..brain.interfaces import BrainController, MotorCommand, SensoryFrame
 from ..brain.motor import DecodedSwing, MotorDecoderV2
 from ..brain.sensory import ProxySensoryEncoderV2
 from ..golf.clubs import PUTTER
-from ..golf.course import COURSE_PAR, COURSE_VERSION, FRONT_NINE, HOLE_BY_NUMBER, course_summary
+from ..golf.course import (
+    COMPATIBLE_COURSE_VERSIONS,
+    COURSE,
+    COURSE_PAR,
+    COURSE_VERSION,
+    HOLE_BY_NUMBER,
+    course_summary,
+)
 from ..golf.course_env import CourseEnvironment
 from ..golf.env import PuttingEnvironment
 from ..golf.flight import COURSE_PHYSICS_VERSION, Launch, simulate_shot
@@ -164,6 +171,17 @@ def is_course_record(record: dict) -> bool:
     return record.get("mode") == "course"
 
 
+def course_version_compatible(recorded: str | None, hole_number: int) -> bool:
+    """Whether a course record's hole is geometrically the hole this code builds.
+
+    True for the current course version, and for an earlier version whose geometry for that hole
+    is unchanged (front-nine-v2 records of holes 1-9: the front nine did not change when the back
+    nine was added)."""
+    if recorded == COURSE_VERSION:
+        return True
+    return hole_number in COMPATIBLE_COURSE_VERSIONS.get(str(recorded), frozenset())
+
+
 def replay_physics(record: dict) -> dict:
     """Re-simulate a recorded shot from its recorded start state and launch; compare trajectories."""
     ball = tuple(record["initial_state"]["ball"])
@@ -174,7 +192,12 @@ def replay_physics(record: dict) -> dict:
         roll = simulate_shot(hole, ball, launch)
         recorded_physics = record.get("versions", {}).get("course_physics")
         current_physics = COURSE_PHYSICS_VERSION
-        extra = {"course_version_recorded": course.get("version"), "course_version_current": COURSE_VERSION}
+        recorded_version = course.get("version")
+        extra = {
+            "course_version_recorded": recorded_version,
+            "course_version_current": COURSE_VERSION,
+            "course_compatible": course_version_compatible(recorded_version, course["hole_number"]),
+        }
     else:
         scenario = Scenario.from_dict(record["scenario"])
         s = record["stroke"]
@@ -438,7 +461,8 @@ class PuttingSession(_Session):
 
 
 class RoundSession(_Session):
-    """A round on the front nine. The fly picks every club itself (motor channel club_reach)."""
+    """An 18-hole round (front nine, then the back nine). The fly picks every club itself
+    (motor channel club_reach)."""
 
     mode = "course"
     experiment_id = COURSE_EXPERIMENT_ID
@@ -472,13 +496,13 @@ class RoundSession(_Session):
         self.attempts = {}
         self.scorecard = {
             h.number: {"hole": h.number, "par": h.par, "strokes": None, "holed": None, "controllers": []}
-            for h in FRONT_NINE
+            for h in COURSE
         }
         return self.start_hole(start_hole)
 
     def start_hole(self, number: int) -> dict:
         if number not in HOLE_BY_NUMBER:
-            raise ValueError(f"no hole {number} on the front nine")
+            raise ValueError(f"no hole {number} on the course (holes 1-{len(COURSE)})")
         self.hole_number = number
         attempt = self.attempts.get(number, -1) + 1
         self.attempts[number] = attempt
@@ -509,7 +533,7 @@ class RoundSession(_Session):
         return out
 
     def next_hole(self) -> dict:
-        """Advance after a finished hole: the next unplayed hole, or a new round after the ninth."""
+        """Advance after a finished hole: the next unplayed hole, or a new round after the 18th."""
         if self.env is not None and not self.env.done:
             raise RuntimeError("finish the current hole first")
         if self.round_complete:
