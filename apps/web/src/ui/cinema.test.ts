@@ -8,7 +8,7 @@ describe("cinema mode from the URL", () => {
     }
   });
   it("stays off otherwise", () => {
-    for (const q of ["", "?cinema=0", "?cinema=false", "?run=trained-front-nine-s07&shot=14", "?cinemas=1"]) {
+    for (const q of ["", "?cinema=0", "?cinema=false", "?run=trained-eighteen-s07&shot=14", "?cinemas=1"]) {
       expect(cinemaFromSearch(q)).toBe(false);
     }
   });

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CoursePayload, SessionState, ShowcaseIndex, ShowcaseRun, type ShotRecord } from "@fly-golf/protocol";
+import { CoursePayload, SessionState, ShowcaseIndex, ShowcaseRun } from "@fly-golf/protocol";
 import {
   drawHoles,
   holeOf,
@@ -41,6 +41,19 @@ describe("committed showcase", () => {
   for (const entry of index.runs) {
     describe(entry.id, () => {
       const run = ShowcaseRun.parse(load(entry.file));
+
+      it("is a complete 18-hole round whose card adds up", () => {
+        const holes = course.holes.map((h) => h.number);
+        expect(entry.course_version).toBe("eighteen-v1");
+        expect(entry.holes).toEqual(holes);
+        expect(holesOfRun(run)).toEqual(holes);
+        expect(run.round.scorecard.map((e) => e.hole)).toEqual(holes);
+        expect(run.round.complete).toBe(true);
+        const strokes = run.round.scorecard.reduce((a, e) => a + (e.strokes ?? 0), 0);
+        expect(run.round.strokes).toBe(strokes);
+        expect(entry.strokes).toBe(strokes);
+        expect(entry.to_par).toBe(strokes - course.par);
+      });
 
       it("matches its index entry and is labelled honestly", () => {
         expect(run.id).toBe(entry.id);
@@ -144,64 +157,29 @@ describe("mixed rounds", () => {
 });
 
 /**
- * The course growing to 18 holes. Until the showcase is re-recorded the committed data is the front
- * nine only, so these tests build an 18-hole course (the front nine again as holes 10-18, marked
- * back nine / dusk) and 18-hole rounds (one recorded front nine, then another recorded front nine
- * played again as the back nine), and mix them with the old nine-hole rounds.
+ * 18 holes, and the rounds recorded before the back nine existed. The committed showcase is all
+ * 18-hole rounds; old front-nine rounds (no longer committed) are rebuilt here in their old shape
+ * from the front nine of committed rounds: holes 1-9 only, a nine-hole card, no hole list.
  */
 describe("18 holes", () => {
   const BACK = 9;
-  const runs = index.runs.map((e) => ShowcaseRun.parse(load(e.file)));
-  const course18 = CoursePayload.parse({
-    ...course,
-    name: "Fly Golf National",
-    version: "eighteen-v1",
-    par: course.par * 2,
-    holes: [
-      ...course.holes,
-      ...course.holes.map((h) => ({ ...h, number: h.number + BACK, nine: "back", theme: "dusk" })),
-    ],
-    nines: [
-      { id: "front", name: "Front Nine", holes: course.holes.map((h) => h.number), par: course.par },
-      {
-        id: "back",
-        name: "The Neuropil Nine",
-        holes: course.holes.map((h) => h.number + BACK),
-        par: course.par,
-      },
-    ],
-  });
-  const asBack = (shot: ShotRecord): ShotRecord => ({
-    ...shot,
-    hole_index: shot.hole_index + BACK,
-    scenario: { ...shot.scenario, hole_number: holeOf(shot) + BACK },
-    hole: shot.hole && { ...shot.hole, number: shot.hole.number + BACK },
-    course: shot.course && {
-      ...shot.course,
-      version: "eighteen-v1",
-      hole_number: shot.course.hole_number + BACK,
-    },
-  });
-  /** An 18-hole round: `front`'s nine, then `back`'s nine played as holes 10-18. */
-  const eighteen = (id: string, front: ShowcaseRun, back: ShowcaseRun): ShowcaseRun => ({
-    ...front,
-    id,
-    course_version: "eighteen-v1",
-    shots: [...front.shots, ...back.shots.map(asBack)],
-    round: {
-      ...front.round,
-      scorecard: [
-        ...front.round.scorecard,
-        ...back.round.scorecard.map((c) => ({ ...c, hole: c.hole + BACK })),
-      ],
-    },
-  });
-  const trained = runs.filter(
-    (r) => r.controllers_used.length === 1 && r.controllers_used[0] === "malecns-trained",
-  );
-  const [a, b, c] = trained;
-  const full1 = eighteen("trained-eighteen-1", a, b);
-  const full2 = eighteen("trained-eighteen-2", b, c);
+  const course18 = course;
+  const trained = index.runs
+    .filter((r) => r.controllers_used.length === 1 && r.controllers_used[0] === "malecns-trained")
+    .map((e) => ShowcaseRun.parse(load(e.file)));
+  /** A committed round cut back to the shape of a round recorded on the front-nine course. */
+  const asOld = (run: ShowcaseRun): ShowcaseRun => {
+    const { holes: _holes, ...round } = run.round;
+    return {
+      ...run,
+      id: run.id.replace("eighteen", "front-nine"),
+      course_version: "front-nine-v2",
+      shots: run.shots.filter((s) => holeOf(s) <= BACK),
+      round: { ...round, scorecard: run.round.scorecard.filter((c) => c.hole <= BACK) },
+    };
+  };
+  const [full1, full2] = trained;
+  const [a, b, c] = trained.slice(2, 5).map(asOld);
   const pool = new Map([full1, full2, a, b, c].map((r) => [r.id, r]));
   const holes18 = course18.holes.map((h) => h.number);
 

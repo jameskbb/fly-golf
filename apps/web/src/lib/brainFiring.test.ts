@@ -29,8 +29,8 @@ const index = ShowcaseIndex.parse(
   JSON.parse(readFileSync(new URL("../../public/showcase/index.json", import.meta.url), "utf8")),
 );
 
-const trained = loadRun("trained-front-nine-s07");
-const mock = loadRun("mock-front-nine-s07");
+const trained = loadRun("trained-eighteen-s07");
+const mock = loadRun("mock-eighteen-s07");
 const neural = (run: ShowcaseRun): ShotRecord[] => run.shots.filter((s) => s.neural_summary);
 
 describe("brain firing: shots without a brain", () => {
