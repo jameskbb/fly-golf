@@ -16,10 +16,25 @@ interface RunLike {
 const numbers = (v: unknown): number[] =>
   Array.isArray(v) ? v.filter((n): n is number => typeof n === "number") : [];
 
+/** A tag for a set of holes: 18 HOLES, FRONT 9, BACK 9, HOLES a-b, or the holes themselves when
+ *  they are not a range. */
+export function holesTag(holes: number[]): string {
+  const set = [...new Set(holes)].sort((x, y) => x - y);
+  const run = (lo: number, hi: number) =>
+    set.length === hi - lo + 1 && set[0] === lo && set[set.length - 1] === hi;
+  if (run(1, 18)) return "18 HOLES";
+  if (run(1, 9)) return "FRONT 9";
+  if (run(10, 18)) return "BACK 9";
+  if (set.length === 1) return `HOLE ${set[0]}`;
+  if (run(set[0], set[set.length - 1])) return `HOLES ${set[0]}-${set[set.length - 1]}`;
+  return set.length <= 4 ? `HOLES ${set.join(", ")}` : `${set.length} HOLES`;
+}
+
 /**
- * "18 HOLES" for a round on the 18-hole course, "FRONT 9" for one recorded on the front nine, and
- * plain "COURSE" while a run says too little to tell (a live run before its first hole is holed
- * out has no scorecard yet).
+ * The run's holes as a tag (holesTag): from the round's own hole range, else the run's hole list,
+ * else its scorecard. A run that lists none falls back to its course version, and to plain
+ * "COURSE" while it says too little to tell (a live run before its first hole is holed out has no
+ * scorecard yet).
  */
 export function courseTag(run: RunLike): string | null {
   if (run.mode !== "course") return null;
@@ -29,17 +44,12 @@ export function courseTag(run: RunLike): string | null {
     course_version?: unknown;
   };
   const card = numbers(Array.isArray(round.scorecard) ? round.scorecard.map((c) => c?.hole) : []);
-  const holes = [...numbers(run.holes), ...numbers(round.holes), ...card];
+  const listed = [numbers(round.holes), numbers(run.holes), card].find((l) => l.length);
+  if (listed) return holesTag(listed);
   const version = String(run.course_version ?? round.course_version ?? "");
   const played = typeof run.holes_played === "number" ? run.holes_played : undefined;
-  if (holes.some((n) => n > 9) || card.length >= 18 || version.startsWith("eighteen") || (played ?? 0) > 9)
-    return "18 HOLES";
-  if (
-    card.length ||
-    version.startsWith("front-nine") ||
-    (run.round_complete === true && played !== undefined)
-  )
-    return "FRONT 9";
+  if (version.startsWith("front-nine") || (run.round_complete === true && played === 9)) return "FRONT 9";
+  if (run.round_complete === true && played === 18) return "18 HOLES";
   return "COURSE";
 }
 

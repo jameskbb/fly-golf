@@ -1,28 +1,45 @@
 import { describe, expect, it } from "vitest";
-import { benchLabel, benchText, courseModeLabel, courseTag } from "./labels";
+import { benchLabel, benchText, courseModeLabel, courseTag, holesTag } from "./labels";
 
 describe("courseTag", () => {
+  const card = (from: number, to: number) =>
+    Array.from({ length: to - from + 1 }, (_, i) => ({ hole: from + i }));
   it("practice runs have no course tag", () => {
     expect(courseTag({ mode: "practice" })).toBeNull();
   });
-  it("a round recorded on the front nine still says FRONT 9", () => {
-    expect(courseTag({ mode: "course", holes_played: 9, round_complete: true })).toBe("FRONT 9");
-    expect(courseTag({ mode: "course", course_version: "front-nine-v2" })).toBe("FRONT 9");
-    const card = Array.from({ length: 9 }, (_, i) => ({ hole: i + 1 }));
-    expect(courseTag({ mode: "course", round: { scorecard: card } })).toBe("FRONT 9");
+  it("tags by the round's holes", () => {
+    expect(courseTag({ mode: "course", round: { scorecard: card(1, 18) } })).toBe("18 HOLES");
+    expect(courseTag({ mode: "course", round: { scorecard: card(1, 9) } })).toBe("FRONT 9");
+    expect(courseTag({ mode: "course", round: { scorecard: card(10, 18) } })).toBe("BACK 9");
+    expect(courseTag({ mode: "course", round: { holes: [10, 11, 12, 13, 14, 15, 16, 17, 18] } })).toBe(
+      "BACK 9",
+    );
+    expect(courseTag({ mode: "course", holes: [1, 2, 3, 4, 5] })).toBe("HOLES 1-5");
+    expect(courseTag({ mode: "course", holes: [12] })).toBe("HOLE 12");
   });
-  it("says only COURSE when the run does not tell which course", () => {
+  it("prefers the round's own range to the holes played so far", () => {
+    expect(
+      courseTag({ mode: "course", holes: [10, 11], round: { holes: card(10, 18).map((c) => c.hole) } }),
+    ).toBe("BACK 9");
+  });
+  it("without a hole list: the course version, a complete round's size, else COURSE", () => {
+    expect(courseTag({ mode: "course", course_version: "front-nine-v2" })).toBe("FRONT 9");
+    expect(courseTag({ mode: "course", holes_played: 9, round_complete: true })).toBe("FRONT 9");
+    expect(courseTag({ mode: "course", holes_played: 18, round_complete: true })).toBe("18 HOLES");
     expect(courseTag({ mode: "course" })).toBe("COURSE");
     expect(courseTag({ mode: "course", round: null, holes_played: 3 })).toBe("COURSE");
   });
-  it("an 18-hole round says 18 HOLES", () => {
-    const card = Array.from({ length: 18 }, (_, i) => ({ hole: i + 1 }));
-    expect(courseTag({ mode: "course", round: { scorecard: card } })).toBe("18 HOLES");
-    expect(courseTag({ mode: "course", holes: [1, 2, 10] })).toBe("18 HOLES");
-    expect(courseTag({ mode: "course", holes_played: 18 })).toBe("18 HOLES");
-    expect(courseTag({ mode: "course", course_version: "eighteen-v1" })).toBe("18 HOLES");
+});
+
+describe("holesTag", () => {
+  it("names whole nines, the full round and other ranges", () => {
+    expect(holesTag(card18())).toBe("18 HOLES");
+    expect(holesTag([3, 1, 2, 4, 5, 6, 7, 8, 9])).toBe("FRONT 9");
+    expect(holesTag([1, 3, 8])).toBe("HOLES 1, 3, 8");
+    expect(holesTag([1, 3, 5, 7, 9])).toBe("5 HOLES");
   });
 });
+const card18 = () => Array.from({ length: 18 }, (_, i) => i + 1);
 
 describe("courseModeLabel", () => {
   it("names the course the mode button plays", () => {
@@ -51,16 +68,5 @@ describe("bench labels", () => {
     ).toBe(
       "18-hole bench: 101.2 strokes per round on average over 10 rounds, 91% of holes holed out. Front nine 50.1, back nine 51.1 (holes it never practised on).",
     );
-  });
-});
-
-describe("courseTag with hole ranges", () => {
-  it("reads the round's own hole list", () => {
-    expect(courseTag({ mode: "course", round: { holes: [10, 11, 12, 13, 14, 15, 16, 17, 18] } })).toBe(
-      "18 HOLES",
-    );
-    expect(
-      courseTag({ mode: "course", round: { holes: [1, 2, 3, 4, 5, 6, 7, 8, 9], scorecard: [{ hole: 1 }] } }),
-    ).toBe("FRONT 9");
   });
 });
