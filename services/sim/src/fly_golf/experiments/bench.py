@@ -1,11 +1,13 @@
-"""`fly-golf bench`: closed-loop rounds on the front nine.
+"""`fly-golf bench`: closed-loop rounds on the 18-hole course.
 
 The training report scores ONE stroke per held-out situation. What a viewer sees is different:
 the fly plays a whole hole, every shot from wherever the last one finished, until it holes out
-or picks up at par + 5. This benchmark plays complete front-nine rounds with a controller,
+or picks up at par + 5. This benchmark plays complete rounds with a controller,
 exactly as the app does (same RoundSession, sensing, brain, decoder and physics), and reports
 what matters for that: holes finished, strokes, penalty strokes and which club the fly reached
-for at each distance.
+for at each distance. Rounds are 18 holes by default, with front- and back-nine splits (the
+back nine is held out from training); `nine="front"` or `"back"` plays one nine only, and
+`nine="front"` reproduces the earlier front-nine bench shot for shot (hole seeds are unchanged).
 
 Rounds are independent and seeded (seed0, seed0 + 1, ...), so a bench is reproducible and two
 controllers can be compared on the same rounds. Rounds run in parallel worker processes that
@@ -25,11 +27,13 @@ import numpy as np
 
 from ..brain.interfaces import BrainController
 from ..brain.mock import MockBrainController
-from ..golf.course import COURSE_PAR
+from ..golf.course import HOLE_BY_NUMBER, NINES
 from ..provenance import git_info, versions
 from .runner import RoundSession
 
-BENCH_VERSION = "front-nine-bench-v1"
+BENCH_VERSION = "eighteen-bench-v1"  # v1 of the 18-hole bench (front-nine-bench-v1 before)
+NINE_HOLES: dict[str, tuple[int, ...]] = {n["id"]: tuple(n["holes"]) for n in NINES}
+NINE_CHOICES = ("both", "front", "back")
 DISTANCE_BANDS = ((0.0, 20.0), (20.0, 60.0), (60.0, 120.0), (120.0, 170.0), (170.0, 1e9))
 
 _GRAPH = None  # set in the parent before forking workers
@@ -57,11 +61,26 @@ def _init_worker() -> None:
     _CTRL = build_controller(cid, _GRAPH, readout)
 
 
-def play_round(seed: int, controller: BrainController | None = None) -> dict:
-    """One complete front-nine round (no recording). Returns the card and every shot."""
+def holes_for(nine: str) -> tuple[int, ...]:
+    """The holes a bench plays: "both" (1-18), "front" (1-9) or "back" (10-18)."""
+    if nine == "both":
+        return NINE_HOLES["front"] + NINE_HOLES["back"]
+    if nine not in NINE_HOLES:
+        raise ValueError(f"nine must be one of {NINE_CHOICES}")
+    return NINE_HOLES[nine]
+
+
+def holes_label(holes: tuple[int, ...]) -> str:
+    """ "1-18", "1-9" or "10-18" for a contiguous run of holes."""
+    return f"{holes[0]}-{holes[-1]}"
+
+
+def play_round(seed: int, controller: BrainController | None = None, nine: str = "both") -> dict:
+    """One complete round, or one nine of it (no recording). Returns the card and every shot."""
     controller = controller or _CTRL
+    holes = holes_for(nine)
     s = RoundSession(controller)
-    s.new_round(seed)
+    s.new_round(seed, start_hole=holes[0])
     shots = []
     while True:
         hole = s.env.hole
@@ -80,10 +99,10 @@ def play_round(seed: int, controller: BrainController | None = None) -> dict:
                     "final_m": round(o["final_distance_m"], 2),
                 }
             )
-        if s.round_complete:
+        if hole.number >= holes[-1] or s.round_complete:
             break
         s.next_hole()
-    card = [s.scorecard[n] for n in sorted(s.scorecard)]
+    card = [s.scorecard[n] for n in holes]
     return {
         "seed": seed,
         "strokes": sum(c["strokes"] for c in card),
@@ -93,12 +112,35 @@ def play_round(seed: int, controller: BrainController | None = None) -> dict:
     }
 
 
+def _play(args: tuple[int, str]) -> dict:
+    return play_round(args[0], nine=args[1])
+
+
+def _nine_split(rounds: list[dict], holes: tuple[int, ...]) -> dict:
+    """mean / best strokes and hazards over one nine of every round."""
+    wanted = set(holes)
+    strokes = np.array([sum(c["strokes"] for c in r["card"] if c["hole"] in wanted) for r in rounds], dtype=float)
+    cards = [c for r in rounds for c in r["card"] if c["hole"] in wanted]
+    shots = [s for r in rounds for s in r["shots"] if s["hole"] in wanted]
+    return {
+        "holes": holes_label(holes),
+        "par": sum(HOLE_BY_NUMBER[n].par for n in holes),
+        "mean_strokes": round(float(strokes.mean()), 2),
+        "best": int(strokes.min()),
+        "holes_holed_pct": round(100.0 * sum(bool(c["holed"]) for c in cards) / len(cards), 1),
+        "holes_picked_up": sum(c["holed"] is False for c in cards),
+        "trees_per_round": round(sum(s["outcome"] == "out_of_bounds" for s in shots) / len(rounds), 2),
+        "water_per_round": round(sum(s["outcome"] == "water" for s in shots) / len(rounds), 2),
+    }
+
+
 def summarize_rounds(rounds: list[dict]) -> dict:
     if not rounds:
         return {"rounds": 0}
     strokes = np.array([r["strokes"] for r in rounds], dtype=float)
     holes = [c for r in rounds for c in r["card"]]
     shots = [s for r in rounds for s in r["shots"]]
+    played = sorted({c["hole"] for c in holes})
     bands = {}
     for lo, hi in DISTANCE_BANDS:
         band = [s for s in shots if lo <= s["start_m"] < hi]
@@ -117,7 +159,8 @@ def summarize_rounds(rounds: list[dict]) -> dict:
         "mean_strokes": round(float(strokes.mean()), 2),
         "median_strokes": float(np.median(strokes)),
         "best_round": int(strokes.min()),
-        "par": COURSE_PAR,
+        "par": sum(HOLE_BY_NUMBER[n].par for n in played),
+        "holes_covered": holes_label(tuple(played)),
         "holes": len(holes),
         "holes_holed_pct": round(100.0 * sum(bool(c["holed"]) for c in holes) / len(holes), 1),
         "holes_picked_up": sum(c["holed"] is False for c in holes),
@@ -125,6 +168,7 @@ def summarize_rounds(rounds: list[dict]) -> dict:
         "trees_per_round": round(sum(s["outcome"] == "out_of_bounds" for s in shots) / len(rounds), 2),
         "water_per_round": round(sum(s["outcome"] == "water" for s in shots) / len(rounds), 2),
         "by_distance": bands,
+        "nines": {nid: _nine_split(rounds, nholes) for nid, nholes in NINE_HOLES.items() if set(nholes) <= set(played)},
     }
 
 
@@ -136,10 +180,12 @@ def bench(
     graph=None,
     readout_path: str | None = None,
     log: Callable[[str], None] = print,
+    nine: str = "both",
 ) -> dict:
     global _GRAPH, _SPEC
     if rounds < 1:
         raise ValueError("rounds must be at least 1")
+    holes = holes_for(nine)
     if controller_id != "mock" and graph is None:
         raise ValueError(f"{controller_id} needs the compiled graph")
     _GRAPH, _SPEC = graph, (controller_id, readout_path)
@@ -149,12 +195,12 @@ def bench(
     if jobs <= 1:
         _init_worker()
         for sd in seeds:
-            out.append(play_round(sd))
+            out.append(play_round(sd, nine=nine))
             log(f"  round seed {sd}: {out[-1]['strokes']}  ({time.perf_counter() - t0:.0f} s)")
     else:
         ctx = mp.get_context("fork" if "fork" in mp.get_all_start_methods() else "spawn")
         with ctx.Pool(min(jobs, rounds), initializer=_init_worker) as pool:
-            for r in pool.imap_unordered(play_round, seeds):
+            for r in pool.imap_unordered(_play, [(sd, nine) for sd in seeds]):
                 out.append(r)
                 log(f"  round seed {r['seed']}: {r['strokes']}  ({time.perf_counter() - t0:.0f} s)")
     out.sort(key=lambda r: r["seed"])
@@ -166,6 +212,8 @@ def bench(
         "controller": out[0]["controller"] if out else {"id": controller_id},
         "readout": readout_path,
         "seeds": seeds,
+        "nine": nine,
+        "holes": holes_label(holes),
         "summary": summarize_rounds(out),
         "rounds": [{k: v for k, v in r.items() if k != "controller"} for r in out],
         "wall_s": round(time.perf_counter() - t0, 1),
