@@ -61,7 +61,8 @@ describe("cardNines", () => {
 });
 
 describe("roundVerdict", () => {
-  const verdict = (c: ScorecardEntry[], extra: { mixedBrains?: string; recordedRounds?: number } = {}) => {
+  type Extra = { brain?: string; mixedBrains?: string; recordedRounds?: number };
+  const verdict = (c: ScorecardEntry[], extra: Extra = {}) => {
     const v = roundVerdict({
       blocks: cardNines(c, c.length > 9 ? NINES : undefined),
       totals: totalsOf(c),
@@ -70,69 +71,112 @@ describe("roundVerdict", () => {
     });
     return v && verdictText(v);
   };
+  const bogeys = (h: number) => PARS[h - 1] + 1; // 90 over 18, 45 over 9
+  const doubles = (h: number) => PARS[h - 1] + 2; // 108 over 18, 54 over 9
+  const MOCK = { brain: "mock" };
+  const WILD = { brain: "malecns" };
+  const TRAINED = { brain: "malecns-trained" };
 
-  it("after 18: the real total, broke 100", () => {
-    expect(verdict(card(18, 18, (h) => PARS[h - 1] + 1))).toBe(
-      "Round complete: 90 (+18). The fly broke 100.",
-    );
+  describe("after 18 holes: the real total, no doubling", () => {
+    it("the mock is the reference, never the fly", () => {
+      expect(verdict(card(18, 18, bogeys), MOCK)).toBe(
+        "Round complete: 90 (+18). The mock controller broke 100. It has no neurons: this is the reference, not the fly.",
+      );
+      expect(verdict(card(18, 18, doubles), MOCK)).toBe(
+        "Round complete: 108 (+36). The mock controller did not break 100. It has no neurons: this is the reference, not the fly.",
+      );
+    });
+    it("the untrained fly", () => {
+      expect(verdict(card(18, 18, bogeys), WILD)).toBe(
+        "Round complete: 90 (+18). The untrained fly broke 100.",
+      );
+      expect(verdict(card(18, 18, doubles), WILD)).toBe(
+        "Round complete: 108 (+36). The untrained fly did not break 100.",
+      );
+    });
+    it("the trained fly, which never practised on the back nine", () => {
+      expect(verdict(card(18, 18, bogeys), TRAINED)).toBe(
+        "Round complete: 90 (+18). The trained fly broke 100. The back nine is ground it never practised on.",
+      );
+      expect(verdict(card(18, 18, doubles), TRAINED)).toBe(
+        "Round complete: 108 (+36). The trained fly did not break 100. The back nine is ground it never practised on.",
+      );
+    });
+    it("exactly 100 does not break 100", () => {
+      const c = card(18, 18, (h) => (h <= 10 ? 6 : 5));
+      expect(totalsOf(c).strokes).toBe(100);
+      expect(verdict(c, WILD)).toMatch(/did not break 100\.$/);
+    });
+    it("an unknown brain is not called the fly", () => {
+      expect(verdict(card(18, 18, bogeys))).toBe("Round complete: 90 (+18). This brain broke 100.");
+    });
+    it("never mentions a pace", () => {
+      for (const b of [MOCK, WILD, TRAINED]) expect(verdict(card(18, 18, doubles), b)).not.toMatch(/pace/);
+    });
   });
 
-  it("after 18: did not break 100, with no doubling", () => {
-    const text = verdict(card(18, 18, (h) => PARS[h - 1] + 2))!;
-    expect(text).toBe("Round complete: 108 (+36). The fly did not break 100.");
-    expect(text).not.toMatch(/pace/);
+  describe("a nine-hole course keeps the pace over eighteen", () => {
+    it("names who is on pace", () => {
+      expect(verdict(card(9, 9, bogeys), MOCK)).toBe(
+        "Round complete: 45 (+9); on pace for 90 over eighteen. The mock controller would break 100 at this pace. It has no neurons: this is the reference, not the fly.",
+      );
+      expect(verdict(card(9, 9, bogeys), WILD)).toBe(
+        "Round complete: 45 (+9); on pace for 90 over eighteen. The untrained fly would break 100 at this pace.",
+      );
+      expect(
+        verdict(
+          card(9, 9, (h) => PARS[h - 1] + 3),
+          TRAINED,
+        ),
+      ).toBe(
+        "Round complete: 63 (+27); on pace for 126 over eighteen. The trained fly is not breaking 100 yet.",
+      );
+    });
   });
 
-  it("exactly 100 does not break 100", () => {
-    const c = card(18, 18, (h) => (h <= 10 ? 6 : 5));
-    expect(totalsOf(c).strokes).toBe(100);
-    expect(verdict(c)).toMatch(/did not break 100\.$/);
-  });
-
-  it("a nine-hole course keeps the pace over eighteen", () => {
-    expect(verdict(card(9, 9, (h) => PARS[h - 1] + 1))).toBe(
-      "Round complete: 45 (+9); on pace for 90 over eighteen. The fly would break 100.",
-    );
-    expect(verdict(card(9, 9, (h) => PARS[h - 1] + 3))).toBe(
-      "Round complete: 63 (+27); on pace for 126 over eighteen. Not breaking 100 yet.",
-    );
-  });
-
-  it("at the turn of an 18-hole round: the OUT score", () => {
-    expect(verdict(card(18, 9, (h) => PARS[h - 1] + 1))).toBe("At the turn: out in 45 (+9).");
-    expect(verdict(card(18, 12, (h) => PARS[h - 1] + 1))).toBe("At the turn: out in 45 (+9).");
+  describe("at the turn of an 18-hole round: the OUT score", () => {
+    it("names who is out, and stays through the back nine", () => {
+      expect(verdict(card(18, 9, bogeys), WILD)).toBe("At the turn: the untrained fly is out in 45 (+9).");
+      expect(verdict(card(18, 12, bogeys), WILD)).toBe("At the turn: the untrained fly is out in 45 (+9).");
+      expect(verdict(card(18, 9, bogeys), MOCK)).toBe(
+        "At the turn: the mock controller is out in 45 (+9). It has no neurons: this is the reference, not the fly.",
+      );
+      expect(verdict(card(18, 9, bogeys), TRAINED)).toBe(
+        "At the turn: the trained fly is out in 45 (+9). The back nine ahead is ground it never practised on.",
+      );
+    });
   });
 
   it("nothing to say before the turn", () => {
-    expect(verdict(card(18, 5))).toBeNull();
-    expect(verdict(card(9, 5))).toBeNull();
+    expect(verdict(card(18, 5), WILD)).toBeNull();
+    expect(verdict(card(9, 5), WILD)).toBeNull();
   });
 
   it("a mixed round is never one brain's score", () => {
-    expect(verdict(card(18, 18), { mixedBrains: "Mock + Trained" })).toBe(
+    const mixedBrains = "Mock + Trained";
+    expect(verdict(card(18, 18, bogeys), { mixedBrains })).toBe(
       "Round complete: 90 (+18). A mixed round (Mock + Trained): not a score for any single brain.",
     );
-    expect(verdict(card(9, 9), { mixedBrains: "Mock + Trained" })).toBe(
+    expect(verdict(card(9, 9, bogeys), { mixedBrains })).toBe(
       "Round complete: 45 (+9); on pace for 90 over eighteen. A mixed round (Mock + Trained): not a score for any single brain.",
     );
-    expect(verdict(card(18, 9), { mixedBrains: "Mock + Trained" })).toBe(
+    expect(verdict(card(18, 9, bogeys), { mixedBrains })).toBe(
       "At the turn: out in 45 (+9). A mixed round so far (Mock + Trained): not a score for any single brain.",
     );
   });
 
   it("a showcase mix says where its holes came from", () => {
-    expect(verdict(card(18, 18), { recordedRounds: 7 })).toBe(
-      "Round complete: 90 (+18). The fly broke 100. Eighteen real recorded holes, drawn from 7 recorded rounds of this brain.",
+    expect(verdict(card(18, 18, bogeys), { ...TRAINED, recordedRounds: 7 })).toBe(
+      "Round complete: 90 (+18). The trained fly broke 100. The back nine is ground it never practised on. Eighteen real recorded holes, drawn from 7 recorded rounds of this brain.",
     );
-    expect(verdict(card(9, 9), { recordedRounds: 1 })).toMatch(
-      /Nine real recorded holes, drawn from 1 recorded round of this brain\.$/,
+    expect(verdict(card(9, 9, bogeys), { ...MOCK, recordedRounds: 1 })).toMatch(
+      /this is the reference, not the fly\. Nine real recorded holes, drawn from 1 recorded round of this brain\.$/,
     );
   });
 
   it("never writes an em dash", () => {
     for (const c of [card(18, 18), card(9, 9), card(18, 9)])
-      expect(verdict(c, { mixedBrains: "A + B", recordedRounds: 3 })).not.toContain(
-        String.fromCharCode(0x2014),
-      );
+      for (const b of [MOCK, WILD, TRAINED, { mixedBrains: "A + B" }])
+        expect(verdict(c, { ...b, recordedRounds: 3 })).not.toContain(String.fromCharCode(0x2014));
   });
 });

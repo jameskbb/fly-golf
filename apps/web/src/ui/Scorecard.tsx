@@ -162,6 +162,7 @@ export function Scorecard() {
     blocks,
     totals,
     complete: !!session.round_complete,
+    brain: used.length === 1 ? used[0] : undefined,
     mixedBrains: mixed ? names(used) : undefined,
     recordedRounds: sources ? roundsUsed : undefined,
   });

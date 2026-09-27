@@ -103,6 +103,7 @@ export interface VerdictInput {
   blocks: NineBlock[];
   totals?: { strokes: number; to_par: number } | null;
   complete: boolean; // every hole on the card has been played
+  brain?: string; // the controller id, when exactly one brain played this round
   mixedBrains?: string; // names of the brains, when more than one played this round
   recordedRounds?: number; // a showcase mix: how many recorded rounds its holes came from
 }
@@ -111,44 +112,75 @@ export const signed = (n: number) => `${n >= 0 ? "+" : ""}${n}`;
 
 const roundsWord = (n: number) => `${n} recorded round${n === 1 ? "" : "s"}`;
 
+/** Who the verdict is about. The mock is never called the fly: it has no neurons. */
+interface Player {
+  subject: string; // sentence-initial name
+  note: string; // what always has to be said about it (leading space), or ""
+}
+
+const MOCK_NOTE = " It has no neurons: this is the reference, not the fly.";
+
+function playerOf(brain: string | undefined): Player {
+  if (brain === "mock") return { subject: "The mock controller", note: MOCK_NOTE };
+  if (brain === "malecns") return { subject: "The untrained fly", note: "" };
+  if (brain === "malecns-trained") return { subject: "The trained fly", note: "" };
+  return { subject: "This brain", note: "" };
+}
+
+const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+
 /**
- * What the round's score says, or nothing yet.
+ * What the round's score says, or nothing yet, naming who played it: the mock controller, the
+ * untrained fly or the trained fly.
  *
- * A full 18: the real total, and whether the fly broke 100. A nine-hole course: its total and the
- * pace over eighteen (the only way to talk about 100 there). At the turn of an 18-hole round, the
- * OUT score. A round more than one brain played is never passed off as one brain's score.
+ * A full 18: the real total, and whether it broke 100 (for the trained fly, with the reminder that
+ * it never practised on the back nine). A nine-hole course: its total and the pace over eighteen
+ * (the only way to talk about 100 there). At the turn of an 18-hole round, the OUT score. A round
+ * more than one brain played is never passed off as one brain's score.
  */
 export function roundVerdict({
   blocks,
   totals,
   complete,
+  brain,
   mixedBrains,
   recordedRounds,
 }: VerdictInput): Verdict | null {
   const holes = blocks.reduce((a, b) => a + b.entries.length, 0);
+  const eighteen = holes >= 18;
   const mixed = mixedBrains ? ` A mixed round (${mixedBrains}): not a score for any single brain.` : "";
+  const who = playerOf(brain);
+  const unpractised =
+    eighteen && brain === "malecns-trained" ? " The back nine is ground it never practised on." : "";
   if (complete && totals) {
-    const eighteen = holes >= 18;
     let rest: string;
     if (eighteen) {
-      rest = "." + (mixed || (totals.strokes < 100 ? " The fly broke 100." : " The fly did not break 100."));
+      const broke = totals.strokes < 100 ? "broke 100." : "did not break 100.";
+      rest = "." + (mixed || ` ${who.subject} ${broke}${who.note}${unpractised}`);
     } else {
       const pace = totals.strokes * 2;
-      rest =
-        `; on pace for ${pace} over eighteen.` +
-        (mixed || (pace < 100 ? " The fly would break 100." : " Not breaking 100 yet."));
+      const verdict = pace < 100 ? "would break 100 at this pace." : "is not breaking 100 yet.";
+      rest = `; on pace for ${pace} over eighteen.` + (mixed || ` ${who.subject} ${verdict}${who.note}`);
     }
     if (recordedRounds)
       rest += ` ${eighteen ? "Eighteen" : "Nine"} real recorded holes, drawn from ${roundsWord(recordedRounds)} of this brain.`;
     return { lead: "Round complete: ", score: totals.strokes, toPar: totals.to_par, rest };
   }
   const front = blocks[0];
-  if (holes >= 18 && blocks.length > 1 && front.complete && front.strokes !== null) {
+  if (eighteen && blocks.length > 1 && front.complete && front.strokes !== null) {
+    const toPar = front.strokes - front.par;
+    if (mixed)
+      return {
+        lead: "At the turn: out in ",
+        score: front.strokes,
+        toPar,
+        rest: "." + mixed.replace("A mixed round", "A mixed round so far"),
+      };
     return {
-      lead: "At the turn: out in ",
+      lead: `At the turn: ${lower(who.subject)} is out in `,
       score: front.strokes,
-      toPar: front.strokes - front.par,
-      rest: "." + mixed.replace("A mixed round", "A mixed round so far"),
+      toPar,
+      rest: "." + who.note + unpractised.replace("The back nine is", "The back nine ahead is"),
     };
   }
   return null;
