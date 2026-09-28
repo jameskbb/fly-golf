@@ -568,6 +568,18 @@ def test_training_situations_use_only_the_front_nine():
     assert holes and holes <= set(range(1, 10))
 
 
+def test_eighteen_hole_practice_covers_every_hole_and_leaves_the_front_nine_default_alone():
+    from fly_golf.training.situations import generate_situations, situations_version
+
+    counts = dict(n_putt=5, n_green=40, n_short=40, n_full=60, seed=3)
+    sits = generate_situations(**counts, course="eighteen")
+    for kind in ("green", "short", "full"):
+        assert {s.hole for s in sits if s.kind == kind} == set(range(1, 19))
+    assert generate_situations(**counts) == generate_situations(**counts, course="front")
+    assert situations_version("front") == "practice-situations-v2"
+    assert situations_version("eighteen") == "practice-situations-v3"
+
+
 def test_drivable_thirteenth_shows_the_lay_up_from_the_tee():
     h = HOLE_BY_NUMBER[13]
     assert math.dist(h.tee, h.cup) > 225.0

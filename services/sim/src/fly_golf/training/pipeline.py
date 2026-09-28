@@ -77,7 +77,7 @@ from ..golf.flight import Outcome, simulate_shot
 from ..golf.physics import Outcome as PuttOutcome
 from ..golf.physics import simulate_roll
 from ..provenance import git_info, versions
-from .situations import SITUATIONS_VERSION, Situation, generate_situations
+from .situations import Situation, generate_situations, situations_version
 
 TRAINING_VERSION = "hindsight-gated-v2"
 DECISION_WINDOW_MS = 400.0
@@ -647,6 +647,7 @@ def train(
     log: Callable[[str], None] = print,
     n_short: int = 120,
     feature_space: str = FEATURE_SPACE,
+    course: str = "front",
 ) -> dict:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -655,7 +656,7 @@ def train(
         graph = shuffled_graph(graph, seed=seed + 1)
     elif control is not None:
         raise ValueError(f"unknown control {control!r}")
-    situations = generate_situations(n_putt, n_green, n_full, seed, n_short=n_short)
+    situations = generate_situations(n_putt, n_green, n_full, seed, n_short=n_short, course=course)
     log(f"{len(situations)} practice situations ({sum(s.is_test for s in situations)} held out); jobs={jobs}")
 
     def progress(k: int, n: int) -> None:
@@ -671,7 +672,7 @@ def train(
         "neural_engine": ENGINE_VERSION,
         "malecns_sensory_mapping": MALECNS_SENSORY_MAPPING_VERSION_V3,
     }
-    counts = {"putt": n_putt, "green": n_green, "short": n_short, "full": n_full, "seed": seed}
+    counts = {"putt": n_putt, "green": n_green, "short": n_short, "full": n_full, "seed": seed, "course": course}
     return fit_and_report(
         situations, rows, names, out_dir, seed, graph_meta, counts, log=log, t0=t0, feature_space=feature_space
     )
@@ -762,7 +763,7 @@ def fit_and_report(
         "method": TRAINING_VERSION,
         "created_utc": datetime.now(UTC).isoformat(),
         "git": git_info(),
-        "versions": versions() | {"situations": SITUATIONS_VERSION},
+        "versions": versions() | {"situations": situations_version(counts.get("course", "front"))},
         "graph": graph_meta,
         # the engine whose activity these weights read; a refit keeps its source run's engine
         "neural_engine": graph_meta.get("neural_engine") or LEGACY_ENGINE_VERSION,
@@ -861,7 +862,9 @@ def refit(src_dir: Path, out_dir: Path, log: Callable[[str], None] = print, feat
     ]
     m = rep["meta"]
     log(f"refitting {m['training_id']} ({len(situations)} situations) from saved practice...")
-    counts = {k: m["situations"][k] for k in ("putt", "green", "short", "full", "seed") if k in m["situations"]}
+    counts = {
+        k: m["situations"][k] for k in ("putt", "green", "short", "full", "seed", "course") if k in m["situations"]
+    }
     return fit_and_report(
         situations,
         rows,

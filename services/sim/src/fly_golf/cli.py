@@ -122,6 +122,7 @@ def cmd_train(args) -> int:
         jobs=args.jobs or default_jobs(),
         control=args.control,
         feature_space=args.features,
+        course=args.course,
     )
     return _report_and_install(report, out, args.install)
 
@@ -378,6 +379,12 @@ def main(argv: list[str] | None = None) -> int:
         "--scale", type=float, default=0.0, help="multiply the 120/120/120/200 putt/green/short/full situations"
     )
     tr.add_argument("--install", action="store_true", help=f"copy the readout to {READOUT_HELP}")
+    tr.add_argument(
+        "--course",
+        choices=["front", "eighteen"],
+        default="front",
+        help="holes to practise on: the front nine (the back nine held out) or all 18",
+    )
     tr.add_argument(
         "--features",
         choices=FEATURE_SPACE_CHOICES,
