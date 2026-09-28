@@ -38,10 +38,12 @@ Pipeline (docs/TRAINING.md, method `hindsight-gated-v2`):
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import multiprocessing as mp
 import os
+import pickle
 import time
 from collections.abc import Callable
 from dataclasses import replace
@@ -269,29 +271,99 @@ def _run_situation(sit_dict: dict) -> dict:
     }
 
 
+class PracticeIncomplete(RuntimeError):
+    """Raised when a time-limited batch stops before every situation has been practised."""
+
+
+def _compact(row: dict) -> dict:
+    """Feature vectors as float64 arrays, not lists of Python floats: the same values in about a
+    quarter of the memory (a 36,000-situation run holds ~1.6 GB of lists otherwise)."""
+    for k in ("features", "features_side"):
+        if k in row:
+            row[k] = np.asarray(row[k], dtype=np.float64)
+    return row
+
+
+def _load_checkpoint(path: Path, key: str) -> list[dict]:
+    """The rows a stopped run already practised. The first record is the run's key; a run with
+    other situations, graph or engine refuses to resume from it. A record cut short by a kill
+    is dropped (its situation is simply practised again)."""
+    rows: list[dict] = []
+    if not path.exists():
+        return rows
+    with path.open("rb") as f:
+        try:
+            head = pickle.load(f)
+        except (EOFError, pickle.UnpicklingError):
+            return rows
+        if head != {"checkpoint": key}:
+            raise ValueError(f"{path} belongs to a different training run; use another --out")
+        while True:
+            try:
+                rows.append(_compact(pickle.load(f)))
+            except (EOFError, pickle.UnpicklingError):
+                break
+    return rows
+
+
 def collect(
-    graph: CompiledGraph, situations: list[Situation], jobs: int = 1, progress: Callable[[int, int], None] | None = None
+    graph: CompiledGraph,
+    situations: list[Situation],
+    jobs: int = 1,
+    progress: Callable[[int, int], None] | None = None,
+    checkpoint: Path | None = None,
+    checkpoint_key: str = "",
+    deadline: float | None = None,
 ) -> tuple[dict[str, list[str]], list[dict]]:
-    """Neural features (every feature space) + fixed channels + practice targets for every situation."""
+    """Neural features (every feature space) + fixed channels + practice targets for every situation.
+
+    With a `checkpoint` file every finished row is appended to it at once, and rows already in it
+    are not practised again, so a run can be stopped and resumed (or run in batches, stopping at
+    `deadline`, a time.monotonic() value) with the same result: each row depends only on its own
+    situation, and rows already arrive in any order from the worker pool."""
     global _GRAPH
     _GRAPH = graph
     ctrl = MaleCNSController(graph)
     names = {space: ctrl.feature_names_for(space) for space in FEATURE_SPACES}
-    todo = [s.to_dict() for s in situations]
-    out: list[dict] = []
-    if jobs <= 1:
-        _init_worker()
-        for k, sd in enumerate(todo):
-            out.append(_run_situation(sd))
-            if progress:
-                progress(k + 1, len(todo))
-    else:
-        ctx = mp.get_context("fork" if "fork" in mp.get_all_start_methods() else "spawn")
-        with ctx.Pool(jobs, initializer=_init_worker) as pool:
-            for k, r in enumerate(pool.imap_unordered(_run_situation, todo, chunksize=2)):
-                out.append(r)
-                if progress:
-                    progress(k + 1, len(todo))
+    wanted = {s.index for s in situations}
+    out = [r for r in _load_checkpoint(checkpoint, checkpoint_key) if r["index"] in wanted] if checkpoint else []
+    done = {r["index"] for r in out}
+    todo = [s.to_dict() for s in situations if s.index not in done]
+    sink = None
+    if checkpoint:
+        fresh = not checkpoint.exists() or checkpoint.stat().st_size == 0
+        sink = checkpoint.open("ab")
+        if fresh:
+            pickle.dump({"checkpoint": checkpoint_key}, sink)
+            sink.flush()
+
+    def keep(r: dict) -> None:
+        out.append(_compact(r))
+        if sink:
+            pickle.dump(r, sink)
+            sink.flush()
+        if progress:
+            progress(len(out), len(situations))
+
+    try:
+        if jobs <= 1:
+            _init_worker()
+            for sd in todo:
+                if deadline is not None and time.monotonic() >= deadline:
+                    break
+                keep(_run_situation(sd))
+        else:
+            ctx = mp.get_context("fork" if "fork" in mp.get_all_start_methods() else "spawn")
+            with ctx.Pool(jobs, initializer=_init_worker) as pool:
+                for r in pool.imap_unordered(_run_situation, todo, chunksize=2):
+                    keep(r)
+                    if deadline is not None and time.monotonic() >= deadline:
+                        break  # leaving the block terminates the workers; their rows are practised next time
+    finally:
+        if sink:
+            sink.close()
+    if len(out) < len(situations):
+        raise PracticeIncomplete(f"practised {len(out)} of {len(situations)} situations; run again to continue")
     out.sort(key=lambda r: r["index"])
     return names, out
 
@@ -648,7 +720,11 @@ def train(
     n_short: int = 120,
     feature_space: str = FEATURE_SPACE,
     course: str = "front",
+    max_minutes: float | None = None,
 ) -> dict:
+    """Practise, fit, calibrate and evaluate. Practice is checkpointed in `out_dir`: running the
+    same command again after a stop resumes it, and `max_minutes` ends a batch cleanly (raising
+    PracticeIncomplete) so a long run can be done an hour at a time."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.perf_counter()
@@ -658,12 +734,25 @@ def train(
         raise ValueError(f"unknown control {control!r}")
     situations = generate_situations(n_putt, n_green, n_full, seed, n_short=n_short, course=course)
     log(f"{len(situations)} practice situations ({sum(s.is_test for s in situations)} held out); jobs={jobs}")
+    identity = {
+        "situations": [s.to_dict() for s in situations],
+        "graph": [graph.manifest.get("release"), graph.n, graph.edges, control],
+        "engine": [ENGINE_VERSION, MALECNS_SENSORY_MAPPING_VERSION_V3],
+    }
+    key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+    checkpoint = out_dir / "practice.partial.pkl"
 
     def progress(k: int, n: int) -> None:
         if k == n or k % max(1, n // 20) == 0:
             log(f"  simulated + practised {k}/{n}  ({time.perf_counter() - t0:.0f} s)")
 
-    names, rows = collect(graph, situations, jobs=jobs, progress=progress)
+    already = len(_load_checkpoint(checkpoint, key))
+    if already:
+        log(f"resuming: {already} situations already practised in {checkpoint.name}")
+    deadline = time.monotonic() + 60.0 * max_minutes if max_minutes else None
+    names, rows = collect(
+        graph, situations, jobs=jobs, progress=progress, checkpoint=checkpoint, checkpoint_key=key, deadline=deadline
+    )
     graph_meta = {
         "release": graph.manifest.get("release"),
         "neurons": graph.n,
@@ -673,9 +762,11 @@ def train(
         "malecns_sensory_mapping": MALECNS_SENSORY_MAPPING_VERSION_V3,
     }
     counts = {"putt": n_putt, "green": n_green, "short": n_short, "full": n_full, "seed": seed, "course": course}
-    return fit_and_report(
+    report = fit_and_report(
         situations, rows, names, out_dir, seed, graph_meta, counts, log=log, t0=t0, feature_space=feature_space
     )
+    checkpoint.unlink(missing_ok=True)  # features.npz and report.json now hold everything it held
+    return report
 
 
 def fit_and_report(
@@ -850,8 +941,8 @@ def refit(src_dir: Path, out_dir: Path, log: Callable[[str], None] = print, feat
     rows = [
         {
             "index": i,
-            "features": z["features"][i].tolist(),
-            **({"features_side": z["features_side"][i].tolist()} if "features_side" in z else {}),
+            "features": z["features"][i],
+            **({"features_side": z["features_side"][i]} if "features_side" in z else {}),
             "fixed": dict(zip(fixed_names, map(float, z["fixed"][i]), strict=True)),
             "sensory": dict(zip(sensory_names, map(float, z["sensory"][i]), strict=True)),
             "target": _target_from(z["targets"][i], z["target_club"][i]),

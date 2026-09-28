@@ -140,6 +140,32 @@ def trained(synthetic_graph, tmp_path):
     return report, load_readout(tmp_path / "out" / "readout.json"), tmp_path / "out"
 
 
+def test_practice_stopped_and_resumed_gives_the_same_rows(synthetic_graph, tmp_path):
+    from fly_golf.training.pipeline import PracticeIncomplete, collect
+
+    sits = generate_situations(n_putt=3, n_green=3, n_full=3, n_short=3, seed=5)
+    _, straight = collect(synthetic_graph, sits)
+    ckpt = tmp_path / "practice.partial.pkl"
+
+    def kill_after_five(k, n):
+        if k == 5:
+            raise KeyboardInterrupt  # a run killed mid-way: what is in the checkpoint survives
+
+    with pytest.raises(KeyboardInterrupt):
+        collect(synthetic_graph, sits, progress=kill_after_five, checkpoint=ckpt, checkpoint_key="k")
+    with pytest.raises(PracticeIncomplete):  # a batch whose time is already up practises nothing more
+        collect(synthetic_graph, sits, checkpoint=ckpt, checkpoint_key="k", deadline=0.0)
+    with pytest.raises(ValueError):  # another run's checkpoint is never mixed in
+        collect(synthetic_graph, sits, checkpoint=ckpt, checkpoint_key="other")
+    _, resumed = collect(synthetic_graph, sits, checkpoint=ckpt, checkpoint_key="k")
+    assert [r["index"] for r in resumed] == [r["index"] for r in straight]
+    for a, b in zip(straight, resumed, strict=True):
+        assert np.array_equal(a["features"], b["features"]) and np.array_equal(a["features_side"], b["features_side"])
+        assert {k: v for k, v in a.items() if not k.startswith("features")} == {
+            k: v for k, v in b.items() if not k.startswith("features")
+        }
+
+
 def test_training_pipeline_end_to_end(trained, synthetic_graph):
     report, readout, out = trained
     assert (out / "report.json").exists() and (out / "no_brain_readout.json").exists()

@@ -592,6 +592,20 @@ $SIM bench --controller mock --rounds 12 --seed 100 --nine front
 $SIM bench --controller malecns-trained --rounds 12 --seed 100
 ```
 
+Practice is checkpointed as it goes (`<out>/practice.partial.pkl`, one record per finished
+situation, removed once the run is complete). Running the same `train` command again after a stop
+resumes it, and `--max-minutes N` ends a batch cleanly (exit code 3), so a long run can be done in
+short batches, each a fresh process that gives all its memory back:
+
+```sh
+until $SIM train --seed 4 --scale 64 --jobs 12 --course eighteen --max-minutes 30 \
+    --out runs/training/v8-eighteen-seed4-x64; [ $? -ne 3 ]; do :; done
+```
+
+Each row depends only on its own situation, so a batched run gives the same rows as a run in one
+go (`test_practice_stopped_and_resumed_gives_the_same_rows`). The fit, calibration and evaluation
+still run in one piece after the last batch.
+
 `fly-golf refit` re-fits, re-calibrates and re-evaluates from a run's saved practice
 (`features.npz` holds the neural features, targets, sensory channels and the fly's own fixed
 tempo / face / strike), so fitting code can be improved without re-simulating the connectome; the

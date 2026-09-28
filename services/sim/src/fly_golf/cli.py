@@ -104,26 +104,31 @@ def cmd_train(args) -> int:
 
     from .brain.malecns.graph import load_compiled
     from .config import load_settings
-    from .training.pipeline import default_jobs, train
+    from .training.pipeline import PracticeIncomplete, default_jobs, train
 
     s = load_settings()
     graph = load_compiled(Path(args.graph) if args.graph else s.compiled_dir)
     stamp = "shuffled" if args.control else "real"
     out = Path(args.out) if args.out else s.runs_dir / "training" / f"{stamp}-seed{args.seed}"
     scale = args.scale or (0.25 if args.quick else 1.0)
-    report = train(
-        graph,
-        out,
-        n_putt=int(120 * scale),
-        n_green=int(120 * scale),
-        n_short=int(120 * scale),
-        n_full=int(200 * scale),
-        seed=args.seed,
-        jobs=args.jobs or default_jobs(),
-        control=args.control,
-        feature_space=args.features,
-        course=args.course,
-    )
+    try:
+        report = train(
+            graph,
+            out,
+            n_putt=int(120 * scale),
+            n_green=int(120 * scale),
+            n_short=int(120 * scale),
+            n_full=int(200 * scale),
+            seed=args.seed,
+            jobs=args.jobs or default_jobs(),
+            control=args.control,
+            feature_space=args.features,
+            course=args.course,
+            max_minutes=args.max_minutes or None,
+        )
+    except PracticeIncomplete as stop:
+        print(f"batch done: {stop}. Practice so far is saved in {out}.")
+        return 3
     return _report_and_install(report, out, args.install)
 
 
@@ -379,6 +384,12 @@ def main(argv: list[str] | None = None) -> int:
         "--scale", type=float, default=0.0, help="multiply the 120/120/120/200 putt/green/short/full situations"
     )
     tr.add_argument("--install", action="store_true", help=f"copy the readout to {READOUT_HELP}")
+    tr.add_argument(
+        "--max-minutes",
+        type=float,
+        default=0.0,
+        help="stop practising after this long (exit 3); the same command resumes where it stopped",
+    )
     tr.add_argument(
         "--course",
         choices=["front", "eighteen"],
