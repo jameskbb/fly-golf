@@ -74,12 +74,33 @@ export function benchLabel(bench: Bench): string {
   return `Bench over holes ${holes}`;
 }
 
-/** The bench in one sentence, with the two nines split out when the bench reports them. */
-export function benchText(bench: Bench): string {
+/**
+ * The course the trained readout practised on, from the readout a controller carries
+ * (config.readout.situations.course): "front", "eighteen" (`fly-golf train --course eighteen`), or
+ * null when the controller carries no readout. A readout made before the option existed records
+ * no course and practised on the front nine.
+ */
+export function practiceCourse(
+  controller: { config?: Record<string, unknown> } | null | undefined,
+): string | null {
+  const readout = controller?.config?.readout as { situations?: { course?: unknown } | null } | undefined;
+  if (!readout) return null;
+  const course = readout.situations?.course;
+  return typeof course === "string" && course ? course : "front";
+}
+
+/** The bench in one sentence, with the two nines split out when the bench reports them. The back
+ *  nine is called unpractised only for a readout that practised on the front nine alone. */
+export function benchText(bench: Bench, practised: string = "front"): string {
   let text = `${benchLabel(bench)}: ${bench.mean_strokes} strokes per round on average over ${bench.rounds} rounds, ${bench.holes_holed_pct}% of holes holed out.`;
   const front = bench.nines?.front?.mean_strokes;
   const back = bench.nines?.back?.mean_strokes;
-  if (front != null && back != null)
-    text += ` Front nine ${front}, back nine ${back} (holes it never practised on).`;
+  const note =
+    practised === "front"
+      ? " (holes it never practised on)"
+      : practised === "eighteen"
+        ? " (it practised on all 18 holes)"
+        : "";
+  if (front != null && back != null) text += ` Front nine ${front}, back nine ${back}${note}.`;
   return text;
 }

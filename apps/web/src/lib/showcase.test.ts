@@ -16,6 +16,7 @@ import {
   runsForBrain,
   scorecardAfter,
   showcaseState,
+  trainedPracticeCourse,
 } from "./showcase";
 import { assetUrl } from "./source";
 
@@ -292,6 +293,27 @@ describe("recordedHoles", () => {
     expect(recordedHoles(nine)).toHaveLength(9);
     const old = { ...index, runs: [{ ...entry, holes: undefined, holes_played: 9 }] };
     expect(recordedHoles(old)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  });
+});
+
+describe("trainedPracticeCourse", () => {
+  const trained = index.runs.find((r) => r.controllers_used[0] === "malecns-trained")!;
+  const withCourses = (...courses: (string | undefined)[]) =>
+    ShowcaseIndex.parse({
+      ...index,
+      runs: courses.map((c, i) => ({ ...trained, id: `t-${i}`, practice_course: c })),
+    });
+  it("the committed rounds were exported before it was recorded: the front nine", () => {
+    expect(trainedPracticeCourse(index)).toBe("front");
+  });
+  it("reads the course the readout practised on", () => {
+    expect(trainedPracticeCourse(withCourses("eighteen", "eighteen"))).toBe("eighteen");
+    expect(trainedPracticeCourse(withCourses("front", undefined))).toBe("front");
+  });
+  it("claims neither when the rounds disagree or there are none", () => {
+    expect(trainedPracticeCourse(withCourses("front", "eighteen"))).toBeNull();
+    expect(trainedPracticeCourse(withCourses(undefined, "eighteen"))).toBeNull();
+    expect(trainedPracticeCourse({ ...index, runs: [] })).toBeNull();
   });
 });
 

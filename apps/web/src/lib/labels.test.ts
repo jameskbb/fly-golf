@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { benchLabel, benchText, courseModeLabel, courseTag, holesTag } from "./labels";
+import { benchLabel, benchText, courseModeLabel, courseTag, holesTag, practiceCourse } from "./labels";
 
 describe("courseTag", () => {
   const card = (from: number, to: number) =>
@@ -68,5 +68,36 @@ describe("bench labels", () => {
     ).toBe(
       "18-hole bench: 101.2 strokes per round on average over 10 rounds, 91% of holes holed out. Front nine 50.1, back nine 51.1 (holes it never practised on).",
     );
+  });
+  it("never calls the back nine unpractised for a readout that practised on all 18", () => {
+    const bench = {
+      holes: "1-18",
+      mean_strokes: 101.2,
+      rounds: 10,
+      holes_holed_pct: 91,
+      nines: { front: { mean_strokes: 50.1 }, back: { mean_strokes: 51.1 } },
+    };
+    expect(benchText(bench, "front")).toBe(benchText(bench));
+    expect(benchText(bench, "eighteen")).toBe(
+      "18-hole bench: 101.2 strokes per round on average over 10 rounds, 91% of holes holed out. Front nine 50.1, back nine 51.1 (it practised on all 18 holes).",
+    );
+    expect(benchText(bench, "eighteen")).not.toContain("never practised");
+  });
+});
+
+describe("practiceCourse", () => {
+  const trained = (situations: unknown) => ({ config: { readout: { id: "r", situations } } });
+  it("reads the course the readout practised on", () => {
+    expect(practiceCourse(trained({ train: 10, test: 4, course: "eighteen" }))).toBe("eighteen");
+    expect(practiceCourse(trained({ train: 10, test: 4, course: "front" }))).toBe("front");
+  });
+  it("a readout from before the option practised on the front nine", () => {
+    expect(practiceCourse(trained({ train: 10, test: 4 }))).toBe("front");
+    expect(practiceCourse(trained(undefined))).toBe("front");
+  });
+  it("no readout, no course", () => {
+    expect(practiceCourse({ config: {} })).toBeNull();
+    expect(practiceCourse({})).toBeNull();
+    expect(practiceCourse(undefined)).toBeNull();
   });
 });

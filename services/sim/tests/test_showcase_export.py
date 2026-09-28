@@ -116,6 +116,28 @@ def test_export_removes_local_paths(run, tmp_path):
     assert "/Users/someone" not in Path(report["run_file"]).read_text()
 
 
+def test_index_records_the_course_the_readout_practised_on(run, tmp_path):
+    runs, run_id = run
+    path = runs / run_id / "shots.jsonl"
+    original = path.read_text()
+
+    def export(situations: dict | None, slug: str) -> dict:
+        shots = [json.loads(line) for line in original.splitlines()]
+        if situations is not None:
+            for s in shots:
+                s["controller"]["config"] = {"readout": {"id": "r1", "situations": situations}}
+        path.write_text("".join(json.dumps(s) + "\n" for s in shots))
+        report = export_showcase(runs, run_id, tmp_path / "out", slug=slug, title="Mock")
+        index = json.loads(Path(report["index_file"]).read_text())
+        return next(r for r in index["runs"] if r["id"] == slug)
+
+    assert "practice_course" not in export(None, "no-readout")
+    # a readout from before `--course eighteen` records no course: it practised on the front nine
+    assert export({"train": 10, "test": 4}, "old")["practice_course"] == "front"
+    assert export({"train": 10, "test": 4, "course": "front"}, "front")["practice_course"] == "front"
+    assert export({"train": 10, "test": 4, "course": "eighteen"}, "eighteen")["practice_course"] == "eighteen"
+
+
 def test_export_rejects_bad_input(run, tmp_path):
     runs, run_id = run
     out = tmp_path / "out"

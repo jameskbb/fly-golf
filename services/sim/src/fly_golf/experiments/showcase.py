@@ -290,6 +290,12 @@ def export_showcase(
     if course_version != COURSE_VERSION:
         version_fields["course_version_exported_with"] = COURSE_VERSION
     holes_played = [c["hole"] for c in rnd["scorecard"] if c["strokes"] is not None]
+    # the course the trained readout practised on, for the web's "never practised on the back
+    # nine" notes: "front" unless the readout records another (every readout before
+    # `fly-golf train --course eighteen` practised on the front nine and records none)
+    readouts = [r for s in out_shots if (r := (s["controller"].get("config") or {}).get("readout"))]
+    practice = sorted({(r.get("situations") or {}).get("course") or "front" for r in readouts})
+    practice_fields = {"practice_course": practice[0]} if len(practice) == 1 else {}
 
     first = out_shots[0]
     if len(ids) > 1:
@@ -348,6 +354,7 @@ def export_showcase(
         "round_seed": round_seed,
         "holes": holes_played,
         **version_fields,
+        **practice_fields,
         "source_run_id": doc["source"]["run_id"],
         "recorded_utc": recorded_utc,
         "git_commit": first["git"]["commit"],

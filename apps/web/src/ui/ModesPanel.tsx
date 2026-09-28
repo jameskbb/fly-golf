@@ -1,7 +1,7 @@
 import { useStore } from "../store";
 import { BRAINS } from "./brains";
 import { Headshot } from "./Headshot";
-import { benchText, type Bench } from "../lib/labels";
+import { benchText, practiceCourse, type Bench } from "../lib/labels";
 
 interface ReadoutMeta {
   id?: string | null;
@@ -10,7 +10,7 @@ interface ReadoutMeta {
   git_commit?: string | null;
   test_metrics?: Record<string, { holed_pct?: number; median_leave_m?: number; penalty_pct?: number }> | null;
   bench?: Bench | null;
-  situations?: { train?: number; test?: number } | null;
+  situations?: { train?: number; test?: number; course?: string } | null;
 }
 
 const DETAIL: Record<string, { what: string[]; honest: string }> = {
@@ -40,32 +40,52 @@ const DETAIL: Record<string, { what: string[]; honest: string }> = {
   },
 };
 
-const STEPS: [string, string][] = [
-  [
-    "Practice spots",
-    "Seeded situations on the practice green and the front nine: putts, chips and pitches around the greens, and full shots from tees, fairways, rough and sand. 30 % are held out and never trained on. The back nine was never practised on.",
-  ],
-  [
-    "Neural response",
-    "At each spot the scene is fed to the connectome and 400 ms of spiking is simulated, exactly as in play. The firing rate of every descending-neuron type (~480) is recorded.",
-  ],
-  [
-    "Trial and error",
-    "In the physics simulator the fly tries every club, swing length and aim from that spot. Each club is judged robustly (a shot that only works if perfect, with the trees a hair away, scores badly) and the shortest club that does about as well as the best is kept.",
-  ],
-  [
-    "Fit the readout",
-    "From the neural firing alone: a putter-or-swing gate, a club head and aim/power heads, each a linear layer chosen by cross-validation.",
-  ],
-  [
-    "Calibrate by practice",
-    "The fly then plays its own readout's strokes on the training spots and tunes how the club and power are decoded (a club too long flies into the trees; one too short just leaves another shot).",
-  ],
-  [
-    "Test honestly",
-    "Held-out shots, full rounds on the course (fly-golf bench), a no-brain baseline fitted the same way on the raw senses, and a shuffled-wiring control. On the back nine every shot is a situation the readout has never seen.",
-  ],
-];
+/**
+ * How the readout was trained, for a readout that practised on `course` (labels.ts
+ * practiceCourse). Only a front-nine readout's back nine is called unpractised; while the page has
+ * no readout to read (another brain is active) it names both options and claims neither.
+ */
+function steps(course: string | null): [string, string][] {
+  const where =
+    course === "front"
+      ? "the front nine"
+      : course === "eighteen"
+        ? "all 18 holes"
+        : "the front nine (all 18 holes for a readout trained with --course eighteen)";
+  const unpractised = course === "front" ? " The back nine was never practised on." : "";
+  const unseen =
+    course === "front"
+      ? " On the back nine every shot is a situation the readout has never seen."
+      : course === "eighteen"
+        ? ""
+        : " For a front-nine readout, every back-nine shot is a situation it has never seen.";
+  return [
+    [
+      "Practice spots",
+      `Seeded situations on the practice green and ${where}: putts, chips and pitches around the greens, and full shots from tees, fairways, rough and sand. 30 % are held out and never trained on.${unpractised}`,
+    ],
+    [
+      "Neural response",
+      "At each spot the scene is fed to the connectome and 400 ms of spiking is simulated, exactly as in play. The firing rate of every descending-neuron type (~480) is recorded.",
+    ],
+    [
+      "Trial and error",
+      "In the physics simulator the fly tries every club, swing length and aim from that spot. Each club is judged robustly (a shot that only works if perfect, with the trees a hair away, scores badly) and the shortest club that does about as well as the best is kept.",
+    ],
+    [
+      "Fit the readout",
+      "From the neural firing alone: a putter-or-swing gate, a club head and aim/power heads, each a linear layer chosen by cross-validation.",
+    ],
+    [
+      "Calibrate by practice",
+      "The fly then plays its own readout's strokes on the training spots and tunes how the club and power are decoded (a club too long flies into the trees; one too short just leaves another shot).",
+    ],
+    [
+      "Test honestly",
+      `Held-out shots, full rounds on the course (fly-golf bench), a no-brain baseline fitted the same way on the raw senses, and a shuffled-wiring control.${unseen}`,
+    ],
+  ];
+}
 
 export function ModesPanel() {
   const open = useStore((s) => s.modesOpen);
@@ -73,6 +93,7 @@ export function ModesPanel() {
   if (!open) return null;
   const active = session?.controller.id;
   const readout = (session?.controller.config as { readout?: ReadoutMeta } | undefined)?.readout;
+  const course = practiceCourse(session?.controller);
   return (
     <div className="drawer modes-panel" aria-label="The three brains explained">
       <div className="drawer-head">
@@ -111,7 +132,7 @@ export function ModesPanel() {
       ))}
       <h4>How the trained readout was trained</h4>
       <ol className="train-steps">
-        {STEPS.map(([title, text]) => (
+        {steps(course).map(([title, text]) => (
           <li key={title}>
             <b>{title}.</b> {text}
           </li>
@@ -127,7 +148,7 @@ export function ModesPanel() {
               {readout.situations.test ?? 0} held out, never trained on).
             </div>
           )}
-          {readout.bench?.mean_strokes != null && <div>{benchText(readout.bench)}</div>}
+          {readout.bench?.mean_strokes != null && <div>{benchText(readout.bench, course ?? "front")}</div>}
         </div>
       )}
       <p className="muted small">

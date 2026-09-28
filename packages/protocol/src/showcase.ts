@@ -41,6 +41,10 @@ export const ShowcaseRunSummary = z.looseObject({
   // the web app then reads the run itself to find out which holes it can draw from it)
   holes: z.array(z.number().int()).optional(),
   course_version: z.string().optional(),
+  // the course a trained readout practised on: "front" or "eighteen" (absent when no shot carries a
+  // readout, and on exports made before it was recorded, whose trained readout practised on the
+  // front nine)
+  practice_course: z.string().optional(),
 });
 export type ShowcaseRunSummary = z.infer<typeof ShowcaseRunSummary>;
 

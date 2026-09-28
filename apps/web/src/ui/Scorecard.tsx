@@ -6,6 +6,7 @@ import { watchHole } from "../showcase/controller";
 import { useStore } from "../store";
 import { yards } from "../lib/terrain";
 import { cardNines, cardTotal, roundVerdict, signed, type NineBlock } from "../lib/card";
+import { practiceCourse } from "../lib/labels";
 import { brainById, controllerLabel } from "./brains";
 
 function scoreClass(strokes: number | null, par: number, holed: boolean | null): string {
@@ -172,6 +173,7 @@ export function Scorecard() {
   const open = useStore((s) => s.cardOpen);
   const busy = useStore((s) => s.busy);
   const recorded = useStore((s) => s.showcase?.run);
+  const history = useStore((s) => s.history);
   const ref = useRef<HTMLDivElement>(null);
   useClearOfControls(ref);
   if (!open || session?.mode !== "course" || !session.scorecard) return null;
@@ -198,11 +200,20 @@ export function Scorecard() {
   const sources = isMixed(recorded) ? recorded.holeSources : undefined;
   const seedOf = sources ? (hole: number) => sources.find((s) => s.hole === hole)?.seed : undefined;
   const roundsUsed = new Set(sources?.map((s) => s.seed)).size;
+  // the brain that played the round, with its readout: the current controller, or the last shot
+  // it played here if the round has since been handed to another brain (unknown if neither)
+  const brain = used.length === 1 ? used[0] : undefined;
+  const played =
+    session.controller.id === brain
+      ? session.controller
+      : [...history].reverse().find((h) => h.run_id === session.run_id && h.controller.id === brain)
+          ?.controller;
   const verdict = roundVerdict({
     blocks,
     totals,
     complete: !!session.round_complete,
-    brain: used.length === 1 ? used[0] : undefined,
+    brain,
+    practised: played ? practiceCourse(played) : null,
     mixedBrains: mixed ? names(used) : undefined,
     recordedRounds: sources ? roundsUsed : undefined,
   });

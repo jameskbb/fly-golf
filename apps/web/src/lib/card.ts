@@ -106,6 +106,9 @@ export interface VerdictInput {
   brain?: string; // the controller id, when exactly one brain played this round
   mixedBrains?: string; // names of the brains, when more than one played this round
   recordedRounds?: number; // a showcase mix: how many recorded rounds its holes came from
+  // the course the trained readout practised on (labels.ts practiceCourse): absent means the front
+  // nine, as for every readout before `--course eighteen`; null means the readout is not known
+  practised?: string | null;
 }
 
 export const signed = (n: number) => `${n >= 0 ? "+" : ""}${n}`;
@@ -134,12 +137,13 @@ const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
  * untrained fly or the trained fly.
  *
  * A full 18: the real total, and whether it broke 100 (for the trained fly, with the reminder that
- * it never practised on the back nine). A nine-hole course: its total and the pace over eighteen
- * (the only way to talk about 100 there). At the turn of an 18-hole round (front nine done, no
- * back-nine hole scored yet), the OUT score; later in the back nine, the running total. A round
- * more than one brain played is never passed off as one brain's score, and a showcase mix of
- * holes from several recorded rounds is never passed off as a round that was played: it is
- * described as a mix.
+ * it never practised on the back nine, when its readout practised on the front nine alone; one
+ * that practised on all 18 says so instead, and an unknown readout gets neither). A nine-hole
+ * course: its total and the pace over eighteen (the only way to talk about 100 there). At the
+ * turn of an 18-hole round (front nine done, no back-nine hole scored yet), the OUT score; later in
+ * the back nine, the running total. A round more than one brain played is never passed off as one
+ * brain's score, and a showcase mix of holes from several recorded rounds is never passed off as a
+ * round that was played: it is described as a mix.
  */
 export function roundVerdict({
   blocks,
@@ -148,6 +152,7 @@ export function roundVerdict({
   brain,
   mixedBrains,
   recordedRounds,
+  practised = "front",
 }: VerdictInput): Verdict | null {
   const holes = blocks.reduce((a, b) => a + b.entries.length, 0);
   const eighteen = holes >= 18;
@@ -156,11 +161,18 @@ export function roundVerdict({
   const composite = !!recordedRounds && !mixedBrains; // a showcase mix of one brain's recorded holes
   const who = playerOf(brain);
   const trained = eighteen && brain === "malecns-trained";
-  const unpractised = trained ? " The back nine is ground it never practised on." : "";
+  const heldOut = trained && practised === "front";
+  const allEighteen = trained && practised === "eighteen";
+  const unpractised = heldOut
+    ? " The back nine is ground it never practised on."
+    : allEighteen
+      ? " It practised on all 18 holes."
+      : "";
   // in a mix "it" would read as the mix, so the brain is named
   const mixNote =
     (brain === "mock" ? " The mock controller has no neurons: this is the reference, not the fly." : "") +
-    (trained ? " The back nine is ground the trained fly never practised on." : "");
+    (heldOut ? " The back nine is ground the trained fly never practised on." : "") +
+    (allEighteen ? " The trained fly practised on all 18 holes." : "");
   const provenance = recordedRounds
     ? ` ${eighteen ? "Eighteen" : "Nine"} real recorded holes, drawn from ${roundsWord(recordedRounds)} of this brain.`
     : "";

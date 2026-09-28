@@ -38,6 +38,16 @@ export function runsForBrain(index: ShowcaseIndex, brainId: string): ShowcaseRun
   return index.runs.filter((r) => r.controllers_used.length === 1 && r.controllers_used[0] === brainId);
 }
 
+/**
+ * The course the trained fly's recorded rounds practised on: "front", "eighteen", or null when the
+ * showcase has no trained rounds or they disagree. An entry exported before the course was recorded
+ * practised on the front nine, as every readout then did.
+ */
+export function trainedPracticeCourse(index: ShowcaseIndex): string | null {
+  const courses = new Set(runsForBrain(index, "malecns-trained").map((r) => r.practice_course ?? "front"));
+  return courses.size === 1 ? [...courses][0] : null;
+}
+
 /** The hole numbers a recorded run has strokes on, in the order they were played. */
 export const holesOfRun = (run: ShowcaseRun): number[] => [...holeStarts(run.shots).keys()];
 

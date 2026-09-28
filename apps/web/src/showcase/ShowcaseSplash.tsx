@@ -1,7 +1,7 @@
 import { useStore } from "../store";
 import { BRAINS, brainById } from "../ui/brains";
 import { Headshot } from "../ui/Headshot";
-import { recordedHoles, runsForBrain } from "../lib/showcase";
+import { recordedHoles, runsForBrain, trainedPracticeCourse } from "../lib/showcase";
 import { closeSplash, selectBrain } from "./controller";
 
 const WORDS: Record<number, string> = { 9: "nine", 18: "eighteen" };
@@ -29,6 +29,9 @@ export function ShowcaseSplash() {
   const recorded = index ? recordedHoles(index, current) : [];
   const holeCount = numberWord(recorded.length);
   const backNine = recorded.some((n) => n > 9);
+  // the back nine is called unseen only when the trained rounds' readout practised on the front
+  // nine alone
+  const practised = index ? trainedPracticeCourse(index) : null;
 
   return (
     <div className="overlay splash" role="dialog" aria-modal="true" aria-labelledby="splash-title">
@@ -42,7 +45,9 @@ export function ShowcaseSplash() {
             <strong>This page shows pre-generated plays.</strong> Every shot was simulated before the page was
             built, and your browser only replays the recordings.
             {backNine &&
+              practised === "front" &&
               " The trained fly practised only on the front nine, so the back nine, played at dusk, is ground it has never seen."}
+            {backNine && practised === "eighteen" && " The trained fly practised on all 18 holes."}
           </p>
         </header>
 

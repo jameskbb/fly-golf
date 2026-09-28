@@ -61,7 +61,7 @@ describe("cardNines", () => {
 });
 
 describe("roundVerdict", () => {
-  type Extra = { brain?: string; mixedBrains?: string; recordedRounds?: number };
+  type Extra = { brain?: string; mixedBrains?: string; recordedRounds?: number; practised?: string | null };
   const verdict = (c: ScorecardEntry[], extra: Extra = {}) => {
     const v = roundVerdict({
       blocks: cardNines(c, c.length > 9 ? NINES : undefined),
@@ -213,6 +213,51 @@ describe("roundVerdict", () => {
     });
     it("a single recorded run (no mix) keeps the direct verdict", () => {
       expect(verdict(card(18, 18, bogeys), TRAINED)).toMatch(/The trained fly broke 100\./);
+    });
+  });
+
+  describe("a readout that practised on all 18 holes: the back nine is not held out", () => {
+    const EIGHTEEN = { ...TRAINED, practised: "eighteen" };
+    it("says so where the front-nine readout gets its reminder", () => {
+      expect(verdict(card(18, 18, bogeys), EIGHTEEN)).toBe(
+        "Round complete: 90 (+18). The trained fly broke 100. It practised on all 18 holes.",
+      );
+      expect(verdict(card(18, 9, bogeys), EIGHTEEN)).toBe(
+        "At the turn: the trained fly is out in 45 (+9). It practised on all 18 holes.",
+      );
+      expect(verdict(card(18, 14, bogeys), EIGHTEEN)).toBe(
+        "Through 14: the trained fly is 70 (+14); out in 45. It practised on all 18 holes.",
+      );
+      expect(verdict(card(18, 18, bogeys), { ...EIGHTEEN, recordedRounds: 6 })).toBe(
+        "Round complete: 90 (+18). This mix of recorded holes totals under 100. Eighteen real recorded holes, drawn from 6 recorded rounds of this brain. The trained fly practised on all 18 holes.",
+      );
+      expect(verdict(card(18, 14, bogeys), { ...EIGHTEEN, recordedRounds: 6 })).toBe(
+        "Through 14: the mix is 70 (+14); out in 45. The trained fly practised on all 18 holes.",
+      );
+    });
+    it("an explicit front-nine readout reads exactly as before", () => {
+      for (const c of [card(18, 18, bogeys), card(18, 9, bogeys), card(18, 14, bogeys)])
+        for (const r of [undefined, 6])
+          expect(verdict(c, { ...TRAINED, practised: "front", recordedRounds: r })).toBe(
+            verdict(c, { ...TRAINED, recordedRounds: r }),
+          );
+    });
+    it("claims nothing about the back nine for an unknown readout", () => {
+      for (const practised of [null, "somewhere"])
+        for (const c of [card(18, 18, bogeys), card(18, 9, bogeys), card(18, 14, bogeys)])
+          for (const r of [undefined, 6]) {
+            const v = verdict(c, { ...TRAINED, practised, recordedRounds: r });
+            expect(v).not.toMatch(/never practised|practised on all/);
+          }
+      expect(verdict(card(18, 18, bogeys), { ...TRAINED, practised: null })).toBe(
+        "Round complete: 90 (+18). The trained fly broke 100.",
+      );
+    });
+    it("never touches another brain's verdict", () => {
+      for (const b of [MOCK, WILD])
+        expect(verdict(card(18, 18, bogeys), { ...b, practised: "eighteen" })).toBe(
+          verdict(card(18, 18, bogeys), b),
+        );
     });
   });
 
