@@ -592,3 +592,8 @@ ones were not recorded:
   Doughnut Island, 16 The Fan, 17 Escape Route, 18 The Way Home); each description still names the
   structure its shape echoes. Geometry and the course version are unchanged. The yardage-book
   image files keep their old anatomical file names.
+- **18-hole practice.** `fly-golf train --course eighteen` practises on all 18 holes, and practice
+  is now checkpointed so a run can be done in short batches (`--max-minutes`) that each give their
+  memory back. A 35,840-situation run on all 18 holes (seven 30-minute batches) averaged 104.0 over
+  the 36 bench rounds against 102.58 for the installed readout, so it was not installed
+  ([TRAINING.md](TRAINING.md#practising-on-all-18-holes-2026-09-28)).

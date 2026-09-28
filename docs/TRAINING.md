@@ -21,6 +21,7 @@ the end.
 - [Readout capacity and side-resolved features (2026-09-14)](#readout-capacity-and-side-resolved-features-2026-09-14)
 - [Sensory injection v0.3 (2026-09-17)](#sensory-injection-v03-2026-09-17)
 - [The back nine is held out (2026-09-27)](#the-back-nine-is-held-out-2026-09-27)
+- [Practising on all 18 holes (2026-09-28)](#practising-on-all-18-holes-2026-09-28)
 - [Honest limits](#honest-limits)
 - [Reproduce](#reproduce)
 
@@ -560,6 +561,44 @@ retrained for 18 holes.
 The controls stand as they were. On the front nine the shuffled-wiring control still beats the
 real wiring on held-out practice shots, and the no-brain sensory readout beats both; the back nine
 does not change that, and nothing here says the real MaleCNS wiring helps the fly play golf.
+
+## Practising on all 18 holes (2026-09-28)
+
+**Question.** The installed readout never practised on the back nine. Would a readout that
+practises on all 18 holes, with far more practice, play better rounds?
+
+**Run.** `v8-eighteen-seed4-x64` (readout `20260928T162634Z`, clean `26cb1a3`):
+`--course eighteen --scale 64 --seed 4`, **35,840 practice situations** (`practice-situations-v3`:
+7,680 practice putts, 7,680 course-green putts, 7,680 chips and pitches, 12,800 full shots, the
+course ones spread over all 18 holes), 10,752 held out. That is 5.3 times the practice behind the
+installed readout. Practice ran in seven 30-minute batches (`--max-minutes 30`, resumed from the
+checkpoint each time) on 12 workers, about 4.3 hours, then 46 minutes of fitting, calibration and
+evaluation. Calibration chose stretch 1.5, shift 2.0, putter power 0.95, swing power 1.0, none on a
+grid edge.
+
+**Held-out shots** (its own held-out set, which now includes back-nine situations, so these are
+not directly comparable with the rows above): practice putts 0.50 m (12.5 % holed), course-green
+putts 0.77 m (8.4 %), chips and pitches 6.87 m, full shots 86.4 m. The no-brain readout of the
+raw senses: 0.06 m, 0.13 m, 6.58 m, 37.7 m.
+
+**Complete 18-hole rounds** (`fly-golf bench`, the same 36 round seeds as the installed readout):
+
+| Readout | Practice | Seeds 100–111 | 200–211 | 300–311 | Mean of 36 | Median | Under 100 | Best / worst | Front | Back | Holes holed |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **`20260917T165536Z` (installed)** | front nine, 6,720 | 102.17 | 102.0 | 103.58 | **102.58** | 103 | **8 of 36** | 88 / 119 | 50.53 | 52.05 | 96.6 % |
+| `20260928T162634Z` | all 18, 35,840 | 102.67 | 104.67 | 104.67 | 104.0 | 103.5 | 7 of 36 | 92 / 115 | 51.94 | 52.05 | 97.4 % |
+
+**Result: it is not better, and it was not installed.** Five times the practice, including the
+back nine itself, made the back nine no better (52.05 strokes either way) and the front nine about
+1.4 strokes worse. It holes out slightly more often and its worst round is better, but it averages
+1.4 strokes more per round. So the back nine was never the limit on how well the readout could
+learn, and more practice of this kind no longer helps: with the scene reaching the readout only
+through descending-neuron rates, the fit is limited by what those rates carry, not by the amount of
+practice. The shuffled-wiring and no-brain comparisons above still stand.
+
+The readout and its bench reports are kept locally (`runs/training/v8-eighteen-seed4-x64`,
+`runs/bench/trained18p-18-s{100,200,300}.json`). The installed readout is unchanged, so every
+statement above that the trained fly never practised on the back nine remains true.
 
 ## Honest limits
 
