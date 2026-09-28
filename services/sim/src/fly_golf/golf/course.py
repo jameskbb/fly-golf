@@ -1,8 +1,8 @@
 """Fly Golf National: eighteen hand-authored holes (par 72).
 
 The front nine (holes 1-9, parkland) is unchanged since `front-nine-v2`. The back nine, "The
-Neuropil Nine" (holes 10-18, dusk), names each hole after a structure of the fly's nervous
-system or body and shapes it to echo that structure; see docs/COURSE.md. Training practises on
+Neuropil Nine" (holes 10-18, dusk), gives each hole a plain name and shapes it to echo a
+structure of the fly's nervous system or body; see docs/COURSE.md. Training practises on
 the front nine only, so the back nine is a held-out course.
 
 Geometry lives in each hole's own frame: metres, the tee at the origin, the hole playing
@@ -569,17 +569,17 @@ def _lin(a: float, b: float, n: int) -> list[float]:
 
 FAN_16: Point = (0.0, -40.0)  # the pivot of hole 16's fan-shaped fairway and its bands of waste sand
 
-# The back nine, "The Neuropil Nine": each hole is named after a structure of the fly's nervous
-# system or body, and its shape echoes that structure (docs/COURSE.md). It uses only the
+# The back nine, "The Neuropil Nine": each hole has a plain name, and its shape echoes a structure
+# of the fly's nervous system or body that its description names (docs/COURSE.md). It uses only the
 # surfaces the front nine uses, plus a per-hole corridor half-width. Seeds follow the front
 # nine's numbering (hole 12 uses 121, 122, ...); a cluster of bunkers uses hole * 100 + k.
 BACK_NINE: tuple[HoleSpec, ...] = (
     HoleSpec(
         10,
-        "Ommatidia",
+        "Fly's Eye",
         4,
         "The compound eye opens the back nine: seven pot bunkers packed in a hexagon, like the facets "
-        "of a fly's eye, wait just past the drive. Stay left of the cluster.",
+        "(ommatidia) of a fly's eye, wait just past the drive. Stay left of the cluster.",
         route=((0.0, 0.0), (-10.0, 232.0), (5.0, 372.0)),
         green=_green((3.0, 375.0), 12.5, 11.0, -0.010, 0.008),
         fairways=(ribbon([(0.0, 40.0), (-6.0, 150.0), (-6.0, 235.0), (0.0, 290.0), (3.0, 350.0)], 20.0, seed=101),),
@@ -592,10 +592,10 @@ BACK_NINE: tuple[HoleSpec, ...] = (
     ),
     HoleSpec(
         11,
-        "Johnston's Organ",
+        "The Ear",
         3,
-        "The fly's ear: a long par three to a big, tilted green. One long curved bunker sweeps across "
-        "the front-left like the arista that catches sound; run it in from the right.",
+        "Johnston's organ, the fly's ear: a long par three to a big, tilted green. One long curved "
+        "bunker sweeps across the front-left like the arista that catches sound; run it in from the right.",
         route=((0.0, 0.0), (-27.0, 199.0)),
         green=_green((-20.0, 193.0), 16.0, 10.5, 0.016, -0.012),
         fairways=(ribbon([(6.0, 120.0), (2.0, 150.0), (-6.0, 172.0)], 12.0, seed=111),),
@@ -607,9 +607,9 @@ BACK_NINE: tuple[HoleSpec, ...] = (
     ),
     HoleSpec(
         12,
-        "Halteres",
+        "Balancing Act",
         5,
-        "Named for the fly's balance organs, which beat opposite the wings: a double dogleg that swings "
+        "Named for the halteres, the fly's balance organs, which beat opposite the wings: a double dogleg that swings "
         "right, then left, with a burn crossing the line of play twice.",
         route=((0.0, 0.0), (6.0, 232.0), (68.0, 392.0), (42.0, 498.0)),
         green=_green((40.0, 501.0), 13.5, 11.0, -0.008, 0.012),
@@ -649,7 +649,7 @@ BACK_NINE: tuple[HoleSpec, ...] = (
     ),
     HoleSpec(
         13,
-        "Protocerebral Bridge",
+        "The Bridge",
         4,
         "A short par four, drivable on paper: a flush driver over a row of church-pew bunkers reaches a "
         "small, fast green with water to its right. The pews echo the protocerebral bridge, a row of "
@@ -670,10 +670,11 @@ BACK_NINE: tuple[HoleSpec, ...] = (
     ),
     HoleSpec(
         14,
-        "Mushroom Body",
+        "The Mushroom",
         4,
-        "The tee sits in a cup of sand like the calyx; a narrow stalk of fairway, the peduncle, runs out "
-        "and splits into lobes, one reaching straight up to the green and one turning off to the right.",
+        "Shaped like the mushroom body, where a fly learns. The tee sits in a cup of sand like the "
+        "calyx; a narrow stalk of fairway, the peduncle, runs out and splits into lobes, one reaching "
+        "straight up to the green and one turning off to the right.",
         route=((0.0, 0.0), (0.0, 238.0), (-8.0, 388.0)),
         green=_green((-6.0, 391.0), 12.0, 11.5, 0.010, -0.012),
         fairways=(
@@ -693,10 +694,10 @@ BACK_NINE: tuple[HoleSpec, ...] = (
     ),
     HoleSpec(
         15,
-        "Ellipsoid Body",
+        "Doughnut Island",
         3,
-        "An island green inside a ring of water, the doughnut of neuropil where the fly keeps its "
-        "compass. A thin causeway at the back right is the only way on foot.",
+        "An island green inside a ring of water, like the ellipsoid body: the doughnut of neuropil "
+        "where the fly keeps its compass. A thin causeway at the back right is the only way on foot.",
         route=((0.0, 0.0), (2.0, 127.0)),
         green=_green((0.0, 128.0), 12.0, 11.0, 0.006, 0.010),
         fairways=(
@@ -709,7 +710,7 @@ BACK_NINE: tuple[HoleSpec, ...] = (
     ),
     HoleSpec(
         16,
-        "Fan-shaped Body",
+        "The Fan",
         4,
         "The widest hole on the course fans out like the fan-shaped body, crossed by bands of waste "
         "sand laid in arcs and broken into columns, as the neuropil is layered and segmented.",
@@ -735,7 +736,7 @@ BACK_NINE: tuple[HoleSpec, ...] = (
     ),
     HoleSpec(
         17,
-        "Giant Fiber",
+        "Escape Route",
         5,
         "The giant fibers are the fly's fastest escape pathway: a pair of huge axons running from the "
         "brain straight down to the jump muscles' motor neurons. The longest, straightest hole on the "
@@ -754,7 +755,7 @@ BACK_NINE: tuple[HoleSpec, ...] = (
     ),
     HoleSpec(
         18,
-        "Descending Neurons",
+        "The Way Home",
         4,
         "Home, the way the brain's commands leave it: down the descending neurons to the body. A cape "
         "hole around the clubhouse lake; the more of the water you carry, the shorter the way in.",

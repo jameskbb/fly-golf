@@ -291,12 +291,12 @@ and averages within 0.6 strokes of par on each of them.
 <table>
 <tr>
 <td width="50%">
-<img src="docs/screenshots/back-nine-trained-s07-h15-tee-shot.webp" alt="Dusk on hole 15, Ellipsoid Body: the trained fly's tee shot, a white trace high over the island green in its ring of water, heading past it"><br>
-<em>15 · Ellipsoid Body, stroke 1: a 6-iron from 139 yd carries 170 yd, over the island and into the water behind it.</em>
+<img src="docs/screenshots/back-nine-trained-s07-h15-tee-shot.webp" alt="Dusk on hole 15, Doughnut Island: the trained fly's tee shot, a white trace high over the island green in its ring of water, heading past it"><br>
+<em>15 · Doughnut Island, stroke 1: a 6-iron from 139 yd carries 170 yd, over the island and into the water behind it.</em>
 </td>
 <td width="50%">
-<img src="docs/screenshots/back-nine-trained-s07-h18-approach.webp" alt="Dusk on hole 18, Descending Neurons: the trained fly in its tam and argyle vest strikes a 6-iron from the fairway, the aim line running ahead of the ball"><br>
-<em>18 · Descending Neurons, stroke 3: a 6-iron from 166 yd finishes on the green, 50 ft from the pin.</em>
+<img src="docs/screenshots/back-nine-trained-s07-h18-approach.webp" alt="Dusk on hole 18, The Way Home: the trained fly in its tam and argyle vest strikes a 6-iron from the fairway, the aim line running ahead of the ball"><br>
+<em>18 · The Way Home, stroke 3: a 6-iron from 166 yd finishes on the green, 50 ft from the pin.</em>
 </td>
 </tr>
 </table>
@@ -314,23 +314,23 @@ strokes; 18 takes 6. That round is the worst of the ten, 115 (54 out, 61 in).
 <table>
 <tr>
 <td width="33%">
-<img src="docs/screenshots/course-hole-10-ommatidia.webp" alt="Bird's-eye render of hole 10, Ommatidia, at dusk"><br>
-<strong>10 · Ommatidia</strong><br>
+<img src="docs/screenshots/course-hole-10-ommatidia.webp" alt="Bird's-eye render of hole 10, Fly's Eye, at dusk"><br>
+<strong>10 · Fly's Eye</strong><br>
 Par 4 · 408 yd<br>
 Seven pot bunkers packed in a hexagon, like the facets of the compound eye, wait just past the
 drive, in the manner of the Old Course and Royal Lytham. Stay left of the cluster.
 </td>
 <td width="33%">
-<img src="docs/screenshots/course-hole-11-johnstons-organ.webp" alt="Bird's-eye render of hole 11, Johnston's Organ, at dusk"><br>
-<strong>11 · Johnston's Organ</strong><br>
+<img src="docs/screenshots/course-hole-11-johnstons-organ.webp" alt="Bird's-eye render of hole 11, The Ear, at dusk"><br>
+<strong>11 · The Ear</strong><br>
 Par 3 · 220 yd<br>
 A long par 3 after the Redan: one curved bunker sweeps across the front-left like an antenna's
 arista, and the big green, the steepest on the course, falls away to the back-left. Run it in
 from the right.
 </td>
 <td width="33%">
-<img src="docs/screenshots/course-hole-12-halteres.webp" alt="Bird's-eye render of hole 12, Halteres, at dusk"><br>
-<strong>12 · Halteres</strong><br>
+<img src="docs/screenshots/course-hole-12-halteres.webp" alt="Bird's-eye render of hole 12, Balancing Act, at dusk"><br>
+<strong>12 · Balancing Act</strong><br>
 Par 5 · 561 yd<br>
 A double dogleg, right and then left, like the balance organs that beat opposite the wings. A
 burn crosses the line of play twice, as the Barry Burn does at Carnoustie.
@@ -338,8 +338,8 @@ burn crosses the line of play twice, as the Barry Burn does at Carnoustie.
 </tr>
 <tr>
 <td width="33%">
-<img src="docs/screenshots/course-hole-13-protocerebral-bridge.webp" alt="Bird's-eye render of hole 13, Protocerebral Bridge, at dusk"><br>
-<strong>13 · Protocerebral Bridge</strong><br>
+<img src="docs/screenshots/course-hole-13-protocerebral-bridge.webp" alt="Bird's-eye render of hole 13, The Bridge, at dusk"><br>
+<strong>13 · The Bridge</strong><br>
 Par 4 · 274 yd<br>
 Drivable on paper, after Riviera's 10th: Oakmont-style church pews guard the direct line to a
 small, fast green with water to its right. "Drivable" describes the geometry, not a choice the fly
@@ -348,16 +348,16 @@ so the fly is shown the lay-up area on the left. Only a full-speed driver within
 of the pin line would hold the green.
 </td>
 <td width="33%">
-<img src="docs/screenshots/course-hole-14-mushroom-body.webp" alt="Bird's-eye render of hole 14, Mushroom Body, at dusk"><br>
-<strong>14 · Mushroom Body</strong><br>
+<img src="docs/screenshots/course-hole-14-mushroom-body.webp" alt="Bird's-eye render of hole 14, The Mushroom, at dusk"><br>
+<strong>14 · The Mushroom</strong><br>
 Par 4 · 425 yd<br>
 The tee sits in a cup of sand, the calyx. A narrow stalk of fairway runs out and splits into two
 lobes, one straight up to the green and one off to the right, a split fairway in the spirit of
 Riviera's 8th.
 </td>
 <td width="33%">
-<img src="docs/screenshots/course-hole-15-ellipsoid-body.webp" alt="Bird's-eye render of hole 15, Ellipsoid Body, at dusk"><br>
-<strong>15 · Ellipsoid Body</strong><br>
+<img src="docs/screenshots/course-hole-15-ellipsoid-body.webp" alt="Bird's-eye render of hole 15, Doughnut Island, at dusk"><br>
+<strong>15 · Doughnut Island</strong><br>
 Par 3 · 139 yd<br>
 An island green inside a ring of water, the fly's compass neuropil played as TPC Sawgrass's 17th.
 Short means a drop on the tee side; long means a drop back on the island. A causeway at the back
@@ -366,22 +366,22 @@ right is the only way on foot.
 </tr>
 <tr>
 <td width="33%">
-<img src="docs/screenshots/course-hole-16-fan-shaped-body.webp" alt="Bird's-eye render of hole 16, Fan-shaped Body, at dusk"><br>
-<strong>16 · Fan-shaped Body</strong><br>
+<img src="docs/screenshots/course-hole-16-fan-shaped-body.webp" alt="Bird's-eye render of hole 16, The Fan, at dusk"><br>
+<strong>16 · The Fan</strong><br>
 Par 4 · 418 yd<br>
 The widest hole on the course fans out toward the biggest, slowest green. Curved bands of waste
 sand, broken into columns, cross the fairway, with more waste on both sides.
 </td>
 <td width="33%">
-<img src="docs/screenshots/course-hole-17-giant-fiber.webp" alt="Bird's-eye render of hole 17, Giant Fiber, at dusk"><br>
-<strong>17 · Giant Fiber</strong><br>
+<img src="docs/screenshots/course-hole-17-giant-fiber.webp" alt="Bird's-eye render of hole 17, Escape Route, at dusk"><br>
+<strong>17 · Escape Route</strong><br>
 Par 5 · 599 yd<br>
 The longest, straightest hole, after the fly's fastest escape pathway: a narrow chute through the
 trees, the tightest corridor on the course. Straight is the only strategy.
 </td>
 <td width="33%">
-<img src="docs/screenshots/course-hole-18-descending-neurons.webp" alt="Bird's-eye render of hole 18, Descending Neurons, at dusk"><br>
-<strong>18 · Descending Neurons</strong><br>
+<img src="docs/screenshots/course-hole-18-descending-neurons.webp" alt="Bird's-eye render of hole 18, The Way Home, at dusk"><br>
+<strong>18 · The Way Home</strong><br>
 Par 4 · 436 yd<br>
 A cape hole after Macdonald's at the National Golf Links, around the clubhouse lake: the more water
 the drive carries, the shorter the way in. Water waits short-left of the green too.

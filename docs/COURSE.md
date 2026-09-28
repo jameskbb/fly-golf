@@ -54,8 +54,8 @@ Water on **four** holes.
 
 ### The Neuropil Nine
 
-Each back-nine hole is named after a structure of the fly's nervous system or body, and its
-**shape echoes that structure**; each also borrows the strategy of a classic "template" hole
+Each back-nine hole has a plain name, and its **shape echoes a structure of the fly's nervous
+system or body** (the Anatomy column); each also borrows the strategy of a classic "template" hole
 from golf architecture, so the nine plays nothing like the front. The front nine is straight
 holes and gentle doglegs with one kind of hazard at a time; the back nine adds an island green,
 a drivable par 4, a double dogleg, a cape hole, a long par 3, a narrow chute, a wide-open hole
@@ -64,17 +64,17 @@ greens vary more (radius 10 to 17 m, stimp 9.5 to 12.5, slopes up to 0.02).
 
 | # | Name | Par | Yards | Corridor | Green (radius, stimp) | Features | Anatomy | Inspired by |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 10 | Ommatidia | 4 | 408 | 42 m | 12.5 m, 11 | **seven pot bunkers packed in a hexagon** just past the drive | the hexagonally packed facets of the compound eye | the pot bunkers of the Old Course and Royal Lytham |
-| 11 | Johnston's Organ | 3 | 220 | 42 m | 16 m, 10.5 | **long par 3**; one long curved bunker across the front-left, green tilted away to the back-left, open to a run-in from the right | the antennal hearing organ and the arista that catches sound | the Redan (15th at North Berwick) |
-| 12 | Halteres | 5 | 561 | 42 m | 13.5 m, 11 | **double dogleg**, right then left; **a burn crosses the line of play twice** | the balance organs that beat opposite the wings | the Barry Burn snaking across Carnoustie's 17th and 18th |
-| 13 | Protocerebral Bridge | 4 | 274 | 42 m | 10 m, 12.5 | **drivable par 4** on paper: a row of **church-pew bunkers** on the direct line to a small, fast green with water right; the fly is shown the lay-up area on the left | the bridge of glomeruli spanning the brain's midline | Riviera's 10th (drivable par 4); Oakmont's church pews |
-| 14 | Mushroom Body | 4 | 425 | 46 m | 12 m, 11.5 | tee in a cup of sand; a narrow stalk of fairway that **splits into two lobes**, one straight to the green, one off to the right | calyx, peduncle, and the vertical and medial lobes | split fairways such as Riviera's 8th |
-| 15 | Ellipsoid Body | 3 | 139 | 42 m | 12 m, 11 | **island green** inside a ring of water, reached on foot by a causeway | the ring-shaped neuropil that holds the fly's compass | TPC Sawgrass 17th |
-| 16 | Fan-shaped Body | 4 | 418 | **58 m** | 17 m, 9.5 | **the widest hole**: a fan-shaped fairway crossed by curved bands of **waste sand** broken into columns, big waste areas either side | the layered, column-segmented fan of the central complex | Pine Valley's waste areas; Pinehurst No. 2 |
-| 17 | Giant Fiber | 5 | 599 | **30 m** | 11 m, 12 | **the longest, straightest hole: a narrow chute through the trees** | the giant fibers, a bilateral pair of descending interneurons: the fast escape pathway from brain to jump muscles | Carnoustie's 6th ("Hogan's Alley") |
-| 18 | Descending Neurons | 4 | 436 | 42 m | 14 m, 11.5 | **cape hole**: the tee shot carries as much of the clubhouse lake as you dare; water short-left of the green | the descending neurons that carry the brain's commands to the body | Macdonald's Cape (National Golf Links) |
+| 10 | Fly's Eye | 4 | 408 | 42 m | 12.5 m, 11 | **seven pot bunkers packed in a hexagon** just past the drive | **ommatidia**: the hexagonally packed facets of the compound eye | the pot bunkers of the Old Course and Royal Lytham |
+| 11 | The Ear | 3 | 220 | 42 m | 16 m, 10.5 | **long par 3**; one long curved bunker across the front-left, green tilted away to the back-left, open to a run-in from the right | **Johnston's organ**: the antennal hearing organ and the arista that catches sound | the Redan (15th at North Berwick) |
+| 12 | Balancing Act | 5 | 561 | 42 m | 13.5 m, 11 | **double dogleg**, right then left; **a burn crosses the line of play twice** | **halteres**: the balance organs that beat opposite the wings | the Barry Burn snaking across Carnoustie's 17th and 18th |
+| 13 | The Bridge | 4 | 274 | 42 m | 10 m, 12.5 | **drivable par 4** on paper: a row of **church-pew bunkers** on the direct line to a small, fast green with water right; the fly is shown the lay-up area on the left | **protocerebral bridge**: the bridge of glomeruli spanning the brain's midline | Riviera's 10th (drivable par 4); Oakmont's church pews |
+| 14 | The Mushroom | 4 | 425 | 46 m | 12 m, 11.5 | tee in a cup of sand; a narrow stalk of fairway that **splits into two lobes**, one straight to the green, one off to the right | **mushroom body**: calyx, peduncle, and the vertical and medial lobes | split fairways such as Riviera's 8th |
+| 15 | Doughnut Island | 3 | 139 | 42 m | 12 m, 11 | **island green** inside a ring of water, reached on foot by a causeway | **ellipsoid body**: the ring-shaped neuropil that holds the fly's compass | TPC Sawgrass 17th |
+| 16 | The Fan | 4 | 418 | **58 m** | 17 m, 9.5 | **the widest hole**: a fan-shaped fairway crossed by curved bands of **waste sand** broken into columns, big waste areas either side | **fan-shaped body**: the layered, column-segmented fan of the central complex | Pine Valley's waste areas; Pinehurst No. 2 |
+| 17 | Escape Route | 5 | 599 | **30 m** | 11 m, 12 | **the longest, straightest hole: a narrow chute through the trees** | **giant fiber**: the giant fibers, a bilateral pair of descending interneurons: the fast escape pathway from brain to jump muscles | Carnoustie's 6th ("Hogan's Alley") |
+| 18 | The Way Home | 4 | 436 | 42 m | 14 m, 11.5 | **cape hole**: the tee shot carries as much of the clubhouse lake as you dare; water short-left of the green | **descending neurons**: the descending neurons that carry the brain's commands to the body | Macdonald's Cape (National Golf Links) |
 
-Water on **four** back-nine holes (12, 13, 15, 18). Johnston's Organ has the steepest green on
+Water on **four** back-nine holes (12, 13, 15, 18). The Ear (11) has the steepest green on
 the course (slope 0.02, falling away to the back-left, as a Redan does).
 
 A few design notes on how the environment plays these holes:
@@ -111,8 +111,8 @@ splits for this reason.
 ### Per-hole corridor
 
 The trees (out of bounds) begin at each hole's own corridor half-width, the distance from the
-routing line: 42 m on every front-nine hole and most back-nine holes, 30 m on Giant Fiber (17),
-46 m on Mushroom Body (14) and 58 m on Fan-shaped Body (16). The course payload reports it as
+routing line: 42 m on every front-nine hole and most back-nine holes, 30 m on Escape Route (17),
+46 m on The Mushroom (14) and 58 m on The Fan (16). The course payload reports it as
 `corridor_half_width_m` per hole. The disc of 26 m around the green is always in play.
 
 ### Surfaces and rules
