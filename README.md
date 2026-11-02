@@ -2,6 +2,14 @@
 
 ![FLY GOLF title card: a trained golfer fly over a dark green diagonal texture, with the subtitle Can a fruit fly break 100?](docs/screenshots/readme-title-fly-golf.png)
 
+<p align="center">
+  <a href="https://github.com/jameskbb/fly-golf/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/jameskbb/fly-golf/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/jameskbb/fly-golf?style=for-the-badge&label=License&color=blue"></a>
+  <a href="apps/web"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"></a>
+  <a href="apps/web"><img alt="Three.js" src="https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=threedotjs&logoColor=white"></a>
+  <a href="#fly-golf"><img alt="Connectome" src="https://img.shields.io/badge/Connectome-MaleCNS%20v1.0-2e6b4e?style=for-the-badge"></a>
+</p>
+
 **Can a fruit fly break 100?**
 
 Fly Golf connects simulated neural activity running over the reconstructed **MaleCNS v1.0**
