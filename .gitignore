@@ -35,6 +35,11 @@ apps/web/dist/
 !.env.example
 *.token
 
+# --- Agent tooling: .claude/ is tracked except these ---
+.claude/settings.local.json
+.claude/worktrees/
+.planning/
+
 # --- Editors / OS ---
 .DS_Store
 .idea/
