@@ -584,3 +584,11 @@ ones were not recorded:
 - **Round-complete screenshot** (`web-demo-round-complete.png`, 1440x900): the committed showcase,
   Trained picked on the splash, a jump to the last stroke of hole 18 of the random mix, played to
   the end. The first mix drawn is the one shown (102).
+
+## 2026-09-28: plain back-nine names, 18-hole practice
+
+- **Plain back-nine names.** The holes of The Neuropil Nine were renamed so a non-specialist can
+  read them (10 Fly's Eye, 11 The Ear, 12 Balancing Act, 13 The Bridge, 14 The Mushroom, 15
+  Doughnut Island, 16 The Fan, 17 Escape Route, 18 The Way Home); each description still names the
+  structure its shape echoes. Geometry and the course version are unchanged. The yardage-book
+  image files keep their old anatomical file names.
