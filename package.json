@@ -29,6 +29,6 @@
     "putt": "uv --directory services/sim run fly-golf putt --controller mock --seed 7"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.2.5"
   }
 }
